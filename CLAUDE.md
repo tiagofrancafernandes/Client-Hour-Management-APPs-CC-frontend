@@ -1,0 +1,153 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+**Hours Ledger System — Frontend**
+
+Vue 3 SPA for client hour tracking with a ledger-based model.
+
+### Tech Stack
+- **Framework**: Vue 3.5+ with Composition API
+- **Build Tool**: Vite 7
+- **Language**: TypeScript 5.9+
+- **Styling**: TailwindCSS v4
+- **Routing**: Vue Router 4
+- **Code Style**: Prettier
+
+## Development Commands
+
+```bash
+# Install dependencies
+npm install
+
+# Development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Type check
+vue-tsc -b
+```
+
+### Docker Commands
+```bash
+# From project root
+docker compose --env-file .env.docker exec frontend npm install
+docker compose --env-file .env.docker exec frontend npm run build
+docker compose --env-file .env.docker exec frontend npx prettier --write src/
+```
+
+## Architecture
+
+### Directory Structure
+```
+src/
+├── composables/       # Reusable composition functions
+│   ├── useClients.ts
+│   ├── useWallets.ts
+│   ├── useLedger.ts
+│   ├── useTags.ts
+│   └── useReports.ts
+├── router/            # Vue Router configuration
+├── services/          # API communication
+│   └── api.ts
+├── types/             # TypeScript interfaces
+│   └── index.ts
+├── views/             # Page components
+│   ├── ClientsView.vue
+│   ├── ClientDetailView.vue
+│   ├── WalletDetailView.vue
+│   ├── ReportsView.vue
+│   └── TagsView.vue
+├── App.vue            # Root component with navigation
+└── main.ts            # Application entry point
+```
+
+### Key Patterns
+
+**Composition API**: All components use `<script setup lang="ts">`
+
+**Composables**: Data fetching and state management via composition functions
+```typescript
+const { clients, loading, error, fetchClients } = useClients();
+```
+
+**API Service**: Centralized API communication in `services/api.ts`
+
+**TypeScript**: Strict typing for all entities and API responses
+
+### Path Aliases
+Configured in `vite.config.ts`:
+- `@` → `./src`
+- `@composables` → `./src/composables`
+- `@views` → `./src/views`
+- `@services` → `./src/services`
+- `@types` → `./src/types`
+
+## Vue.js Guidelines
+
+### Conditional Classes
+**Always use object syntax** instead of ternary operators:
+
+```vue
+<!-- ✅ Correct -->
+<div :class="{'bg-blue-600': isActive, 'bg-gray-200': !isActive}"></div>
+
+<!-- ❌ Wrong -->
+<div :class="isActive ? 'bg-blue-600' : 'bg-gray-200'"></div>
+```
+
+### Combining Static and Conditional Classes
+```vue
+<div :class="[
+    'px-4 py-2 rounded-lg',
+    {
+        'bg-blue-600 text-white': isActive,
+        'bg-gray-200 text-gray-800': !isActive,
+    }
+]"></div>
+```
+
+## TailwindCSS v4
+
+This project uses TailwindCSS v4 with Vite plugin:
+
+- CSS import: `@import "tailwindcss"` (not `@tailwind` directives)
+- No `tailwind.config.js` required
+- Use `bg-linear-*` instead of `bg-gradient-*`
+
+## Environment Variables
+
+```env
+VITE_API_URL=http://api.local.tiagoapps.com.br
+```
+
+Access in code: `import.meta.env.VITE_API_URL`
+
+## Code Style Guideline (Mandatory)
+
+All code generated, modified, or refactored **must strictly follow** the rules defined in:
+
+**UNIVERSAL-CODE-STYLE-RULES.md**
+
+### Enforcement Rules
+
+- The rules in `UNIVERSAL-CODE-STYLE-RULES.md` are **authoritative and non-negotiable**
+- No framework convention, language idiom, or AI default may override these rules
+- Brevity, shortcuts, and one-liners are explicitly forbidden when they reduce clarity
+- Explicit control flow, block scoping, and early returns are mandatory
+- Logical sections must be separated by blank lines
+- If multiple valid implementations exist, choose the **most explicit and readable**
+
+### Conflict Resolution
+
+If any instruction, suggestion, or generated code conflicts with the rules in
+`UNIVERSAL-CODE-STYLE-RULES.md`, **that file always takes precedence**.
+
+Any output that violates these rules must be considered **invalid and corrected**.
