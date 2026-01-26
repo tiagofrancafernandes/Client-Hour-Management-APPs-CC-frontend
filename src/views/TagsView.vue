@@ -45,51 +45,29 @@ async function handleDelete(id: number) {
             </button>
         </div>
 
-        <div
-            v-if="error"
-            class="mb-4 rounded-lg bg-red-100 p-4 text-red-700"
-        >
+        <div v-if="error" class="mb-4 rounded-lg bg-red-100 p-4 text-red-700">
             {{ error }}
         </div>
 
-        <div
-            v-if="loading"
-            class="py-8 text-center"
-        >
-            Loading...
-        </div>
+        <div v-if="loading" class="py-8 text-center">Loading...</div>
 
-        <div
-            v-else
-            class="flex flex-wrap gap-2"
-        >
+        <div v-else class="flex flex-wrap gap-2">
             <div
                 v-for="tag in tags"
                 :key="tag.id"
                 class="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow"
             >
                 <span class="text-gray-900">{{ tag.name }}</span>
-                <button
-                    class="text-red-500 hover:text-red-700"
-                    @click="handleDelete(tag.id)"
-                >
-                    ×
-                </button>
+                <button class="text-red-500 hover:text-red-700" @click="handleDelete(tag.id)">×</button>
             </div>
         </div>
 
-        <div
-            v-if="!loading && !tags.length"
-            class="py-8 text-center text-gray-500"
-        >
+        <div v-if="!loading && !tags.length" class="py-8 text-center text-gray-500">
             No tags yet. Create one to start categorizing entries.
         </div>
 
         <!-- Create Modal -->
-        <div
-            v-if="showCreateModal"
-            class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-        >
+        <div v-if="showCreateModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div class="w-full max-w-md rounded-lg bg-white p-6">
                 <h2 class="mb-4 text-lg font-semibold">New Tag</h2>
                 <div class="mb-4">
@@ -108,10 +86,7 @@ async function handleDelete(id: number) {
                     >
                         Cancel
                     </button>
-                    <button
-                        class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                        @click="handleCreate"
-                    >
+                    <button class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700" @click="handleCreate">
                         Create
                     </button>
                 </div>

@@ -124,26 +124,13 @@ function formatDate(date: string | null): string {
 
 <template>
     <div class="container mx-auto px-4 py-8">
-        <button
-            class="mb-4 text-blue-600 hover:text-blue-800"
-            @click="router.back()"
-        >
-            ← Back
-        </button>
+        <button class="mb-4 text-blue-600 hover:text-blue-800" @click="router.back()">← Back</button>
 
-        <div
-            v-if="walletError"
-            class="mb-4 rounded-lg bg-red-100 p-4 text-red-700"
-        >
+        <div v-if="walletError" class="mb-4 rounded-lg bg-red-100 p-4 text-red-700">
             {{ walletError }}
         </div>
 
-        <div
-            v-if="walletLoading && !wallet"
-            class="py-8 text-center"
-        >
-            Loading...
-        </div>
+        <div v-if="walletLoading && !wallet" class="py-8 text-center">Loading...</div>
 
         <div v-else-if="wallet">
             <div class="mb-6 rounded-lg bg-white p-6 shadow">
@@ -151,25 +138,16 @@ function formatDate(date: string | null): string {
                     <div>
                         <p class="text-sm text-gray-500">{{ wallet.client?.name }}</p>
                         <h1 class="text-2xl font-bold text-gray-900">{{ wallet.name }}</h1>
-                        <p
-                            v-if="wallet.description"
-                            class="mt-1 text-gray-600"
-                        >
+                        <p v-if="wallet.description" class="mt-1 text-gray-600">
                             {{ wallet.description }}
                         </p>
-                        <p
-                            v-if="wallet.hourly_rate_reference"
-                            class="mt-1 text-sm text-gray-500"
-                        >
+                        <p v-if="wallet.hourly_rate_reference" class="mt-1 text-sm text-gray-500">
                             Rate: ${{ wallet.hourly_rate_reference }}/h
                         </p>
                     </div>
                     <div class="text-right">
                         <p class="text-sm text-gray-500">Current Balance</p>
-                        <p
-                            class="text-3xl font-bold"
-                            :class="getBalanceColor(currentBalance)"
-                        >
+                        <p class="text-3xl font-bold" :class="getBalanceColor(currentBalance)">
                             {{ formatBalance(currentBalance) }}
                         </p>
                     </div>
@@ -205,19 +183,13 @@ function formatDate(date: string | null): string {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white">
-                        <tr
-                            v-for="entry in entries"
-                            :key="entry.id"
-                        >
+                        <tr v-for="entry in entries" :key="entry.id">
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                                 {{ formatDate(entry.reference_date) }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900">
                                 <div>{{ entry.title || '-' }}</div>
-                                <div
-                                    v-if="entry.description"
-                                    class="text-xs text-gray-500"
-                                >
+                                <div v-if="entry.description" class="text-xs text-gray-500">
                                     {{ entry.description }}
                                 </div>
                             </td>
@@ -243,17 +215,9 @@ function formatDate(date: string | null): string {
                 </table>
             </div>
 
-            <div
-                v-if="!entries.length"
-                class="py-8 text-center text-gray-500"
-            >
-                No entries yet.
-            </div>
+            <div v-if="!entries.length" class="py-8 text-center text-gray-500">No entries yet.</div>
 
-            <div
-                v-if="pagination.lastPage > 1"
-                class="mt-4 flex justify-center gap-2"
-            >
+            <div v-if="pagination.lastPage > 1" class="mt-4 flex justify-center gap-2">
                 <button
                     :disabled="pagination.currentPage === 1"
                     class="rounded px-3 py-1 disabled:opacity-50"
@@ -265,9 +229,7 @@ function formatDate(date: string | null): string {
                 >
                     Previous
                 </button>
-                <span class="px-3 py-1">
-                    Page {{ pagination.currentPage }} of {{ pagination.lastPage }}
-                </span>
+                <span class="px-3 py-1">Page {{ pagination.currentPage }} of {{ pagination.lastPage }}</span>
                 <button
                     :disabled="pagination.currentPage === pagination.lastPage"
                     class="rounded px-3 py-1 disabled:opacity-50"
@@ -283,10 +245,7 @@ function formatDate(date: string | null): string {
         </div>
 
         <!-- Add Entry Modal -->
-        <div
-            v-if="showEntryModal"
-            class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-        >
+        <div v-if="showEntryModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div class="w-full max-w-md rounded-lg bg-white p-6">
                 <h2 class="mb-4 text-lg font-semibold">Add Ledger Entry</h2>
 
@@ -332,9 +291,7 @@ function formatDate(date: string | null): string {
                 </div>
 
                 <div class="mb-4">
-                    <label class="mb-1 block text-sm font-medium text-gray-700">
-                        Reference Date
-                    </label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Reference Date</label>
                     <input
                         v-model="entryForm.reference_date"
                         type="date"
@@ -354,12 +311,7 @@ function formatDate(date: string | null): string {
                                 'border-gray-300': !entryForm.tags?.includes(tag.id),
                             }"
                         >
-                            <input
-                                v-model="entryForm.tags"
-                                type="checkbox"
-                                :value="tag.id"
-                                class="hidden"
-                            />
+                            <input v-model="entryForm.tags" type="checkbox" :value="tag.id" class="hidden" />
                             {{ tag.name }}
                         </label>
                     </div>

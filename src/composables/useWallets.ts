@@ -25,9 +25,7 @@ export function useWallets() {
                 params.append('client_id', String(clientId));
             }
 
-            const response = await api.get<PaginatedResponse<WalletWithBalance>>(
-                `/wallets?${params}`
-            );
+            const response = await api.get<PaginatedResponse<WalletWithBalance>>(`/wallets?${params}`);
 
             wallets.value = response.data;
             pagination.value = {
@@ -60,9 +58,7 @@ export function useWallets() {
         error.value = null;
 
         try {
-            const response = await api.get<PaginatedResponse<LedgerEntry>>(
-                `/wallets/${walletId}/entries?page=${page}`
-            );
+            const response = await api.get<PaginatedResponse<LedgerEntry>>(`/wallets/${walletId}/entries?page=${page}`);
 
             entries.value = response.data;
             pagination.value = {

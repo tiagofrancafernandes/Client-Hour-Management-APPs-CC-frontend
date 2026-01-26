@@ -4,8 +4,7 @@ import { useClients } from '@/composables/useClients';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
-const { clients, loading, error, pagination, fetchClients, createClient, deleteClient } =
-    useClients();
+const { clients, loading, error, pagination, fetchClients, createClient, deleteClient } = useClients();
 
 const showCreateModal = ref(false);
 const newClientName = ref('');
@@ -71,33 +70,19 @@ function goToClient(id: number) {
                     class="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
                     @keyup.enter="handleSearch"
                 />
-                <button
-                    class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
-                    @click="handleSearch"
-                >
+                <button class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200" @click="handleSearch">
                     Search
                 </button>
             </div>
         </div>
 
-        <div
-            v-if="error"
-            class="mb-4 rounded-lg bg-red-100 p-4 text-red-700"
-        >
+        <div v-if="error" class="mb-4 rounded-lg bg-red-100 p-4 text-red-700">
             {{ error }}
         </div>
 
-        <div
-            v-if="loading"
-            class="py-8 text-center"
-        >
-            Loading...
-        </div>
+        <div v-if="loading" class="py-8 text-center">Loading...</div>
 
-        <div
-            v-else
-            class="overflow-hidden rounded-lg bg-white shadow"
-        >
+        <div v-else class="overflow-hidden rounded-lg bg-white shadow">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -126,10 +111,7 @@ function goToClient(id: number) {
                             {{ client.notes || '-' }}
                         </td>
                         <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
-                            <button
-                                class="text-red-600 hover:text-red-900"
-                                @click.stop="handleDelete(client.id)"
-                            >
+                            <button class="text-red-600 hover:text-red-900" @click.stop="handleDelete(client.id)">
                                 Delete
                             </button>
                         </td>
@@ -138,10 +120,7 @@ function goToClient(id: number) {
             </table>
         </div>
 
-        <div
-            v-if="pagination.lastPage > 1"
-            class="mt-4 flex justify-center gap-2"
-        >
+        <div v-if="pagination.lastPage > 1" class="mt-4 flex justify-center gap-2">
             <button
                 :disabled="pagination.currentPage === 1"
                 class="rounded px-3 py-1 disabled:opacity-50"
@@ -153,9 +132,7 @@ function goToClient(id: number) {
             >
                 Previous
             </button>
-            <span class="px-3 py-1">
-                Page {{ pagination.currentPage }} of {{ pagination.lastPage }}
-            </span>
+            <span class="px-3 py-1">Page {{ pagination.currentPage }} of {{ pagination.lastPage }}</span>
             <button
                 :disabled="pagination.currentPage === pagination.lastPage"
                 class="rounded px-3 py-1 disabled:opacity-50"
@@ -170,10 +147,7 @@ function goToClient(id: number) {
         </div>
 
         <!-- Create Modal -->
-        <div
-            v-if="showCreateModal"
-            class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-        >
+        <div v-if="showCreateModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div class="w-full max-w-md rounded-lg bg-white p-6">
                 <h2 class="mb-4 text-lg font-semibold">New Client</h2>
                 <div class="mb-4">
@@ -199,10 +173,7 @@ function goToClient(id: number) {
                     >
                         Cancel
                     </button>
-                    <button
-                        class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                        @click="handleCreate"
-                    >
+                    <button class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700" @click="handleCreate">
                         Create
                     </button>
                 </div>

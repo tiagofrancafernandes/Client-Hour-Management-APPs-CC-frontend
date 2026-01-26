@@ -74,45 +74,28 @@ function getBalanceColor(balance: string): string {
 
 <template>
     <div class="container mx-auto px-4 py-8">
-        <button
-            class="mb-4 text-blue-600 hover:text-blue-800"
-            @click="router.push({ name: 'clients' })"
-        >
+        <button class="mb-4 text-blue-600 hover:text-blue-800" @click="router.push({ name: 'clients' })">
             ← Back to Clients
         </button>
 
-        <div
-            v-if="clientError"
-            class="mb-4 rounded-lg bg-red-100 p-4 text-red-700"
-        >
+        <div v-if="clientError" class="mb-4 rounded-lg bg-red-100 p-4 text-red-700">
             {{ clientError }}
         </div>
 
-        <div
-            v-if="clientLoading"
-            class="py-8 text-center"
-        >
-            Loading...
-        </div>
+        <div v-if="clientLoading" class="py-8 text-center">Loading...</div>
 
         <div v-else-if="client">
             <div class="mb-6 rounded-lg bg-white p-6 shadow">
                 <div class="flex items-start justify-between">
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900">{{ client.name }}</h1>
-                        <p
-                            v-if="client.notes"
-                            class="mt-1 text-gray-600"
-                        >
+                        <p v-if="client.notes" class="mt-1 text-gray-600">
                             {{ client.notes }}
                         </p>
                     </div>
                     <div class="text-right">
                         <p class="text-sm text-gray-500">Total Balance</p>
-                        <p
-                            class="text-2xl font-bold"
-                            :class="getBalanceColor(client.total_balance || '0')"
-                        >
+                        <p class="text-2xl font-bold" :class="getBalanceColor(client.total_balance || '0')">
                             {{ formatBalance(client.total_balance || '0') }}
                         </p>
                     </div>
@@ -139,44 +122,29 @@ function getBalanceColor(balance: string): string {
                     <div class="flex items-start justify-between">
                         <div>
                             <h3 class="font-semibold text-gray-900">{{ wallet.name }}</h3>
-                            <p
-                                v-if="wallet.description"
-                                class="mt-1 text-sm text-gray-500"
-                            >
+                            <p v-if="wallet.description" class="mt-1 text-sm text-gray-500">
                                 {{ wallet.description }}
                             </p>
                         </div>
                         <div class="text-right">
-                            <p
-                                class="text-lg font-bold"
-                                :class="getBalanceColor(wallet.balance)"
-                            >
+                            <p class="text-lg font-bold" :class="getBalanceColor(wallet.balance)">
                                 {{ formatBalance(wallet.balance) }}
                             </p>
                         </div>
                     </div>
-                    <div
-                        v-if="wallet.hourly_rate_reference"
-                        class="mt-2 text-sm text-gray-500"
-                    >
+                    <div v-if="wallet.hourly_rate_reference" class="mt-2 text-sm text-gray-500">
                         Rate: ${{ wallet.hourly_rate_reference }}/h
                     </div>
                 </div>
             </div>
 
-            <div
-                v-if="!client.wallets?.length"
-                class="py-8 text-center text-gray-500"
-            >
+            <div v-if="!client.wallets?.length" class="py-8 text-center text-gray-500">
                 No wallets yet. Create one to start tracking hours.
             </div>
         </div>
 
         <!-- Create Wallet Modal -->
-        <div
-            v-if="showCreateWalletModal"
-            class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-        >
+        <div v-if="showCreateWalletModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div class="w-full max-w-md rounded-lg bg-white p-6">
                 <h2 class="mb-4 text-lg font-semibold">New Wallet</h2>
                 <div class="mb-4">
@@ -196,9 +164,7 @@ function getBalanceColor(balance: string): string {
                     ></textarea>
                 </div>
                 <div class="mb-4">
-                    <label class="mb-1 block text-sm font-medium text-gray-700">
-                        Hourly Rate Reference (optional)
-                    </label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Hourly Rate Reference (optional)</label>
                     <input
                         v-model.number="newWalletHourlyRate"
                         type="number"

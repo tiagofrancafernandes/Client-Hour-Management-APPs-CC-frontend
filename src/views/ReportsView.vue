@@ -121,11 +121,7 @@ function formatDate(date: string | null): string {
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                     >
                         <option :value="undefined">All Clients</option>
-                        <option
-                            v-for="client in clients"
-                            :key="client.id"
-                            :value="client.id"
-                        >
+                        <option v-for="client in clients" :key="client.id" :value="client.id">
                             {{ client.name }}
                         </option>
                     </select>
@@ -138,11 +134,7 @@ function formatDate(date: string | null): string {
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                     >
                         <option :value="undefined">All Wallets</option>
-                        <option
-                            v-for="wallet in wallets"
-                            :key="wallet.id"
-                            :value="wallet.id"
-                        >
+                        <option v-for="wallet in wallets" :key="wallet.id" :value="wallet.id">
                             {{ wallet.name }}
                         </option>
                     </select>
@@ -202,12 +194,7 @@ function formatDate(date: string | null): string {
                                 'border-gray-300': !filters.tags?.includes(tag.id),
                             }"
                         >
-                            <input
-                                v-model="filters.tags"
-                                type="checkbox"
-                                :value="tag.id"
-                                class="hidden"
-                            />
+                            <input v-model="filters.tags" type="checkbox" :value="tag.id" class="hidden" />
                             {{ tag.name }}
                         </label>
                     </div>
@@ -215,33 +202,21 @@ function formatDate(date: string | null): string {
             </div>
 
             <div class="mt-4 flex gap-2">
-                <button
-                    class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                    @click="handleFilter"
-                >
+                <button class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700" @click="handleFilter">
                     Apply Filters
                 </button>
-                <button
-                    class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
-                    @click="clearFilters"
-                >
+                <button class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200" @click="clearFilters">
                     Clear
                 </button>
             </div>
         </div>
 
-        <div
-            v-if="error"
-            class="mb-4 rounded-lg bg-red-100 p-4 text-red-700"
-        >
+        <div v-if="error" class="mb-4 rounded-lg bg-red-100 p-4 text-red-700">
             {{ error }}
         </div>
 
         <!-- Summary -->
-        <div
-            v-if="summary"
-            class="mb-6 grid gap-4 md:grid-cols-4"
-        >
+        <div v-if="summary" class="mb-6 grid gap-4 md:grid-cols-4">
             <div class="rounded-lg bg-white p-4 shadow">
                 <p class="text-sm text-gray-500">Total Credits</p>
                 <p class="text-2xl font-bold text-green-600">+{{ summary.total_credits }}h</p>
@@ -252,10 +227,7 @@ function formatDate(date: string | null): string {
             </div>
             <div class="rounded-lg bg-white p-4 shadow">
                 <p class="text-sm text-gray-500">Net Balance</p>
-                <p
-                    class="text-2xl font-bold"
-                    :class="getHoursColor(summary.net_balance)"
-                >
+                <p class="text-2xl font-bold" :class="getHoursColor(summary.net_balance)">
                     {{ formatHours(summary.net_balance) }}
                 </p>
             </div>
@@ -265,18 +237,10 @@ function formatDate(date: string | null): string {
             </div>
         </div>
 
-        <div
-            v-if="loading"
-            class="py-8 text-center"
-        >
-            Loading...
-        </div>
+        <div v-if="loading" class="py-8 text-center">Loading...</div>
 
         <!-- Grouped Data -->
-        <div
-            v-else-if="groupedData.length > 0"
-            class="overflow-hidden rounded-lg bg-white shadow"
-        >
+        <div v-else-if="groupedData.length > 0" class="overflow-hidden rounded-lg bg-white shadow">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -298,10 +262,7 @@ function formatDate(date: string | null): string {
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
-                    <tr
-                        v-for="(item, index) in groupedData"
-                        :key="index"
-                    >
+                    <tr v-for="(item, index) in groupedData" :key="index">
                         <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                             {{ item.client_name || item.wallet_name }}
                         </td>
@@ -326,10 +287,7 @@ function formatDate(date: string | null): string {
         </div>
 
         <!-- Entries Table -->
-        <div
-            v-else-if="entries.length > 0"
-            class="overflow-hidden rounded-lg bg-white shadow"
-        >
+        <div v-else-if="entries.length > 0" class="overflow-hidden rounded-lg bg-white shadow">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -351,10 +309,7 @@ function formatDate(date: string | null): string {
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
-                    <tr
-                        v-for="entry in entries"
-                        :key="entry.id"
-                    >
+                    <tr v-for="entry in entries" :key="entry.id">
                         <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                             {{ formatDate(entry.reference_date) }}
                         </td>
@@ -388,10 +343,7 @@ function formatDate(date: string | null): string {
                 </tbody>
             </table>
 
-            <div
-                v-if="pagination.lastPage > 1"
-                class="flex justify-center gap-2 border-t p-4"
-            >
+            <div v-if="pagination.lastPage > 1" class="flex justify-center gap-2 border-t p-4">
                 <button
                     :disabled="pagination.currentPage === 1"
                     class="rounded px-3 py-1 disabled:opacity-50"
@@ -402,9 +354,7 @@ function formatDate(date: string | null): string {
                 >
                     Previous
                 </button>
-                <span class="px-3 py-1">
-                    Page {{ pagination.currentPage }} of {{ pagination.lastPage }}
-                </span>
+                <span class="px-3 py-1">Page {{ pagination.currentPage }} of {{ pagination.lastPage }}</span>
                 <button
                     :disabled="pagination.currentPage === pagination.lastPage"
                     class="rounded px-3 py-1 disabled:opacity-50"
@@ -418,11 +368,6 @@ function formatDate(date: string | null): string {
             </div>
         </div>
 
-        <div
-            v-else
-            class="py-8 text-center text-gray-500"
-        >
-            No entries found matching the filters.
-        </div>
+        <div v-else class="py-8 text-center text-gray-500">No entries found matching the filters.</div>
     </div>
 </template>
