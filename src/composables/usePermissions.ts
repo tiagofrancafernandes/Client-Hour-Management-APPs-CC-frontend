@@ -4,58 +4,116 @@ import { useAuth } from './useAuth';
 export function usePermissions() {
     const auth = useAuth();
 
+    // Client permissions
     const canViewClients = computed(() => {
-        return auth.hasAnyPermission(['view_clients', 'manage_clients']);
+        return auth.hasPermission('client.view');
+    });
+
+    const canViewAnyClients = computed(() => {
+        return auth.hasPermission('client.view_any');
+    });
+
+    const canCreateClients = computed(() => {
+        return auth.hasPermission('client.create');
+    });
+
+    const canUpdateClients = computed(() => {
+        return auth.hasPermission('client.update');
+    });
+
+    const canDeleteClients = computed(() => {
+        return auth.hasPermission('client.delete');
     });
 
     const canManageClients = computed(() => {
-        return auth.hasPermission('manage_clients');
+        return auth.hasAnyPermission(['client.create', 'client.update', 'client.delete']);
     });
 
+    // Wallet permissions
     const canViewWallets = computed(() => {
-        return auth.hasAnyPermission(['view_wallets', 'manage_wallets']);
+        return auth.hasPermission('wallet.view');
+    });
+
+    const canViewAnyWallets = computed(() => {
+        return auth.hasPermission('wallet.view_any');
+    });
+
+    const canCreateWallets = computed(() => {
+        return auth.hasPermission('wallet.create');
+    });
+
+    const canUpdateWallets = computed(() => {
+        return auth.hasPermission('wallet.update');
+    });
+
+    const canDeleteWallets = computed(() => {
+        return auth.hasPermission('wallet.delete');
     });
 
     const canManageWallets = computed(() => {
-        return auth.hasPermission('manage_wallets');
+        return auth.hasAnyPermission(['wallet.create', 'wallet.update', 'wallet.delete']);
     });
 
+    // Ledger permissions
     const canViewLedger = computed(() => {
-        return auth.hasAnyPermission(['view_ledger', 'manage_ledger']);
+        return auth.hasPermission('ledger.view');
     });
 
-    const canManageLedger = computed(() => {
-        return auth.hasPermission('manage_ledger');
+    const canViewAnyLedger = computed(() => {
+        return auth.hasPermission('ledger.view_any');
     });
 
     const canAddCredits = computed(() => {
-        return auth.hasPermission('add_credits');
+        return auth.hasPermission('ledger.credit');
     });
 
     const canAddDebits = computed(() => {
-        return auth.hasPermission('add_debits');
+        return auth.hasPermission('ledger.debit');
     });
 
     const canAddAdjustments = computed(() => {
-        return auth.hasPermission('add_adjustments');
+        return auth.hasPermission('ledger.adjust');
     });
 
+    const canAddEntry = computed(() => {
+        return auth.hasAnyPermission(['ledger.credit', 'ledger.debit', 'ledger.adjust']);
+    });
+
+    // Tag permissions
     const canViewTags = computed(() => {
-        return auth.hasAnyPermission(['view_tags', 'manage_tags']);
+        return auth.hasPermission('tag.view');
+    });
+
+    const canViewAnyTags = computed(() => {
+        return auth.hasPermission('tag.view_any');
+    });
+
+    const canCreateTags = computed(() => {
+        return auth.hasPermission('tag.create');
+    });
+
+    const canUpdateTags = computed(() => {
+        return auth.hasPermission('tag.update');
+    });
+
+    const canDeleteTags = computed(() => {
+        return auth.hasPermission('tag.delete');
     });
 
     const canManageTags = computed(() => {
-        return auth.hasPermission('manage_tags');
+        return auth.hasAnyPermission(['tag.create', 'tag.update', 'tag.delete']);
     });
 
+    // Report permissions
     const canViewReports = computed(() => {
-        return auth.hasAnyPermission(['view_reports', 'view_all_reports']);
+        return auth.hasPermission('report.view');
     });
 
-    const canViewAllReports = computed(() => {
-        return auth.hasPermission('view_all_reports');
+    const canViewAnyReports = computed(() => {
+        return auth.hasPermission('report.view_any');
     });
 
+    // Role checks
     const isSuperAdmin = computed(() => {
         return auth.hasRole('super_admin');
     });
@@ -64,23 +122,53 @@ export function usePermissions() {
         return auth.hasAnyRole(['super_admin', 'admin']);
     });
 
+    const isManager = computed(() => {
+        return auth.hasAnyRole(['super_admin', 'admin', 'manager']);
+    });
+
     return {
+        // Client
         canViewClients,
+        canViewAnyClients,
+        canCreateClients,
+        canUpdateClients,
+        canDeleteClients,
         canManageClients,
+
+        // Wallet
         canViewWallets,
+        canViewAnyWallets,
+        canCreateWallets,
+        canUpdateWallets,
+        canDeleteWallets,
         canManageWallets,
+
+        // Ledger
         canViewLedger,
-        canManageLedger,
+        canViewAnyLedger,
         canAddCredits,
         canAddDebits,
         canAddAdjustments,
+        canAddEntry,
+
+        // Tags
         canViewTags,
+        canViewAnyTags,
+        canCreateTags,
+        canUpdateTags,
+        canDeleteTags,
         canManageTags,
+
+        // Reports
         canViewReports,
-        canViewAllReports,
+        canViewAnyReports,
+
+        // Roles
         isSuperAdmin,
         isAdmin,
+        isManager,
 
+        // Generic helpers
         hasPermission: auth.hasPermission,
         hasAnyPermission: auth.hasAnyPermission,
         hasAllPermissions: auth.hasAllPermissions,

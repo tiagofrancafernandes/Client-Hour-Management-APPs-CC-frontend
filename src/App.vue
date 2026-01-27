@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router';
-import { computed } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useAuth } from '@/composables/useAuth';
 import { usePermissions } from '@/composables/usePermissions';
 
@@ -9,14 +9,45 @@ const route = useRoute();
 const { user, isAuthenticated, logout, loading } = useAuth();
 const { canViewClients, canViewReports, canViewTags } = usePermissions();
 
+const showUserMenu = ref(false);
+const userMenuRef = ref<HTMLElement | null>(null);
+
 const showNavigation = computed(() => {
     return isAuthenticated.value && route.name !== 'login';
 });
 
+function toggleUserMenu() {
+    showUserMenu.value = !showUserMenu.value;
+}
+
+function closeUserMenu() {
+    showUserMenu.value = false;
+}
+
+function handleClickOutside(event: MouseEvent) {
+    if (userMenuRef.value && !userMenuRef.value.contains(event.target as Node)) {
+        closeUserMenu();
+    }
+}
+
+function goToProfile() {
+    closeUserMenu();
+    router.push({ name: 'profile' });
+}
+
 async function handleLogout() {
+    closeUserMenu();
     await logout();
     router.push({ name: 'login' });
 }
+
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <template>
@@ -54,15 +85,62 @@ async function handleLogout() {
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-4">
-                        <span class="text-sm text-gray-600">{{ user?.name }}</span>
+                    <div ref="userMenuRef" class="relative">
                         <button
-                            :disabled="loading"
-                            class="rounded-lg bg-gray-100 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-                            @click="handleLogout"
+                            class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            @click="toggleUserMenu"
                         >
-                            Logout
+                            <span>{{ user?.name }}</span>
+                            <svg
+                                class="h-4 w-4 transition-transform"
+                                :class="{ 'rotate-180': showUserMenu }"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M19 9l-7 7-7-7"
+                                />
+                            </svg>
                         </button>
+
+                        <div
+                            v-if="showUserMenu"
+                            class="absolute right-0 mt-2 w-48 rounded-lg bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5"
+                        >
+                            <button
+                                class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                                @click="goToProfile"
+                            >
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                    />
+                                </svg>
+                                Profile
+                            </button>
+                            <button
+                                :disabled="loading"
+                                class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                @click="handleLogout"
+                            >
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                    />
+                                </svg>
+                                Logout
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
