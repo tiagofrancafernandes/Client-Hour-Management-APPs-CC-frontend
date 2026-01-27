@@ -2,9 +2,11 @@
 import { onMounted, ref } from 'vue';
 import { useClients } from '@/composables/useClients';
 import { useRouter } from 'vue-router';
+import { usePermissions } from '@/composables/usePermissions';
 
 const router = useRouter();
 const { clients, loading, error, pagination, fetchClients, createClient, deleteClient } = useClients();
+const { canManageClients } = usePermissions();
 
 const showCreateModal = ref(false);
 const newClientName = ref('');
@@ -54,6 +56,7 @@ function goToClient(id: number) {
         <div class="mb-6 flex items-center justify-between">
             <h1 class="text-2xl font-bold text-gray-900">Clients</h1>
             <button
+                v-if="canManageClients"
                 class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
                 @click="showCreateModal = true"
             >
@@ -111,7 +114,11 @@ function goToClient(id: number) {
                             {{ client.notes || '-' }}
                         </td>
                         <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
-                            <button class="text-red-600 hover:text-red-900" @click.stop="handleDelete(client.id)">
+                            <button
+                                v-if="canManageClients"
+                                class="text-red-600 hover:text-red-900"
+                                @click.stop="handleDelete(client.id)"
+                            >
                                 Delete
                             </button>
                         </td>

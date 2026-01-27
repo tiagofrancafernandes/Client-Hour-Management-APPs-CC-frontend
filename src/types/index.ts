@@ -78,3 +78,36 @@ export interface LedgerEntryForm {
     reference_date?: string;
     tags?: number[];
 }
+
+export interface User {
+    id: number;
+    name: string;
+    email: string;
+}
+
+export interface AuthState {
+    user: User | null;
+    role: string | null;
+    permissions: string[];
+    token: string | null;
+    isAuthenticated: boolean;
+}
+
+export interface LoginCredentials {
+    email: string;
+    password: string;
+}
+
+export interface LoginResponse {
+    user: User;
+    role: string | null;
+    permissions: string[];
+    token: string;
+}
+
+export interface ValidateTokenResponse {
+    valid: boolean;
+    user: User;
+    role: string | null;
+    permissions: string[];
+}

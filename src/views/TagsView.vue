@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useTags } from '@/composables/useTags';
+import { usePermissions } from '@/composables/usePermissions';
 
 const { tags, loading, error, fetchTags, createTag, deleteTag } = useTags();
+const { canManageTags } = usePermissions();
 
 const showCreateModal = ref(false);
 const newTagName = ref('');
@@ -38,6 +40,7 @@ async function handleDelete(id: number) {
         <div class="mb-6 flex items-center justify-between">
             <h1 class="text-2xl font-bold text-gray-900">Tags</h1>
             <button
+                v-if="canManageTags"
                 class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
                 @click="showCreateModal = true"
             >
@@ -58,7 +61,9 @@ async function handleDelete(id: number) {
                 class="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow"
             >
                 <span class="text-gray-900">{{ tag.name }}</span>
-                <button class="text-red-500 hover:text-red-700" @click="handleDelete(tag.id)">×</button>
+                <button v-if="canManageTags" class="text-red-500 hover:text-red-700" @click="handleDelete(tag.id)">
+                    ×
+                </button>
             </div>
         </div>
 

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useWallets } from '@/composables/useWallets';
 import { useLedger } from '@/composables/useLedger';
 import { useTags } from '@/composables/useTags';
+import { usePermissions } from '@/composables/usePermissions';
 import type { LedgerEntryForm } from '@/types';
 
 const route = useRoute();
@@ -22,6 +23,11 @@ const {
 
 const { createEntry, loading: entryLoading } = useLedger();
 const { tags, fetchTags } = useTags();
+const { canAddCredits, canAddDebits, canAddAdjustments } = usePermissions();
+
+const canAddEntry = computed(() => {
+    return canAddCredits.value || canAddDebits.value || canAddAdjustments.value;
+});
 
 const showEntryModal = ref(false);
 const entryForm = ref<LedgerEntryForm>({
@@ -157,6 +163,7 @@ function formatDate(date: string | null): string {
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="text-xl font-semibold text-gray-900">Ledger Entries</h2>
                 <button
+                    v-if="canAddEntry"
                     class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
                     @click="showEntryModal = true"
                 >
@@ -255,9 +262,9 @@ function formatDate(date: string | null): string {
                         v-model="entryForm.type"
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                     >
-                        <option value="debit">Debit (consume hours)</option>
-                        <option value="credit">Credit (add hours)</option>
-                        <option value="adjustment">Adjustment</option>
+                        <option v-if="canAddDebits" value="debit">Debit (consume hours)</option>
+                        <option v-if="canAddCredits" value="credit">Credit (add hours)</option>
+                        <option v-if="canAddAdjustments" value="adjustment">Adjustment</option>
                     </select>
                 </div>
 

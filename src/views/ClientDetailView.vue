@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useClients } from '@/composables/useClients';
 import { useWallets } from '@/composables/useWallets';
+import { usePermissions } from '@/composables/usePermissions';
 
 const route = useRoute();
 const router = useRouter();
@@ -10,6 +11,7 @@ const clientId = Number(route.params.id);
 
 const { client, loading: clientLoading, error: clientError, fetchClient } = useClients();
 const { createWallet } = useWallets();
+const { canManageWallets } = usePermissions();
 
 const showCreateWalletModal = ref(false);
 const newWalletName = ref('');
@@ -105,6 +107,7 @@ function getBalanceColor(balance: string): string {
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="text-xl font-semibold text-gray-900">Wallets</h2>
                 <button
+                    v-if="canManageWallets"
                     class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
                     @click="showCreateWalletModal = true"
                 >
