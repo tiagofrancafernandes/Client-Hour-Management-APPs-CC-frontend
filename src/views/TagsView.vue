@@ -72,7 +72,7 @@ async function handleDelete(id: number) {
         </div>
 
         <!-- Create Modal -->
-        <div v-if="showCreateModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div v-if="showCreateModal" class="fixed inset-0 flex items-center justify-center bg-black/50">
             <div class="w-full max-w-md rounded-lg bg-white p-6">
                 <h2 class="mb-4 text-lg font-semibold">New Tag</h2>
                 <div class="mb-4">

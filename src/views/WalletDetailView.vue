@@ -5,6 +5,7 @@ import { useWallets } from '@/composables/useWallets';
 import { useLedger } from '@/composables/useLedger';
 import { useTags } from '@/composables/useTags';
 import { usePermissions } from '@/composables/usePermissions';
+import TagInput from '@/components/TagInput.vue';
 import type { LedgerEntryForm } from '@/types';
 
 const route = useRoute();
@@ -22,7 +23,7 @@ const {
 } = useWallets();
 
 const { createEntry, loading: entryLoading } = useLedger();
-const { tags, fetchTags } = useTags();
+const { fetchTags } = useTags();
 const { canAddCredits, canAddDebits, canAddAdjustments } = usePermissions();
 
 const canAddEntry = computed(() => {
@@ -252,7 +253,7 @@ function formatDate(date: string | null): string {
         </div>
 
         <!-- Add Entry Modal -->
-        <div v-if="showEntryModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div v-if="showEntryModal" class="fixed inset-0 flex items-center justify-center bg-black/50">
             <div class="w-full max-w-md rounded-lg bg-white p-6">
                 <h2 class="mb-4 text-lg font-semibold">Add Ledger Entry</h2>
 
@@ -308,20 +309,7 @@ function formatDate(date: string | null): string {
 
                 <div class="mb-4">
                     <label class="mb-1 block text-sm font-medium text-gray-700">Tags</label>
-                    <div class="flex flex-wrap gap-2">
-                        <label
-                            v-for="tag in tags"
-                            :key="tag.id"
-                            class="flex cursor-pointer items-center gap-1 rounded-full border px-2 py-1 text-sm"
-                            :class="{
-                                'border-blue-500 bg-blue-50': entryForm.tags?.includes(tag.id),
-                                'border-gray-300': !entryForm.tags?.includes(tag.id),
-                            }"
-                        >
-                            <input v-model="entryForm.tags" type="checkbox" :value="tag.id" class="hidden" />
-                            {{ tag.name }}
-                        </label>
-                    </div>
+                    <TagInput v-model="entryForm.tags" placeholder="Add tags..." :allow-create="true" />
                 </div>
 
                 <div class="flex justify-end gap-2">
