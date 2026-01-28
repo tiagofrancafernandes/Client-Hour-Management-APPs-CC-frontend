@@ -4,6 +4,7 @@ import { useReports } from '@/composables/useReports';
 import { useClients } from '@/composables/useClients';
 import { useWallets } from '@/composables/useWallets';
 import { useTags } from '@/composables/useTags';
+import api from '@/services/api';
 import type { ReportFilters } from '@/types';
 
 const { summary, entries, groupedData, loading, error, pagination, fetchReport } = useReports();
@@ -104,6 +105,52 @@ function formatDate(date: string | null): string {
 
     return new Date(date).toLocaleDateString();
 }
+
+const exporting = ref(false);
+const exportError = ref<string | null>(null);
+
+async function exportReport(format: 'pdf' | 'excel') {
+    exporting.value = true;
+    exportError.value = null;
+
+    try {
+        const params = new URLSearchParams();
+
+        params.append('format', format);
+
+        if (filters.value.client_id) {
+            params.append('client_id', String(filters.value.client_id));
+        }
+
+        if (filters.value.wallet_id) {
+            params.append('wallet_id', String(filters.value.wallet_id));
+        }
+
+        if (filters.value.date_from) {
+            params.append('date_from', filters.value.date_from);
+        }
+
+        if (filters.value.date_to) {
+            params.append('date_to', filters.value.date_to);
+        }
+
+        if (filters.value.tags && filters.value.tags.length > 0) {
+            filters.value.tags.forEach((tag) => {
+                params.append('tags[]', String(tag));
+            });
+        }
+
+        if (filters.value.type) {
+            params.append('type', filters.value.type);
+        }
+
+        await api.download(`/reports/export?${params.toString()}`);
+    } catch (err) {
+        exportError.value = err instanceof Error ? err.message : 'Export failed';
+    } finally {
+        exporting.value = false;
+    }
+}
 </script>
 
 <template>
@@ -201,13 +248,46 @@ function formatDate(date: string | null): string {
                 </div>
             </div>
 
-            <div class="mt-4 flex gap-2">
+            <div class="mt-4 flex flex-wrap items-center gap-2">
                 <button class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700" @click="handleFilter">
                     Apply Filters
                 </button>
                 <button class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200" @click="clearFilters">
                     Clear
                 </button>
+
+                <div class="ml-auto flex gap-2">
+                    <button
+                        :disabled="exporting"
+                        class="flex items-center gap-2 rounded-lg border border-green-600 px-4 py-2 text-green-600 hover:bg-green-50 disabled:opacity-50"
+                        @click="exportReport('excel')"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8.5 18H7v-5h1.5v5zm3.5 0h-2v-5h2v5zm4 0h-2.5v-5H16v5z"
+                            />
+                        </svg>
+                        <span v-if="!exporting">Excel</span>
+                        <span v-else>Exporting...</span>
+                    </button>
+                    <button
+                        :disabled="exporting"
+                        class="flex items-center gap-2 rounded-lg border border-red-600 px-4 py-2 text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        @click="exportReport('pdf')"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 15h2v2H8v-2zm0-3h2v2H8v-2zm4 3h4v2h-4v-2zm0-3h4v2h-4v-2z"
+                            />
+                        </svg>
+                        <span v-if="!exporting">PDF</span>
+                        <span v-else>Exporting...</span>
+                    </button>
+                </div>
+            </div>
+
+            <div v-if="exportError" class="mt-2 rounded-lg bg-red-100 p-2 text-sm text-red-700">
+                {{ exportError }}
             </div>
         </div>
 

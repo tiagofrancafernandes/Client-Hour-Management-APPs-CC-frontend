@@ -44,6 +44,57 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     return response.json();
 }
 
+async function downloadFile(endpoint: string, filename: string|null = null): Promise<void> {
+    const token = localStorage.getItem('auth_token');
+
+    const config: RequestInit = {
+        method: 'GET',
+        headers: {
+            Accept: 'application/octet-stream',
+        },
+        credentials: 'include',
+    };
+
+    if (token) {
+        (config.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_URL}/api${endpoint}`, config);
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Download failed' }));
+
+        throw new Error(error.message || `HTTP error ${response.status}`);
+    }
+
+    console.log('api.ts downloadFile', {
+        response,
+        responseHeaders: response.headers,
+    });
+
+    const contentDisposition = response.headers.get('Content-Disposition');
+    filename = filename || 'download';
+
+    if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+
+        if (filenameMatch && filenameMatch[1]) {
+            filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+}
+
 export const api = {
     get: <T>(endpoint: string) => request<T>(endpoint),
 
@@ -52,6 +103,8 @@ export const api = {
     put: <T>(endpoint: string, data: unknown) => request<T>(endpoint, { method: 'PUT', body: data }),
 
     delete: <T>(endpoint: string) => request<T>(endpoint, { method: 'DELETE' }),
+
+    download: (endpoint: string, filename: string|null = null) => downloadFile(endpoint, filename),
 };
 
 export default api;
