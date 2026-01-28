@@ -44,7 +44,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     return response.json();
 }
 
-async function downloadFile(endpoint: string, filename: string|null = null): Promise<void> {
+async function downloadFile(endpoint: string, filename: string | null = null): Promise<void> {
     const token = localStorage.getItem('auth_token');
 
     const config: RequestInit = {
@@ -111,7 +111,7 @@ export const api = {
 
     delete: <T>(endpoint: string) => request<T>(endpoint, { method: 'DELETE' }),
 
-    download: (endpoint: string, filename: string|null = null) => downloadFile(endpoint, filename),
+    download: (endpoint: string, filename: string | null = null) => downloadFile(endpoint, filename),
 };
 
 export default api;

@@ -3,7 +3,7 @@
     "compilerOptions": {
         "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
         "baseUrl": ".",
-        "types": ["vite/client"],
+        /* AOS DEVS: NÃO defina "types" aqui */
         /* Linting */
         "strict": true,
         "noUnusedLocals": true,

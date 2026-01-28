@@ -195,13 +195,7 @@ function handleInputBlur() {
                 class="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-sm text-blue-700"
             >
                 {{ tag.name }}
-                <button
-                    type="button"
-                    class="text-blue-700 hover:text-blue-900"
-                    @click="removeTag(tag.id)"
-                >
-                    ×
-                </button>
+                <button type="button" class="text-blue-700 hover:text-blue-900" @click="removeTag(tag.id)">×</button>
             </span>
 
             <input
@@ -241,8 +235,6 @@ function handleInputBlur() {
             </button>
         </div>
 
-        <p v-if="allowCreate" class="mt-1 text-xs text-gray-500">
-            Type and press Enter or comma to create a new tag
-        </p>
+        <p v-if="allowCreate" class="mt-1 text-xs text-gray-500">Type and press Enter or comma to create a new tag</p>
     </div>
 </template>

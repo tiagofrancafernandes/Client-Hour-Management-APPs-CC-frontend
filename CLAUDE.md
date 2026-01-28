@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Hours Ledger System — Frontend**
+**Hours Ledger System -- Frontend**
 
 Vue 3 SPA for client hour tracking with a ledger-based model.
 
@@ -129,6 +129,51 @@ VITE_API_URL=http://api.local.tiagoapps.com.br
 ```
 
 Access in code: `import.meta.env.VITE_API_URL`
+
+## UI Design Reference
+
+**All UI components must follow the design system specification defined in:**
+
+**`design/design.json`**
+
+### Design Guidelines
+
+This file contains the complete design system extracted from the official mockups:
+- **Color palette**: Primary (#dc2626), secondary, backgrounds, text colors
+- **Typography**: Font families, sizes, weights
+- **Component styles**: Buttons, cards, inputs, tables, badges, etc.
+- **Spacing & Layout**: Consistent spacing scale and border radius
+- **Navigation**: Header, sidebar, and mobile bottom navigation specs
+- **Responsive breakpoints**: Mobile, tablet, and desktop layouts
+
+### Key Design Principles
+
+1. **Color Usage**:
+   - Primary red (#dc2626) for actions, brand elements, and active states
+   - Neutral grays for text hierarchy and backgrounds
+   - White cards with subtle shadows for content containers
+
+2. **Component Consistency**:
+   - Rounded corners (0.5rem for most elements)
+   - Consistent padding (0.5rem - 1rem for interactive elements)
+   - Clear hover states for all interactive components
+
+3. **Branding**:
+   - Logo format: Brand name with accent color (e.g., "MK" in black + "Pay" in red)
+   - Red badges for app/section identifiers
+   - Clean, modern aesthetic with generous whitespace
+
+4. **Responsive Design**:
+   - Desktop: Expanded sidebar, full header
+   - Mobile: Bottom navigation, collapsed sidebar, compact header
+   - Breakpoints defined in design.json
+
+**Always refer to `design/design.json` when:**
+- Creating new components
+- Styling existing components
+- Implementing buttons, cards, or forms
+- Choosing colors or spacing values
+- Designing navigation elements
 
 ## Code Style Guideline (Mandatory)
 

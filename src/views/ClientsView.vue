@@ -55,13 +55,11 @@ function goToClient(id: number) {
     <div class="container mx-auto px-4 py-8">
         <div class="mb-6 flex items-center justify-between">
             <h1 class="text-2xl font-bold text-gray-900">Clients</h1>
-            <button
-                v-if="canManageClients"
-                class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                @click="showCreateModal = true"
-            >
-                New Client
-            </button>
+            <CButton v-if="canManageClients" @click="showCreateModal = true">New Client</CButton>
+
+            <CButton v-if="canManageClients" preset="slim-blue" @click="showCreateModal = true">
+                New Client CButton
+            </CButton>
         </div>
 
         <div class="mb-6">
@@ -180,9 +178,7 @@ function goToClient(id: number) {
                     >
                         Cancel
                     </button>
-                    <button class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700" @click="handleCreate">
-                        Create
-                    </button>
+                    <CButton @click="handleCreate">Create</CButton>
                 </div>
             </div>
         </div>

@@ -163,13 +163,7 @@ function formatDate(date: string | null): string {
 
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="text-xl font-semibold text-gray-900">Ledger Entries</h2>
-                <button
-                    v-if="canAddEntry"
-                    class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                    @click="showEntryModal = true"
-                >
-                    Add Entry
-                </button>
+                <CButton v-if="canAddEntry" @click="showEntryModal = true">Add Entry</CButton>
             </div>
 
             <div class="overflow-hidden rounded-lg bg-white shadow">

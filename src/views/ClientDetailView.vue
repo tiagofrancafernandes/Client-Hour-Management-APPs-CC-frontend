@@ -106,13 +106,7 @@ function getBalanceColor(balance: string): string {
 
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="text-xl font-semibold text-gray-900">Wallets</h2>
-                <button
-                    v-if="canManageWallets"
-                    class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                    @click="showCreateWalletModal = true"
-                >
-                    New Wallet
-                </button>
+                <CButton v-if="canManageWallets" @click="showCreateWalletModal = true">New Wallet</CButton>
             </div>
 
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -183,12 +177,7 @@ function getBalanceColor(balance: string): string {
                     >
                         Cancel
                     </button>
-                    <button
-                        class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                        @click="handleCreateWallet"
-                    >
-                        Create
-                    </button>
+                    <CButton @click="handleCreateWallet">Create</CButton>
                 </div>
             </div>
         </div>

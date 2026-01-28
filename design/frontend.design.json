@@ -4,21 +4,12 @@
         "version": "1.0.0",
         "description": "Dashboard for managing API keys with environment context and quick copy actions.",
         "responsive": true,
-        "themes": [
-            "light"
-        ],
-        "platforms": [
-            "desktop",
-            "mobile"
-        ]
+        "themes": ["light"],
+        "platforms": ["desktop", "mobile"]
     },
     "layout": {
         "type": "application",
-        "structure": [
-            "topbar",
-            "sidebar",
-            "content"
-        ]
+        "structure": ["topbar", "sidebar", "content"]
     },
     "topbar": {
         "height": "64px",
@@ -35,23 +26,12 @@
             {
                 "type": "app-switcher",
                 "behavior": "dropdown",
-                "elements": [
-                    "current_app",
-                    "current_environment",
-                    "search",
-                    "app_list",
-                    "create_app_action"
-                ]
+                "elements": ["current_app", "current_environment", "search", "app_list", "create_app_action"]
             },
             {
                 "type": "actions",
                 "align": "right",
-                "elements": [
-                    "apps_link",
-                    "docs_link",
-                    "theme_toggle",
-                    "user_avatar"
-                ]
+                "elements": ["apps_link", "docs_link", "theme_toggle", "user_avatar"]
             }
         ]
     },
@@ -104,18 +84,13 @@
                     {
                         "type": "select",
                         "label": "Key type",
-                        "options": [
-                            "Secret Key"
-                        ]
+                        "options": ["Secret Key"]
                     },
                     {
                         "type": "code-block",
                         "label": "Environment variables",
                         "language": "env",
-                        "content": [
-                            "APP_SECRET='sk_live_********'",
-                            "APP_ID='********'"
-                        ],
+                        "content": ["APP_SECRET='sk_live_********'", "APP_ID='********'"],
                         "actions": [
                             {
                                 "type": "button",
@@ -134,23 +109,14 @@
                 "elements": [
                     {
                         "type": "table",
-                        "columns": [
-                            "Name",
-                            "Key",
-                            "Created",
-                            "Last used",
-                            "Actions"
-                        ],
+                        "columns": ["Name", "Key", "Created", "Last used", "Actions"],
                         "rows": [
                             {
                                 "name": "Secret Key",
                                 "key_masked": true,
                                 "created_at": "Dec 30, 2025, 4:50 PM",
                                 "last_used": "Never",
-                                "actions": [
-                                    "reveal",
-                                    "more"
-                                ]
+                                "actions": ["reveal", "more"]
                             }
                         ]
                     },
@@ -167,11 +133,7 @@
     "mobile": {
         "layout": {
             "topbar": {
-                "elements": [
-                    "brand",
-                    "theme_toggle",
-                    "menu_toggle"
-                ]
+                "elements": ["brand", "theme_toggle", "menu_toggle"]
             }
         },
         "navigation": {
@@ -210,13 +172,7 @@
         }
     },
     "behavior": {
-        "security": [
-            "keys_are_masked_by_default",
-            "explicit_reveal_action_required"
-        ],
-        "copy_actions": [
-            "one_click_copy",
-            "visual_feedback_on_copy"
-        ]
+        "security": ["keys_are_masked_by_default", "explicit_reveal_action_required"],
+        "copy_actions": ["one_click_copy", "visual_feedback_on_copy"]
     }
 }

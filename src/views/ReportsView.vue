@@ -249,12 +249,8 @@ async function exportReport(format: 'pdf' | 'excel') {
             </div>
 
             <div class="mt-4 flex flex-wrap items-center gap-2">
-                <button class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700" @click="handleFilter">
-                    Apply Filters
-                </button>
-                <button class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200" @click="clearFilters">
-                    Clear
-                </button>
+                <CButton @click="handleFilter">Apply Filters</CButton>
+                <CButton preset="outlined-black" @click="clearFilters">Clear</CButton>
 
                 <div class="ml-auto flex gap-2">
                     <button

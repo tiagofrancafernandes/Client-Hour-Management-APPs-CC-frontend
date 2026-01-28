@@ -39,13 +39,7 @@ async function handleDelete(id: number) {
     <div class="container mx-auto px-4 py-8">
         <div class="mb-6 flex items-center justify-between">
             <h1 class="text-2xl font-bold text-gray-900">Tags</h1>
-            <button
-                v-if="canManageTags"
-                class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                @click="showCreateModal = true"
-            >
-                New Tag
-            </button>
+            <CButton v-if="canManageTags" @click="showCreateModal = true">New Tag</CButton>
         </div>
 
         <div v-if="error" class="mb-4 rounded-lg bg-red-100 p-4 text-red-700">
@@ -91,9 +85,7 @@ async function handleDelete(id: number) {
                     >
                         Cancel
                     </button>
-                    <button class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700" @click="handleCreate">
-                        Create
-                    </button>
+                    <CButton @click="handleCreate">Create</CButton>
                 </div>
             </div>
         </div>
