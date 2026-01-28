@@ -67,20 +67,27 @@ async function downloadFile(endpoint: string, filename: string|null = null): Pro
         throw new Error(error.message || `HTTP error ${response.status}`);
     }
 
+    const contentDisposition = response.headers.get('Content-Disposition');
+
     console.log('api.ts downloadFile', {
+        filename,
         response,
+        contentDisposition,
         responseHeaders: response.headers,
     });
 
-    const contentDisposition = response.headers.get('Content-Disposition');
-    filename = filename || 'download';
-
-    if (contentDisposition) {
+    if (!filename && contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
 
         if (filenameMatch && filenameMatch[1]) {
             filename = filenameMatch[1].replace(/['"]/g, '');
         }
+    }
+
+    filename = filename || response.headers.get('X-Filename');
+
+    if (!filename) {
+        filename = filename || `download_${Date.now()}`;
     }
 
     const blob = await response.blob();
