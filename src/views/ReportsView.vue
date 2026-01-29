@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed, watch } from 'vue';
 import { useReports } from '@/composables/useReports';
 import { useClients } from '@/composables/useClients';
 import { useWallets } from '@/composables/useWallets';
 import { useTags } from '@/composables/useTags';
 import api from '@/services/api';
 import type { ReportFilters } from '@/types';
+import CButton from '@/components/CButton.vue';
 
 const { summary, entries, groupedData, loading, error, pagination, fetchReport } = useReports();
 const { clients, fetchClients } = useClients();
@@ -22,8 +23,34 @@ const filters = ref<ReportFilters>({
     group_by: undefined,
 });
 
+const hasAppliedFilters = ref(false);
+
+const filteredWallets = computed(() => {
+    if (!filters.value.client_id) {
+        return wallets.value;
+    }
+
+    return wallets.value.filter((wallet) => wallet.client_id === filters.value.client_id);
+});
+
+function getWalletLabel(wallet: any): string {
+    const clientName = wallet.client?.name || 'Unknown Client';
+
+    return `${wallet.name} (${clientName})`;
+}
+
+watch(() => filters.value.client_id, (newClientId, oldClientId) => {
+    if (newClientId !== oldClientId && filters.value.wallet_id) {
+        const selectedWallet = wallets.value.find((w) => w.id === filters.value.wallet_id);
+
+        if (selectedWallet && selectedWallet.client_id !== newClientId) {
+            filters.value.wallet_id = undefined;
+        }
+    }
+});
+
 onMounted(async () => {
-    await Promise.all([fetchClients(1, ''), fetchWallets(), fetchTags(), fetchReport()]);
+    await Promise.all([fetchClients(1, ''), fetchWallets(), fetchTags()]);
 });
 
 async function handleFilter() {
@@ -57,6 +84,8 @@ async function handleFilter() {
         activeFilters.group_by = filters.value.group_by;
     }
 
+    hasAppliedFilters.value = true;
+
     await fetchReport(activeFilters);
 }
 
@@ -71,7 +100,7 @@ function clearFilters() {
         group_by: undefined,
     };
 
-    fetchReport();
+    hasAppliedFilters.value = false;
 }
 
 function formatHours(hours: string): string {
@@ -181,8 +210,8 @@ async function exportReport(format: 'pdf' | 'excel') {
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                     >
                         <option :value="undefined">All Wallets</option>
-                        <option v-for="wallet in wallets" :key="wallet.id" :value="wallet.id">
-                            {{ wallet.name }}
+                        <option v-for="wallet in filteredWallets" :key="wallet.id" :value="wallet.id">
+                            {{ getWalletLabel(wallet) }}
                         </option>
                     </select>
                 </div>
@@ -291,8 +320,29 @@ async function exportReport(format: 'pdf' | 'excel') {
             {{ error }}
         </div>
 
+        <!-- Initial Message -->
+        <div v-if="!hasAppliedFilters" class="rounded-lg bg-blue-50 border border-blue-200 p-8 text-center">
+            <svg
+                class="mx-auto h-16 w-16 text-blue-500 mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                />
+            </svg>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">No Reports to Display</h3>
+            <p class="text-gray-600 mb-4">
+                Select your filters above and click "Apply Filters" to view reports.
+            </p>
+        </div>
+
         <!-- Summary -->
-        <div v-if="summary" class="mb-6 grid gap-4 md:grid-cols-4">
+        <div v-else-if="summary" class="mb-6 grid gap-4 md:grid-cols-4">
             <div class="rounded-lg bg-white p-4 shadow">
                 <p class="text-sm text-gray-500">Total Credits</p>
                 <p class="text-2xl font-bold text-green-600">+{{ summary.total_credits }}h</p>
@@ -313,10 +363,10 @@ async function exportReport(format: 'pdf' | 'excel') {
             </div>
         </div>
 
-        <div v-if="loading" class="py-8 text-center">Loading...</div>
+        <div v-else-if="loading" class="py-8 text-center">Loading...</div>
 
         <!-- Grouped Data -->
-        <div v-else-if="groupedData.length > 0" class="overflow-hidden rounded-lg bg-white shadow">
+        <div v-else-if="hasAppliedFilters && groupedData.length > 0" class="overflow-hidden rounded-lg bg-white shadow">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -363,7 +413,7 @@ async function exportReport(format: 'pdf' | 'excel') {
         </div>
 
         <!-- Entries Table -->
-        <div v-else-if="entries.length > 0" class="overflow-hidden rounded-lg bg-white shadow">
+        <div v-else-if="hasAppliedFilters && entries.length > 0" class="overflow-hidden rounded-lg bg-white shadow">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -444,6 +494,24 @@ async function exportReport(format: 'pdf' | 'excel') {
             </div>
         </div>
 
-        <div v-else class="py-8 text-center text-gray-500">No entries found matching the filters.</div>
+        <div v-else-if="hasAppliedFilters" class="rounded-lg bg-white border border-gray-200 p-8 text-center">
+            <svg
+                class="mx-auto h-16 w-16 text-gray-400 mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+            </svg>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">No Entries Found</h3>
+            <p class="text-gray-500">
+                No entries match the selected filters. Try adjusting your filter criteria.
+            </p>
+        </div>
     </div>
 </template>
