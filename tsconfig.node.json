@@ -5,7 +5,7 @@
         "lib": ["ES2023"],
         "module": "ESNext",
         "jsx": "preserve",
-        "types": ["node"],
+        "types": ["node","vue3-toastify/global"],
         "skipLibCheck": true,
 
         /* Bundler mode */

@@ -146,6 +146,20 @@ This file contains the complete design system extracted from the official mockup
 - **Navigation**: Header, sidebar, and mobile bottom navigation specs
 - **Responsive breakpoints**: Mobile, tablet, and desktop layouts
 
+### Toast messages
+
+```ts
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
+
+toast.success('success!');
+toast.error('error!');
+toast.info('info!');
+toast.dark('dark!');
+toast.warning('warning!');
+```
+
 ### Key Design Principles
 
 1. **Color Usage**:

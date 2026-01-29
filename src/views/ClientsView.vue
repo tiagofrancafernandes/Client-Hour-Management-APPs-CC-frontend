@@ -55,10 +55,8 @@ function goToClient(id: number) {
     <div class="container mx-auto px-4 py-8">
         <div class="mb-6 flex items-center justify-between">
             <h1 class="text-2xl font-bold text-gray-900">Clients</h1>
-            <CButton v-if="canManageClients" @click="showCreateModal = true">New Client</CButton>
-
             <CButton v-if="canManageClients" preset="slim-blue" @click="showCreateModal = true">
-                New Client CButton
+                New Client
             </CButton>
         </div>
 

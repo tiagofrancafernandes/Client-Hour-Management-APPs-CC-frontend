@@ -111,3 +111,48 @@ export interface ValidateTokenResponse {
     role: string | null;
     permissions: string[];
 }
+
+export type TimerStatus = 'running' | 'paused' | 'stopped' | 'confirmed' | 'cancelled';
+
+export interface TimerCycle {
+    id: number;
+    timer_id: number;
+    started_at: string;
+    ended_at: string | null;
+    duration_seconds: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Timer {
+    id: number;
+    user_id: number;
+    wallet_id: number;
+    title: string | null;
+    description: string | null;
+    status: TimerStatus;
+    confirmed_at: string | null;
+    ledger_entry_id: number | null;
+    total_seconds: number;
+    formatted_duration: string;
+    total_hours: number;
+    cycles: TimerCycle[];
+    wallet?: Wallet;
+    tags?: Tag[];
+    ledger_entry?: LedgerEntry;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface TimerForm {
+    wallet_id: number;
+    title?: string;
+    description?: string;
+    tags?: number[];
+}
+
+export interface TimerCycleForm {
+    id?: number;
+    started_at: string;
+    ended_at?: string | null;
+}

@@ -5,6 +5,7 @@ import App from './App.vue';
 import CButton from './components/CButton.vue';
 import router from './router';
 import authPlugin from './plugins/auth';
+import ToastPlugin from '@/plugins/toast';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -17,6 +18,9 @@ const components = {
 app.use(pinia);
 app.use(router);
 app.use(authPlugin);
+app.use(ToastPlugin, {
+    autoClose: 8000,
+});
 
 for (let [compName, compObj] of Object.entries(components)) {
     app.component(compName, compObj);
