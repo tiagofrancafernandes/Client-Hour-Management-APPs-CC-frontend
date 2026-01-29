@@ -76,6 +76,16 @@ const router = createRouter({
             },
         },
         {
+            path: '/timers',
+            name: 'timers',
+            component: () => import('@/views/TimersView.vue'),
+            meta: {
+                title: 'Timers',
+                requiresAuth: true,
+                permissions: ['timer.view'],
+            },
+        },
+        {
             path: '/profile',
             name: 'profile',
             component: () => import('@/views/ProfileView.vue'),

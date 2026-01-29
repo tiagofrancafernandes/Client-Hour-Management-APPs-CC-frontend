@@ -3,14 +3,23 @@ import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useAuth } from '@/composables/useAuth';
 import { usePermissions } from '@/composables/usePermissions';
+import { useTimerStore } from '@/stores/timer';
+import TimerFloatingBalloon from '@/components/TimerFloatingBalloon.vue';
 
 const router = useRouter();
 const route = useRoute();
 const { user, isAuthenticated, logout, loading } = useAuth();
 const { canViewClients, canViewReports, canViewTags } = usePermissions();
+const timerStore = useTimerStore();
 
 const showUserMenu = ref(false);
 const userMenuRef = ref<HTMLElement | null>(null);
+const canViewTimers = computed(() => {
+    return isAuthenticated.value && (
+        usePermissions().hasPermission('timer.view') ||
+        usePermissions().hasPermission('timer.view_any')
+    );
+});
 
 const showNavigation = computed(() => {
     return isAuthenticated.value && route.name !== 'login';
@@ -41,12 +50,17 @@ async function handleLogout() {
     router.push({ name: 'login' });
 }
 
-onMounted(() => {
+onMounted(async () => {
     document.addEventListener('click', handleClickOutside);
+
+    if (isAuthenticated.value) {
+        await timerStore.initialize();
+    }
 });
 
 onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside);
+    timerStore.cleanup();
 });
 </script>
 
@@ -81,6 +95,14 @@ onUnmounted(() => {
                                 active-class="text-blue-600 font-medium"
                             >
                                 Tags
+                            </RouterLink>
+                            <RouterLink
+                                v-if="canViewTimers"
+                                to="/timers"
+                                class="text-gray-600 hover:text-gray-900"
+                                active-class="text-blue-600 font-medium"
+                            >
+                                Timers
                             </RouterLink>
                         </div>
                     </div>
@@ -149,5 +171,8 @@ onUnmounted(() => {
         <main>
             <RouterView />
         </main>
+
+        <!-- Timer Floating Balloon -->
+        <TimerFloatingBalloon v-if="isAuthenticated" />
     </div>
 </template>
