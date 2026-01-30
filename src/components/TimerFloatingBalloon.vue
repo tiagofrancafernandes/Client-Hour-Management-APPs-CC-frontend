@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useTimerStore } from '@/stores/timer';
+import { useConfirm } from '@/composables/useConfirm';
 
 const timerStore = useTimerStore();
+const { confirm } = useConfirm();
 
 const expanded = ref(true);
 const localTime = ref(0);
@@ -36,7 +38,15 @@ async function togglePlayPause(): Promise<void> {
 }
 
 async function stopTimer(): Promise<void> {
-    if (window.confirm('Are you sure you want to stop this timer?')) {
+    const confirmed = await confirm({
+        title: 'Parar Timer',
+        message: 'Tem certeza que deseja parar este timer?',
+        confirmText: 'Sim, Parar',
+        cancelText: 'Cancelar',
+        variant: 'warning',
+    });
+
+    if (confirmed) {
         await timerStore.stopTimer();
         stopLocalTimer();
     }

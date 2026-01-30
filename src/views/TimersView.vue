@@ -2,12 +2,14 @@
 import { ref, onMounted, computed } from 'vue';
 import { useTimerStore } from '@/stores/timer';
 import { useAuthStore } from '@/stores/auth';
+import { useConfirm } from '@/composables/useConfirm';
 import TimerStartModal from '@/components/TimerStartModal.vue';
 import TimerConfirmModal from '@/components/TimerConfirmModal.vue';
 import type { Timer } from '@/types';
 
 const timerStore = useTimerStore();
 const authStore = useAuthStore();
+const { confirm } = useConfirm();
 
 const showStartModal = ref(false);
 const showConfirmModal = ref(false);
@@ -75,7 +77,15 @@ function handleConfirmTimer(timer: Timer): void {
 }
 
 async function handleDeleteTimer(timer: Timer): Promise<void> {
-    if (!window.confirm(`Are you sure you want to delete this timer?`)) {
+    const confirmed = await confirm({
+        title: 'Excluir Timer',
+        message: 'Tem certeza que deseja excluir este timer?',
+        confirmText: 'Sim, Excluir',
+        cancelText: 'Cancelar',
+        variant: 'danger',
+    });
+
+    if (!confirmed) {
         return;
     }
 

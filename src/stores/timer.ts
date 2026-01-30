@@ -203,10 +203,19 @@ export const useTimerStore = defineStore('timer', () => {
             stopPolling();
 
             return true;
-        } catch (err) {
-            error.value = err instanceof Error ? err.message : 'Failed to confirm timer';
+        } catch (err: any) {
+            const errorMessage = err?.response?.data?.message || err?.message || 'Failed to confirm timer';
 
-            return false;
+            error.value = errorMessage;
+
+            console.error('Timer confirm error:', {
+                error: err,
+                response: err?.response?.data,
+                timer: activeTimer.value,
+                cycles,
+            });
+
+            throw new Error(errorMessage);
         } finally {
             loading.value = false;
         }
