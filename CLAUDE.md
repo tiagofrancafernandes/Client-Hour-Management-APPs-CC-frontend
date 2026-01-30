@@ -160,6 +160,54 @@ toast.dark('dark!');
 toast.warning('warning!');
 ```
 
+## Using buttons
+To use <button> preffer use global `CButton` component (`src/components/CButton.vue` not need import this) and use presets to style
+Example:
+```vue
+<template>
+<CButton preset="outlined-black" class="inline-flex items-center">
+    Unlock
+</CButton>
+</template>
+```
+
+
+### Using buttons with icons
+
+- Content inside
+```vue
+<CButton class="inline-flex items-center gap-2">
+    <Icon icon="material-symbols:lock-open-right-outline-rounded" />
+    Unlock
+</CButton>
+```
+
+- Icon on left
+```vue
+<CButton icon="mdi-light:home">
+    Home
+</CButton>
+```
+
+- Icon on right
+```vue
+<CButton right-icon="mdi-light:home">
+    Home
+</CButton>
+```
+
+- Icon on both (right and left)
+```vue
+<CButton icon="mdi-light:home" right-icon="mdi-light:home">
+    Home
+</CButton>
+```
+
+- Icon and label via args
+```vue
+<CButton icon="mdi-light:home" label="Home" />
+```
+
 ### Key Design Principles
 
 1. **Color Usage**:

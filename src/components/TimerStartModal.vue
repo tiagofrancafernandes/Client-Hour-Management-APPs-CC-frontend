@@ -45,9 +45,11 @@ async function loadWallets(): Promise<void> {
     loadingWallets.value = true;
 
     try {
-        const response = await api.get<WalletWithBalance[]>('/wallets');
+        const response = await api.get<WalletWithBalance[]>('/wallets?with=tags,balance');
 
-        wallets.value = response;
+        let _data = ('data' in response ? response?.data : response) as WalletWithBalance[];
+
+        wallets.value = Array.isArray(_data) ? _data : [];
     } catch (error) {
         console.error('Failed to load wallets:', error);
     } finally {
@@ -116,11 +118,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div
-        v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-        @click.self="handleClose"
-    >
+    <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="handleClose">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
             <!-- Header -->
             <div class="flex items-center justify-between p-6 border-b border-gray-200">
@@ -130,12 +128,7 @@ onMounted(() => {
                     :disabled="loading"
                     @click="handleClose"
                 >
-                    <svg
-                        class="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
@@ -147,17 +140,12 @@ onMounted(() => {
             </div>
 
             <!-- Body -->
-            <form
-                class="p-6 space-y-4"
-                @submit.prevent="handleSubmit"
-            >
+            <form class="p-6 space-y-4" @submit.prevent="handleSubmit">
                 <!-- Wallet Selection -->
                 <div>
-                    <label
-                        for="wallet"
-                        class="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                        Wallet <span class="text-red-600">*</span>
+                    <label for="wallet" class="block text-sm font-medium text-gray-700 mb-1">
+                        Wallet
+                        <span class="text-red-600">*</span>
                     </label>
                     <select
                         id="wallet"
@@ -170,23 +158,20 @@ onMounted(() => {
                             {{ loadingWallets ? 'Loading...' : 'Select a wallet' }}
                         </option>
                         <option
+                            v-if="Object.keys(wallets || {}).length"
                             v-for="wallet in wallets"
-                            :key="wallet.id"
-                            :value="wallet.id"
+                            :key="wallet?.id"
+                            :value="wallet?.id"
                         >
-                            {{ wallet.client?.name }} - {{ wallet.name }} ({{ wallet.balance }}h)
+                            {{ wallet?.client?.name }} - {{ wallet?.name }}
+                            <template v-if="wallet?.balance !== undefined">({{ wallet?.balance }}h)</template>
                         </option>
                     </select>
                 </div>
 
                 <!-- Title -->
                 <div>
-                    <label
-                        for="title"
-                        class="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                        Title
-                    </label>
+                    <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
                     <input
                         id="title"
                         v-model="form.title"
@@ -199,12 +184,7 @@ onMounted(() => {
 
                 <!-- Description -->
                 <div>
-                    <label
-                        for="description"
-                        class="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                        Description
-                    </label>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                     <textarea
                         id="description"
                         v-model="form.description"
@@ -217,9 +197,7 @@ onMounted(() => {
 
                 <!-- Tags -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Tags
-                    </label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
                     <TagInput
                         :available-tags="tags"
                         :selected-tags="form.tags"
@@ -254,10 +232,7 @@ onMounted(() => {
             </form>
 
             <!-- Error Message -->
-            <div
-                v-if="timerStore.error"
-                class="mx-6 mb-6 p-3 bg-red-50 border border-red-200 rounded-lg"
-            >
+            <div v-if="timerStore.error" class="mx-6 mb-6 p-3 bg-red-50 border border-red-200 rounded-lg">
                 <p class="text-sm text-red-600">{{ timerStore.error }}</p>
             </div>
         </div>

@@ -7,6 +7,7 @@ const { tags, loading, error, fetchTags, createTag, deleteTag } = useTags();
 const { canManageTags } = usePermissions();
 
 const showCreateModal = ref(false);
+const lockToEditTags = ref(false);
 const newTagName = ref('');
 
 onMounted(() => {
@@ -39,7 +40,23 @@ async function handleDelete(id: number) {
     <div class="container mx-auto px-4 py-8">
         <div class="mb-6 flex items-center justify-between">
             <h1 class="text-2xl font-bold text-gray-900">Tags</h1>
-            <CButton v-if="canManageTags" @click="showCreateModal = true">New Tag</CButton>
+            <div class="flex justify-between gap-2">
+                <CButton
+                    v-if="canManageTags"
+                    @click="lockToEditTags = !lockToEditTags"
+                    class="inline-flex items-center gap-2"
+                    :icon="
+                        lockToEditTags
+                            ? 'material-symbols:lock-open-outline-rounded'
+                            : 'material-symbols:lock-open-right-outline-rounded'
+                    "
+                    :preset="lockToEditTags ? 'outlined-black' : 'outlined-danger'"
+                >
+                    {{ lockToEditTags ? 'Lock to edit' : 'Unlock to edit' }}
+                </CButton>
+
+                <CButton v-if="canManageTags" @click="showCreateModal = true">New Tag</CButton>
+            </div>
         </div>
 
         <div v-if="error" class="mb-4 rounded-lg bg-red-100 p-4 text-red-700">
@@ -52,12 +69,17 @@ async function handleDelete(id: number) {
             <div
                 v-for="tag in tags"
                 :key="tag.id"
-                class="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow"
+                class="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow tag-pill"
             >
                 <span class="text-gray-900">{{ tag.name }}</span>
-                <button v-if="canManageTags" class="text-red-500 hover:text-red-700" @click="handleDelete(tag.id)">
+                <CButton
+                    preset="outlined-red-sm"
+                    v-if="canManageTags && lockToEditTags"
+                    class="text-red-500 hover:text-red-700"
+                    @click="handleDelete(tag.id)"
+                >
                     ×
-                </button>
+                </CButton>
             </div>
         </div>
 

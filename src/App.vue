@@ -15,9 +15,9 @@ const timerStore = useTimerStore();
 const showUserMenu = ref(false);
 const userMenuRef = ref<HTMLElement | null>(null);
 const canViewTimers = computed(() => {
-    return isAuthenticated.value && (
-        usePermissions().hasPermission('timer.view') ||
-        usePermissions().hasPermission('timer.view_any')
+    return (
+        isAuthenticated.value &&
+        (usePermissions().hasPermission('timer.view') || usePermissions().hasPermission('timer.view_any'))
     );
 });
 
@@ -70,7 +70,10 @@ onUnmounted(() => {
             <div class="container mx-auto px-4">
                 <div class="flex h-16 items-center justify-between">
                     <div class="flex items-center gap-8">
-                        <span class="text-xl font-bold text-gray-900">Hours Ledger</span>
+                        <RouterLink to="/">
+                            <span class="text-xl font-bold text-gray-900">Hours Ledger</span>
+                        </RouterLink>
+
                         <div class="flex gap-4">
                             <RouterLink
                                 v-if="canViewClients"

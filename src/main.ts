@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import './assets/main.css';
 import App from './App.vue';
 import CButton from './components/CButton.vue';
+import { Icon } from '@iconify/vue';
 import router from './router';
 import authPlugin from './plugins/auth';
 import ToastPlugin from '@/plugins/toast';
@@ -13,6 +14,8 @@ const pinia = createPinia();
 const components = {
     CButton: CButton,
     Button: CButton,
+    Icon: Icon,
+    UIcon: Icon,
 };
 
 app.use(pinia);

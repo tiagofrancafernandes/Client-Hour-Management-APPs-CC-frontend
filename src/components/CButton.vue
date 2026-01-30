@@ -11,19 +11,37 @@ const props = defineProps({
         type: String,
         default: 'blue',
     },
+    icon: {
+        type: String,
+    },
+    rightIcon: {
+        type: String,
+    },
 });
 
 const classes = computed(() => {
     const presets: any = buttonPresets();
 
-    return presets[props.preset] ?? presets.blue;
+    let _classes: any = [presets[props.preset] ?? presets.blue];
+
+    if (props.icon || props.rightIcon) {
+        _classes = ['inline-flex items-center gap-2', ..._classes];
+    }
+
+    return _classes;
 });
 </script>
 
 <template>
-    <button :class="classes">
+    <button :class="classes" data-component-name="CButton">
+        <template v-if="props.icon">
+            <UIcon :icon="props.icon" />
+        </template>
         <template v-if="props?.label === null">
             <slot />
+        </template>
+        <template v-if="props.rightIcon">
+            <UIcon :icon="props.rightIcon" />
         </template>
     </button>
 </template>

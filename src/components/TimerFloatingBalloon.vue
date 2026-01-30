@@ -108,18 +108,9 @@ if (!hasTimer.value && intervalId.value) {
         ]"
     >
         <!-- Minimized State -->
-        <div
-            v-if="!expanded"
-            class="flex items-center justify-center h-full cursor-pointer"
-            @click="toggleExpanded"
-        >
+        <div v-if="!expanded" class="flex items-center justify-center h-full cursor-pointer" @click="toggleExpanded">
             <div class="flex flex-col items-center">
-                <svg
-                    class="w-6 h-6 text-red-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -132,10 +123,7 @@ if (!hasTimer.value && intervalId.value) {
         </div>
 
         <!-- Expanded State -->
-        <div
-            v-else
-            class="p-4"
-        >
+        <div v-else class="p-4">
             <!-- Header -->
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2">
@@ -152,22 +140,9 @@ if (!hasTimer.value && intervalId.value) {
                         {{ isRunning ? 'Running' : 'Paused' }}
                     </span>
                 </div>
-                <button
-                    class="text-gray-400 hover:text-gray-600 transition-colors"
-                    @click="toggleExpanded"
-                >
-                    <svg
-                        class="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 9l-7 7-7-7"
-                        />
+                <button class="text-gray-400 hover:text-gray-600 transition-colors" @click="toggleExpanded">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
                 </button>
             </div>
@@ -177,16 +152,10 @@ if (!hasTimer.value && intervalId.value) {
                 <div class="text-3xl font-bold text-gray-900 font-mono">
                     {{ formattedTime }}
                 </div>
-                <div
-                    v-if="timer?.wallet"
-                    class="text-sm text-gray-500 mt-1"
-                >
+                <div v-if="timer?.wallet" class="text-sm text-gray-500 mt-1">
                     {{ timer.wallet.client?.name }} - {{ timer.wallet.name }}
                 </div>
-                <div
-                    v-if="timer?.title"
-                    class="text-sm text-gray-700 mt-1"
-                >
+                <div v-if="timer?.title" class="text-sm text-gray-700 mt-1">
                     {{ timer.title }}
                 </div>
             </div>

@@ -216,12 +216,7 @@ onMounted(() => {
                 v-else-if="filteredTimers.length === 0"
                 class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center"
             >
-                <svg
-                    class="w-16 h-16 text-gray-400 mx-auto mb-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
+                <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -236,10 +231,7 @@ onMounted(() => {
             </div>
 
             <!-- Timers List -->
-            <div
-                v-else
-                class="space-y-4"
-            >
+            <div v-else class="space-y-4">
                 <div
                     v-for="timer in filteredTimers"
                     :key="timer.id"
@@ -265,19 +257,13 @@ onMounted(() => {
                                 <p class="text-sm text-gray-600">
                                     {{ timer.wallet?.client?.name }} - {{ timer.wallet?.name }}
                                 </p>
-                                <p
-                                    v-if="timer.description"
-                                    class="text-sm text-gray-700 mt-2"
-                                >
+                                <p v-if="timer.description" class="text-sm text-gray-700 mt-2">
                                     {{ timer.description }}
                                 </p>
                             </div>
 
                             <!-- Tags -->
-                            <div
-                                v-if="timer.tags && timer.tags.length > 0"
-                                class="flex flex-wrap gap-2 mb-3"
-                            >
+                            <div v-if="timer.tags && timer.tags.length > 0" class="flex flex-wrap gap-2 mb-3">
                                 <span
                                     v-for="tag in timer.tags"
                                     :key="tag.id"
@@ -330,10 +316,7 @@ onMounted(() => {
         </div>
 
         <!-- Modals -->
-        <TimerStartModal
-            :show="showStartModal"
-            @close="showStartModal = false"
-        />
+        <TimerStartModal :show="showStartModal" @close="showStartModal = false" />
 
         <TimerConfirmModal
             :show="showConfirmModal"

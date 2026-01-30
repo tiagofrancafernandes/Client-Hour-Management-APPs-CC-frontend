@@ -156,3 +156,58 @@ export interface TimerCycleForm {
     started_at: string;
     ended_at?: string | null;
 }
+
+export type ImportPlanStatus = 'pending' | 'validated' | 'confirmed' | 'cancelled';
+
+export interface ImportPlanSummary {
+    total_rows: number;
+    valid_rows: number;
+    invalid_rows: number;
+    total_hours: number;
+}
+
+export interface ImportPlanRow {
+    id: number;
+    import_plan_id: number;
+    row_number: number;
+    reference_date: string;
+    hours: number;
+    title: string;
+    description: string | null;
+    tags: string[];
+    validation_errors: string[];
+    is_valid: boolean;
+    ledger_entry_id: number | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface ImportPlan {
+    id: number;
+    user_id: number;
+    wallet_id: number;
+    original_filename: string;
+    file_path: string;
+    status: ImportPlanStatus;
+    summary: ImportPlanSummary | null;
+    validation_errors: string[] | null;
+    confirmed_at: string | null;
+    user?: User;
+    wallet?: Wallet;
+    rows?: ImportPlanRow[];
+    created_at: string;
+    updated_at: string;
+}
+
+export interface ImportPlanForm {
+    wallet_id: number;
+    file: File;
+}
+
+export interface ImportRowForm {
+    reference_date: string;
+    hours: number;
+    title: string;
+    description?: string;
+    tags?: string[];
+}

@@ -33,6 +33,8 @@ const badgeSizes = {
  */
 const solidColors = {
     black: 'bg-neutral-950 text-white shadow-neutral-500/20',
+    neutral: 'bg-neutral-950 text-neutral-100 shadow-neutral-500/20',
+    none: '',
     red: 'bg-red-600 text-white shadow-red-500/20',
     green: 'bg-green-600 text-white shadow-green-500/20',
     blue: 'bg-blue-600 text-white shadow-blue-500/20',
@@ -54,6 +56,8 @@ const solidColors = {
  */
 const outlinedColors = {
     black: 'border border-neutral-900 text-neutral-900 hover:bg-neutral-900 hover:text-white',
+    none: '',
+    neutral: 'border border-neutral-900 text-neutral-900 hover:bg-neutral-900 hover:text-white',
     red: 'border border-red-600 text-red-600 hover:bg-red-600 hover:text-white',
     green: 'border border-green-600 text-green-600 hover:bg-green-600 hover:text-white',
     blue: 'border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white',
@@ -108,10 +112,36 @@ function buildBadgePresets(colors: Record<string, string>, rounded: string, type
  * Button presets
  */
 export function buttonPresets() {
-    return {
+    let _result: any = {
         ...buildPresets(solidColors),
         ...buildPresets(outlinedColors, 'outlined'),
     };
+
+    const buttonCommonClasses = ['disabled:opacity-50', 'c-button-presets'];
+
+    _result = Object.fromEntries(
+        Object.entries(_result).map((item: any[]) => {
+            let [key, value] = item;
+
+            if (!buttonCommonClasses.length) {
+                return [key, value];
+            }
+
+            if (value && typeof value === 'string' && value.trim()) {
+                value = value.trim().split(' ');
+
+                for (const _class of buttonCommonClasses) {
+                    value.push(!value.includes(_class) ? _class : '');
+                }
+
+                value = value.filter(Boolean).join(' ');
+            }
+
+            return [key, value];
+        })
+    );
+
+    return _result;
 }
 
 /**

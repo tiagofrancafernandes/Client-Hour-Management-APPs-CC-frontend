@@ -7,13 +7,8 @@ export function useToast() {
         throw new Error('useToast must be called inside setup()');
     }
 
-    const {
-        $toastSuccess,
-        $toastError,
-        $toastInfo,
-        $toastDark,
-        $toastWarning,
-    } = instance.appContext.config.globalProperties;
+    const { $toastSuccess, $toastError, $toastInfo, $toastDark, $toastWarning } =
+        instance.appContext.config.globalProperties;
 
     return {
         dark: $toastDark,

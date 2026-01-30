@@ -124,12 +124,7 @@ if (props.show && props.timer) {
                     :disabled="loading"
                     @click="handleClose"
                 >
-                    <svg
-                        class="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
@@ -159,17 +154,11 @@ if (props.show && props.timer) {
                             <p class="text-sm text-gray-500">{{ totalHours }} hours</p>
                         </div>
                     </div>
-                    <div
-                        v-if="timer?.title"
-                        class="mt-3"
-                    >
+                    <div v-if="timer?.title" class="mt-3">
                         <p class="text-sm text-gray-600">Title</p>
                         <p class="font-medium text-gray-900">{{ timer.title }}</p>
                     </div>
-                    <div
-                        v-if="timer?.description"
-                        class="mt-3"
-                    >
+                    <div v-if="timer?.description" class="mt-3">
                         <p class="text-sm text-gray-600">Description</p>
                         <p class="text-gray-900">{{ timer.description }}</p>
                     </div>
@@ -185,9 +174,7 @@ if (props.show && props.timer) {
                             class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                         >
                             <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900">
-                                    Cycle {{ index + 1 }}
-                                </p>
+                                <p class="text-sm font-medium text-gray-900">Cycle {{ index + 1 }}</p>
                                 <p class="text-xs text-gray-600">
                                     {{ formatDateTime(cycle.started_at) }}
                                     →
@@ -222,18 +209,15 @@ if (props.show && props.timer) {
                         <div class="ml-3">
                             <h4 class="text-sm font-medium text-yellow-800">Confirm Timer</h4>
                             <p class="text-sm text-yellow-700 mt-1">
-                                This will create a ledger entry for {{ totalHours }} hours and mark this timer as confirmed.
-                                This action cannot be undone.
+                                This will create a ledger entry for {{ totalHours }} hours and mark this timer as
+                                confirmed. This action cannot be undone.
                             </p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Error Message -->
-                <div
-                    v-if="timerStore.error"
-                    class="p-3 bg-red-50 border border-red-200 rounded-lg"
-                >
+                <div v-if="timerStore.error" class="p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p class="text-sm text-red-600">{{ timerStore.error }}</p>
                 </div>
 

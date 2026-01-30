@@ -39,15 +39,18 @@ function getWalletLabel(wallet: any): string {
     return `${wallet.name} (${clientName})`;
 }
 
-watch(() => filters.value.client_id, (newClientId, oldClientId) => {
-    if (newClientId !== oldClientId && filters.value.wallet_id) {
-        const selectedWallet = wallets.value.find((w) => w.id === filters.value.wallet_id);
+watch(
+    () => filters.value.client_id,
+    (newClientId, oldClientId) => {
+        if (newClientId !== oldClientId && filters.value.wallet_id) {
+            const selectedWallet = wallets.value.find((w) => w.id === filters.value.wallet_id);
 
-        if (selectedWallet && selectedWallet.client_id !== newClientId) {
-            filters.value.wallet_id = undefined;
+            if (selectedWallet && selectedWallet.client_id !== newClientId) {
+                filters.value.wallet_id = undefined;
+            }
         }
     }
-});
+);
 
 onMounted(async () => {
     await Promise.all([fetchClients(1, ''), fetchWallets(), fetchTags()]);
@@ -258,13 +261,15 @@ async function exportReport(format: 'pdf' | 'excel') {
                     </select>
                 </div>
 
-                <div class="lg:col-span-2">
+                <div v-if="true" class="lg:col-span-2">
                     <label class="mb-1 block text-sm font-medium text-gray-700">Tags</label>
-                    <div class="flex flex-wrap gap-2">
+                    <div
+                        class="flex gap-2 overflow-x-auto whitespace-nowrap pb-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200"
+                    >
                         <label
                             v-for="tag in tags"
                             :key="tag.id"
-                            class="flex cursor-pointer items-center gap-1 rounded-full border px-2 py-1 text-sm"
+                            class="flex cursor-pointer items-center gap-1 rounded-full border px-2 py-1 text-sm select-none"
                             :class="{
                                 'border-blue-500 bg-blue-50': filters.tags?.includes(tag.id),
                                 'border-gray-300': !filters.tags?.includes(tag.id),
@@ -278,11 +283,14 @@ async function exportReport(format: 'pdf' | 'excel') {
             </div>
 
             <div class="mt-4 flex flex-wrap items-center gap-2">
-                <CButton @click="handleFilter">Apply Filters</CButton>
-                <CButton preset="outlined-black" @click="clearFilters">Clear</CButton>
+                <div class="flex gap-2">
+                    <CButton preset="blue" @click="handleFilter">Apply Filters</CButton>
+                    <CButton preset="outlined-black" @click="clearFilters">Clear</CButton>
+                </div>
 
                 <div class="ml-auto flex gap-2">
-                    <button
+                    <CButton
+                        preset="outlined-green-sm"
                         :disabled="exporting"
                         class="flex items-center gap-2 rounded-lg border border-green-600 px-4 py-2 text-green-600 hover:bg-green-50 disabled:opacity-50"
                         @click="exportReport('excel')"
@@ -294,8 +302,9 @@ async function exportReport(format: 'pdf' | 'excel') {
                         </svg>
                         <span v-if="!exporting">Excel</span>
                         <span v-else>Exporting...</span>
-                    </button>
-                    <button
+                    </CButton>
+                    <CButton
+                        preset="outlined-red-sm"
                         :disabled="exporting"
                         class="flex items-center gap-2 rounded-lg border border-red-600 px-4 py-2 text-red-600 hover:bg-red-50 disabled:opacity-50"
                         @click="exportReport('pdf')"
@@ -307,7 +316,7 @@ async function exportReport(format: 'pdf' | 'excel') {
                         </svg>
                         <span v-if="!exporting">PDF</span>
                         <span v-else>Exporting...</span>
-                    </button>
+                    </CButton>
                 </div>
             </div>
 
@@ -322,12 +331,7 @@ async function exportReport(format: 'pdf' | 'excel') {
 
         <!-- Initial Message -->
         <div v-if="!hasAppliedFilters" class="rounded-lg bg-blue-50 border border-blue-200 p-8 text-center">
-            <svg
-                class="mx-auto h-16 w-16 text-blue-500 mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-            >
+            <svg class="mx-auto h-16 w-16 text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -336,9 +340,7 @@ async function exportReport(format: 'pdf' | 'excel') {
                 />
             </svg>
             <h3 class="text-lg font-semibold text-gray-900 mb-2">No Reports to Display</h3>
-            <p class="text-gray-600 mb-4">
-                Select your filters above and click "Apply Filters" to view reports.
-            </p>
+            <p class="text-gray-600 mb-4">Select your filters above and click "Apply Filters" to view reports.</p>
         </div>
 
         <!-- Summary -->
@@ -470,7 +472,8 @@ async function exportReport(format: 'pdf' | 'excel') {
             </table>
 
             <div v-if="pagination.lastPage > 1" class="flex justify-center gap-2 border-t p-4">
-                <button
+                <CButton
+                    preset="none-sm"
                     :disabled="pagination.currentPage === 1"
                     class="rounded px-3 py-1 disabled:opacity-50"
                     :class="{
@@ -479,9 +482,10 @@ async function exportReport(format: 'pdf' | 'excel') {
                     }"
                 >
                     Previous
-                </button>
+                </CButton>
                 <span class="px-3 py-1">Page {{ pagination.currentPage }} of {{ pagination.lastPage }}</span>
-                <button
+                <CButton
+                    preset="none-sm"
                     :disabled="pagination.currentPage === pagination.lastPage"
                     class="rounded px-3 py-1 disabled:opacity-50"
                     :class="{
@@ -490,17 +494,12 @@ async function exportReport(format: 'pdf' | 'excel') {
                     }"
                 >
                     Next
-                </button>
+                </CButton>
             </div>
         </div>
 
         <div v-else-if="hasAppliedFilters" class="rounded-lg bg-white border border-gray-200 p-8 text-center">
-            <svg
-                class="mx-auto h-16 w-16 text-gray-400 mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-            >
+            <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -509,9 +508,7 @@ async function exportReport(format: 'pdf' | 'excel') {
                 />
             </svg>
             <h3 class="text-lg font-semibold text-gray-900 mb-2">No Entries Found</h3>
-            <p class="text-gray-500">
-                No entries match the selected filters. Try adjusting your filter criteria.
-            </p>
+            <p class="text-gray-500">No entries match the selected filters. Try adjusting your filter criteria.</p>
         </div>
     </div>
 </template>

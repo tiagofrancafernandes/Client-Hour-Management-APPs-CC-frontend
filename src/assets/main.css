@@ -29,3 +29,32 @@ button:not([disabled]) {
     transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
     transition-duration: var(--tw-duration, var(--default-transition-duration));
 }
+
+@layer components {
+    .tag-pill {
+        @apply flex
+            cursor-pointer
+            items-center
+            rounded-full
+            border
+            border-gray-300
+            px-3
+            py-1
+            text-sm
+            text-gray-700
+            transition
+            hover:bg-gray-100;
+    }
+
+    .tag-pill input:checked + & {
+        @apply border-red-600
+            bg-red-50
+            text-red-700;
+    }
+
+    .tag-pill:has(input:checked) {
+        @apply border-red-600
+            bg-red-50
+            text-red-700;
+    }
+}
