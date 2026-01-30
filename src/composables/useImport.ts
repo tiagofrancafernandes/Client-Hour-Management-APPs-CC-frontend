@@ -29,13 +29,12 @@ export function useImport() {
 
             const response = await api.get<PaginatedResponse<ImportPlan>>('/import-plans', { params });
 
-            importPlans.value = response.data.data;
-            totalPages.value = response.data.last_page;
-            currentPage.value = response.data.current_page;
+            importPlans.value = response.data.data || [];
+            totalPages.value = response.data.last_page || 1;
+            currentPage.value = response.data.current_page || 1;
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Failed to fetch import plans';
-
-            throw err;
+            importPlans.value = [];
         } finally {
             loading.value = false;
         }
