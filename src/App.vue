@@ -4,13 +4,16 @@ import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useAuth } from '@/composables/useAuth';
 import { usePermissions } from '@/composables/usePermissions';
 import { useTimerStore } from '@/stores/timer';
+import { useConfirm } from '@/composables/useConfirm';
 import TimerFloatingBalloon from '@/components/TimerFloatingBalloon.vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 const router = useRouter();
 const route = useRoute();
 const { user, isAuthenticated, logout, loading } = useAuth();
 const { canViewClients, canViewReports, canViewTags } = usePermissions();
 const timerStore = useTimerStore();
+const { state: confirmState, handleConfirm, handleCancel } = useConfirm();
 
 const showUserMenu = ref(false);
 const userMenuRef = ref<HTMLElement | null>(null);
@@ -177,5 +180,17 @@ onUnmounted(() => {
 
         <!-- Timer Floating Balloon -->
         <TimerFloatingBalloon v-if="isAuthenticated" />
+
+        <!-- Global Confirm Modal -->
+        <ConfirmModal
+            v-model:is-open="confirmState.isOpen"
+            :title="confirmState.title"
+            :message="confirmState.message"
+            :confirm-text="confirmState.confirmText"
+            :cancel-text="confirmState.cancelText"
+            :variant="confirmState.variant"
+            @confirm="handleConfirm"
+            @cancel="handleCancel"
+        />
     </div>
 </template>
