@@ -86,6 +86,36 @@ const router = createRouter({
             },
         },
         {
+            path: '/imports',
+            name: 'imports',
+            component: () => import('@/views/ImportPlansListView.vue'),
+            meta: {
+                title: 'Importações',
+                requiresAuth: true,
+                permissions: ['import.view'],
+            },
+        },
+        {
+            path: '/imports/upload',
+            name: 'imports-upload',
+            component: () => import('@/views/ImportUploadView.vue'),
+            meta: {
+                title: 'Nova Importação',
+                requiresAuth: true,
+                permissions: ['import.create'],
+            },
+        },
+        {
+            path: '/imports/:id/review',
+            name: 'imports-review',
+            component: () => import('@/views/ImportReviewView.vue'),
+            meta: {
+                title: 'Revisar Importação',
+                requiresAuth: true,
+                permissions: ['import.view'],
+            },
+        },
+        {
             path: '/profile',
             name: 'profile',
             component: () => import('@/views/ProfileView.vue'),

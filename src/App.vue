@@ -24,6 +24,13 @@ const canViewTimers = computed(() => {
     );
 });
 
+const canViewImports = computed(() => {
+    return (
+        isAuthenticated.value &&
+        (usePermissions().hasPermission('import.view') || usePermissions().hasPermission('import.view_any'))
+    );
+});
+
 const showNavigation = computed(() => {
     return isAuthenticated.value && route.name !== 'login';
 });
@@ -109,6 +116,14 @@ onUnmounted(() => {
                                 active-class="text-blue-600 font-medium"
                             >
                                 Timers
+                            </RouterLink>
+                            <RouterLink
+                                v-if="canViewImports"
+                                to="/imports"
+                                class="text-gray-600 hover:text-gray-900"
+                                active-class="text-blue-600 font-medium"
+                            >
+                                Importações
                             </RouterLink>
                         </div>
                     </div>

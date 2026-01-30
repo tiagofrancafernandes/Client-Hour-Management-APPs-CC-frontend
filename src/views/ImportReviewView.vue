@@ -200,6 +200,14 @@
                 Voltar para Importações
             </CButton>
         </div>
+
+        <!-- Edit Row Modal -->
+        <ImportRowEditModal
+            v-model:is-open="showEditModal"
+            :row="editingRow"
+            :plan-id="currentPlan?.id"
+            @save="handleSaveRow"
+        />
     </div>
 </template>
 
@@ -210,15 +218,18 @@ import { Icon } from '@iconify/vue';
 import { useImport } from '@/composables/useImport';
 import { useConfirm } from '@/composables/useConfirm';
 import { useToast } from '@/composables/useToast';
-import type { ImportPlanRow } from '@/types';
+import ImportRowEditModal from '@/components/ImportRowEditModal.vue';
+import type { ImportPlanRow, ImportRowForm } from '@/types';
 
 const route = useRoute();
 const router = useRouter();
-const { currentPlan, loading, fetchImportPlan, confirmImportPlan, cancelImportPlan, deleteRow } = useImport();
+const { currentPlan, loading, fetchImportPlan, confirmImportPlan, cancelImportPlan, deleteRow, updateRow, addRow } = useImport();
 const { confirm } = useConfirm();
 const toast = useToast();
 
 const confirming: Ref<boolean> = ref(false);
+const showEditModal: Ref<boolean> = ref(false);
+const editingRow: Ref<ImportPlanRow | null> = ref(null);
 
 const statusLabels: Record<string, string> = {
     pending: 'Pendente',
@@ -254,7 +265,8 @@ function formatDate(dateString: string): string {
 }
 
 function handleEditRow(row: ImportPlanRow): void {
-    console.log('Edit row', row);
+    editingRow.value = row;
+    showEditModal.value = true;
 }
 
 async function handleDeleteRow(row: ImportPlanRow): Promise<void> {
@@ -279,7 +291,29 @@ async function handleDeleteRow(row: ImportPlanRow): Promise<void> {
 }
 
 function handleAddRow(): void {
-    console.log('Add row');
+    editingRow.value = null;
+    showEditModal.value = true;
+}
+
+async function handleSaveRow(data: ImportRowForm): Promise<void> {
+    if (!currentPlan.value) {
+        return;
+    }
+
+    try {
+        if (editingRow.value) {
+            await updateRow(editingRow.value.id, data);
+            toast.success('Linha atualizada com sucesso');
+        } else {
+            await addRow(currentPlan.value.id, data);
+            toast.success('Linha adicionada com sucesso');
+        }
+
+        showEditModal.value = false;
+        editingRow.value = null;
+    } catch (err) {
+        toast.error('Erro ao salvar linha');
+    }
 }
 
 async function handleConfirm(): Promise<void> {
