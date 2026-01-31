@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 import { useTimerStore } from '@/stores/timer';
 import { useConfirm } from '@/composables/useConfirm';
 
@@ -95,15 +95,25 @@ onUnmounted(() => {
     stopLocalTimer();
 });
 
-// Restart local timer when timer becomes active
-if (hasTimer.value && !intervalId.value) {
-    startLocalTimer();
-}
+// Watch for timer changes and start/stop local timer accordingly
+watch(hasTimer, (newValue, oldValue) => {
+    if (newValue && !intervalId.value) {
+        // Timer became active - start local timer
+        startLocalTimer();
+    } else if (!newValue && intervalId.value) {
+        // Timer is no longer active - stop local timer
+        stopLocalTimer();
+    }
+});
 
-// Stop local timer when timer is no longer active
-if (!hasTimer.value && intervalId.value) {
-    stopLocalTimer();
-}
+// Watch for timer object changes to update local time
+watch(timer, (newTimer) => {
+    if (newTimer) {
+        localTime.value = newTimer.total_seconds;
+    } else {
+        localTime.value = 0;
+    }
+}, { deep: true });
 </script>
 
 <template>

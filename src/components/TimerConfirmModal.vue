@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useTimerStore } from '@/stores/timer';
 import type { Timer, TimerCycleForm } from '@/types';
 
@@ -103,10 +103,16 @@ function calculateCycleDuration(cycle: TimerCycleForm): string {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
-// Initialize cycles when modal is shown
-if (props.show && props.timer) {
-    initializeCycles();
-}
+// Initialize cycles when modal is shown with a timer
+watch(
+    () => [props.show, props.timer],
+    ([newShow, newTimer]) => {
+        if (newShow && newTimer) {
+            initializeCycles();
+        }
+    },
+    { immediate: true }
+);
 </script>
 
 <template>
