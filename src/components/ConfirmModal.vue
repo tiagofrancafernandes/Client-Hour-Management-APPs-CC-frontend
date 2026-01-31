@@ -5,10 +5,7 @@
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
             @click.self="handleCancel"
         >
-            <div
-                class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all"
-                @click.stop
-            >
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all" @click.stop>
                 <div class="p-6">
                     <div class="flex items-start gap-4">
                         <div
@@ -19,7 +16,7 @@
                                     'bg-yellow-100': variant === 'warning',
                                     'bg-blue-100': variant === 'info',
                                     'bg-green-100': variant === 'success',
-                                }
+                                },
                             ]"
                         >
                             <Icon
@@ -31,7 +28,7 @@
                                         'text-yellow-600': variant === 'warning',
                                         'text-blue-600': variant === 'info',
                                         'text-green-600': variant === 'success',
-                                    }
+                                    },
                                 ]"
                             />
                         </div>
@@ -49,17 +46,11 @@
                 </div>
 
                 <div class="bg-gray-50 px-6 py-4 flex gap-3 justify-end rounded-b-lg">
-                    <CButton
-                        preset="outlined-black"
-                        @click="handleCancel"
-                    >
+                    <CButton preset="outlined-black" @click="handleCancel">
                         {{ cancelText }}
                     </CButton>
 
-                    <CButton
-                        :preset="confirmPreset"
-                        @click="handleConfirm"
-                    >
+                    <CButton :preset="confirmPreset" @click="handleConfirm">
                         {{ confirmText }}
                     </CButton>
                 </div>

@@ -193,75 +193,37 @@ async function exportReport(format: 'pdf' | 'excel') {
         <div class="mb-6 rounded-lg bg-white p-4 shadow">
             <h2 class="mb-4 text-lg font-semibold">Filters</h2>
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Client</label>
-                    <select
-                        v-model="filters.client_id"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
-                    >
-                        <option :value="undefined">All Clients</option>
-                        <option v-for="client in clients" :key="client.id" :value="client.id">
-                            {{ client.name }}
-                        </option>
-                    </select>
-                </div>
+                <CSelect label="Client" v-model="filters.client_id">
+                    <option :value="undefined">All Clients</option>
+                    <option v-for="client in clients" :key="client.id" :value="client.id">
+                        {{ client.name }}
+                    </option>
+                </CSelect>
 
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Wallet</label>
-                    <select
-                        v-model="filters.wallet_id"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
-                    >
-                        <option :value="undefined">All Wallets</option>
-                        <option v-for="wallet in filteredWallets" :key="wallet.id" :value="wallet.id">
-                            {{ getWalletLabel(wallet) }}
-                        </option>
-                    </select>
-                </div>
+                <CSelect label="Wallet" v-model="filters.wallet_id">
+                    <option :value="undefined">All Wallets</option>
+                    <option v-for="wallet in filteredWallets" :key="wallet.id" :value="wallet.id">
+                        {{ getWalletLabel(wallet) }}
+                    </option>
+                </CSelect>
 
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Date From</label>
-                    <input
-                        v-model="filters.date_from"
-                        type="date"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
-                    />
-                </div>
+                <CInput label="Date From" v-model="filters.date_from" type="date" />
 
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Date To</label>
-                    <input
-                        v-model="filters.date_to"
-                        type="date"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
-                    />
-                </div>
+                <CInput label="Date To" v-model="filters.date_to" type="date" />
 
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Type</label>
-                    <select
-                        v-model="filters.type"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
-                    >
-                        <option :value="undefined">All Types</option>
-                        <option value="credit">Credits Only</option>
-                        <option value="debit">Debits Only</option>
-                    </select>
-                </div>
+                <CSelect label="Type" v-model="filters.type">
+                    <option :value="undefined">All Types</option>
+                    <option value="credit">Credits Only</option>
+                    <option value="debit">Debits Only</option>
+                </CSelect>
 
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Group By</label>
-                    <select
-                        v-model="filters.group_by"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
-                    >
-                        <option :value="undefined">No Grouping</option>
-                        <option value="wallet">By Wallet</option>
-                        <option value="client">By Client</option>
-                    </select>
-                </div>
+                <CSelect label="Group By" v-model="filters.group_by">
+                    <option :value="undefined">No Grouping</option>
+                    <option value="wallet">By Wallet</option>
+                    <option value="client">By Client</option>
+                </CSelect>
 
-                <div v-if="true" class="lg:col-span-2">
+                <div class="lg:col-span-2">
                     <label class="mb-1 block text-sm font-medium text-gray-700">Tags</label>
                     <div
                         class="flex gap-2 overflow-x-auto whitespace-nowrap pb-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200"

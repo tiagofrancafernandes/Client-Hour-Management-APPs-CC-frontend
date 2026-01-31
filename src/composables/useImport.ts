@@ -66,18 +66,40 @@ export function useImport() {
         try {
             const formData = new FormData();
 
-            formData.append('wallet_id', data.wallet_id.toString());
+            formData.append('wallet_id', (data?.wallet_id || '').toString());
             formData.append('file', data.file);
 
-            const response = await api.post<ImportPlan>('/import-plans', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
+            console.log('formData', formData);
+
+            const response: Response = await api.post<Response>(
+                '/import-plans',
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
                 },
-            });
+                /* returnResponse */ true
+            );
 
-            currentPlan.value = response.data;
+            if (!response.ok) {
+                let _data: any = await response.json();
+                let errorMessage =
+                    _data?.error ||
+                    (_data?.errors && _data?.errors[0]) ||
+                    null ||
+                    _data?.message ||
+                    'Failed to upload file';
+                throw new Error(errorMessage);
+            }
 
-            return response.data;
+            let _data: any = await response.json();
+
+            let importPlan: ImportPlan = 'data' in _data ? _data['data'] : _data;
+
+            currentPlan.value = importPlan;
+
+            return importPlan;
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Failed to upload file';
 
@@ -92,10 +114,11 @@ export function useImport() {
         error.value = null;
 
         try {
-            const response = await api.post<{ data: ImportPlan }>(`/import-plans/${planId}/confirm`);
+            const response: any = await api.post<{ data: ImportPlan }>(`/import-plans/${planId}/confirm`);
 
             if (currentPlan.value && currentPlan.value.id === planId) {
-                currentPlan.value = response.data.data;
+                currentPlan.value =
+                    'data' in response || 'data' in response.data ? response?.data || response?.data?.data : response;
             }
 
             return response.data.data;

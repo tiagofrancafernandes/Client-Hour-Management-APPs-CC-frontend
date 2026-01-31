@@ -14,35 +14,31 @@
                 <form @submit.prevent="handleUpload">
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Selecione a Carteira
-                            </label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Selecione a Carteira</label>
 
-                            <select
-                                v-model="selectedWalletId"
-                                required
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            >
+                            <CSelect v-model="selectedWalletId" required>
                                 <option :value="undefined">Selecione uma carteira</option>
-                                <option
-                                    v-for="wallet in wallets"
-                                    :key="wallet.id"
-                                    :value="wallet.id"
-                                >
+                                <option v-for="wallet in wallets" :key="wallet.id" :value="wallet.id">
                                     {{ wallet.name }}
                                     <span v-if="wallet.client">({{ wallet.client.name }})</span>
                                 </option>
-                            </select>
+                            </CSelect>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Arquivo (CSV ou XLSX)
-                            </label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Arquivo (CSV ou XLSX)</label>
 
+                            <CDropZone
+                                accept="csv,xlsx"
+                                v-model="selectedFile"
+                                @change="(ev: any) => console.log('changed', ev)"
+                            />
+
+                            <!-- o item abaixo será substituído pelo CDropZone  -->
                             <div
+                                v-if="false"
                                 class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer"
-                                :class="{'border-blue-500 bg-blue-50': isDragging}"
+                                :class="{ 'border-blue-500 bg-blue-50': isDragging }"
                                 @dragover.prevent="isDragging = true"
                                 @dragleave.prevent="isDragging = false"
                                 @drop.prevent="handleFileDrop"
@@ -93,11 +89,7 @@
                                 <span v-else>Fazer Upload e Validar</span>
                             </CButton>
 
-                            <CButton
-                                type="button"
-                                preset="outlined-black"
-                                @click="$router.push('/imports')"
-                            >
+                            <CButton type="button" preset="outlined-black" @click="$router.push('/imports')">
                                 Cancelar
                             </CButton>
                         </div>
@@ -111,9 +103,7 @@
                 <div class="space-y-4 text-sm text-gray-600">
                     <div>
                         <h3 class="font-medium text-gray-900 mb-2">1. Baixe o Template</h3>
-                        <p class="mb-2">
-                            Use nosso template para garantir que o arquivo está no formato correto.
-                        </p>
+                        <p class="mb-2">Use nosso template para garantir que o arquivo está no formato correto.</p>
 
                         <div class="flex gap-2">
                             <CButton
@@ -142,18 +132,29 @@
 
                     <div>
                         <h3 class="font-medium text-gray-900 mb-2">2. Preencha os Dados</h3>
-                        <p>
-                            Complete o arquivo com seus dados. Campos obrigatórios:
-                        </p>
+                        <p>Complete o arquivo com seus dados. Campos obrigatórios:</p>
 
                         <ul class="list-disc list-inside mt-2 space-y-1">
-                            <li><strong>reference_date</strong>: Data de referência (YYYY-MM-DD)</li>
-                            <li><strong>hours</strong>: Horas (positivo = crédito, negativo = débito)</li>
-                            <li><strong>title</strong>: Título do registro</li>
+                            <li>
+                                <strong>reference_date</strong>
+                                : Data de referência (YYYY-MM-DD)
+                            </li>
+                            <li>
+                                <strong>hours</strong>
+                                : Horas (positivo = crédito, negativo = débito)
+                            </li>
+                            <li>
+                                <strong>title</strong>
+                                : Título do registro
+                            </li>
                         </ul>
 
                         <p class="mt-2">
-                            Campos opcionais: <strong>description</strong>, <strong>tags</strong> (separadas por vírgula)
+                            Campos opcionais:
+                            <strong>description</strong>
+                            ,
+                            <strong>tags</strong>
+                            (separadas por vírgula)
                         </p>
                     </div>
 
@@ -193,6 +194,7 @@ const toast = useToast();
 
 const selectedWalletId: Ref<number | undefined> = ref(undefined);
 const selectedFile: Ref<File | null> = ref(null);
+const alterSelectedFile: Ref<File | null> = ref(null);
 const fileInput: Ref<HTMLInputElement | null> = ref(null);
 const isDragging: Ref<boolean> = ref(false);
 const uploading: Ref<boolean> = ref(false);
@@ -225,7 +227,11 @@ function handleFileDrop(event: DragEvent): void {
 function validateAndSetFile(file: File): void {
     uploadError.value = null;
 
-    const allowedTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+    const allowedTypes = [
+        'text/csv',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ];
     const maxSize = 10 * 1024 * 1024;
 
     if (!allowedTypes.includes(file.type) && !file.name.endsWith('.csv') && !file.name.endsWith('.xlsx')) {
@@ -264,10 +270,16 @@ async function handleUpload(): Promise<void> {
             file: selectedFile.value,
         });
 
+        if (!importPlan?.id) {
+            console.log('importPlan', importPlan);
+            toast.error('Houve algum erro ao enviar o arquivo...');
+            return;
+        }
+
         toast.success('Arquivo enviado com sucesso! Redirecionando para revisão...');
 
         setTimeout(() => {
-            router.push(`/imports/${importPlan.id}/review`);
+            router.push(`/imports/${importPlan?.id}/review`);
         }, 1000);
     } catch (err) {
         uploadError.value = err instanceof Error ? err.message : 'Erro ao fazer upload do arquivo.';
@@ -277,8 +289,10 @@ async function handleUpload(): Promise<void> {
     }
 }
 
-async function handleDownloadTemplate(format: 'csv' | 'xlsx'): Promise<void> {
+async function handleDownloadTemplate(format: 'csv' | 'xlsx' = 'csv'): Promise<void> {
     downloading.value = true;
+
+    console.log('format', format);
 
     try {
         await downloadTemplate(format);

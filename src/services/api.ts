@@ -3,21 +3,79 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://api.local.tiagoapps.com.
 interface RequestOptions {
     method?: string;
     body?: unknown;
+    params?: unknown;
     headers?: Record<string, string>;
 }
 
-async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-    const { method = 'GET', body, headers = {} } = options;
+async function request<T>(
+    endpoint: string,
+    options: RequestOptions | any = {},
+    returnResponse: boolean | null = null
+): Promise<T> {
+    options = {
+        body: options?.params?.body || options?.params || {},
+        params: options?.params || options?.params?.body || {},
+        ...(options || {}),
+    };
+
+    let { method = 'GET', body, params, headers = {} } = options;
+
+    let bodyIsFormData = (body || {})?.constructor?.name === 'FormData';
+
+    console.log('options', options, 'bodyIsFormData', bodyIsFormData);
+
+    let responseType: any =
+        (options || {})['responseType'] || (body || {})['responseType'] || (params || {})['responseType'] || null;
+
+    if (returnResponse === null) {
+        returnResponse =
+            (options || {})['returnResponse'] ||
+            (body || {})['returnResponse'] ||
+            (params || {})['returnResponse'] ||
+            false;
+    }
+
+    if (typeof options?.returnResponse !== 'undefined') {
+        delete options.returnResponse;
+    }
+
+    if (typeof params?.returnResponse !== 'undefined') {
+        delete params.returnResponse;
+    }
+
+    if (typeof body?.returnResponse !== 'undefined') {
+        delete body.returnResponse;
+    }
+
+    if (typeof options?.responseType !== 'undefined') {
+        delete options.responseType;
+    }
 
     const token = localStorage.getItem('auth_token');
+    let isGet = Boolean(!method || ['GET', 'get'].includes(method));
 
-    const config: RequestInit = {
-        method,
-        headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            ...headers,
-        },
+    headers = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...headers,
+    };
+
+    if (bodyIsFormData) {
+        // headers['Content-Type'] = 'multipart/form-data'; // (Isso quebra o request porque o boundary não é enviado.)
+
+        let _headersToDelete = ['Content-Type', 'content-type'];
+
+        for (const _header of _headersToDelete) {
+            if (typeof headers[_header] !== 'undefined') {
+                delete headers[_header];
+            }
+        }
+        isGet = isGet ? false : isGet;
+    }
+
+    const config: RequestInit | any = {
+        method: bodyIsFormData ? (method === 'GET' ? 'POST' : method) : method,
+        headers,
         credentials: 'include',
     };
 
@@ -25,11 +83,37 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
         (config.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
     }
 
-    if (body) {
-        config.body = JSON.stringify(body);
+    if (!isGet) {
+        config.body = body || params;
+        config.body = bodyIsFormData ? body : JSON.stringify(config.body);
     }
 
-    const response = await fetch(`${API_URL}/api${endpoint}`, config);
+    let response: Response | any;
+
+    if (isGet) {
+        config.method = 'GET';
+
+        let _data: any = { ...params, ...(body || {}) };
+        let _url = new URL(`${API_URL}/api${endpoint}`);
+        Object.keys(_data || {})
+            .filter((key: any) => typeof _data[key] !== 'object')
+            .forEach((key) => _url.searchParams.append(key, _data[key]));
+
+        if (typeof config?.params !== 'undefined') {
+            delete config.params;
+        }
+
+        if (typeof config?.body !== 'undefined') {
+            delete config.body;
+        }
+
+        response = await fetch(_url, config);
+    }
+
+    if (!isGet) {
+        console.log('config', config);
+        response = await fetch(`${API_URL}/api${endpoint}`, config);
+    }
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({ message: 'Request failed' }));
@@ -41,7 +125,19 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
         return null as T;
     }
 
-    return response.json();
+    if (returnResponse) {
+        return response;
+    }
+
+    if (responseType === 'blob') {
+        return response.blob();
+    }
+
+    if ((response.headers.get('Content-Type') || '').includes('application/json')) {
+        return response.json();
+    }
+
+    return response.text();
 }
 
 async function downloadFile(endpoint: string, filename: string | null = null): Promise<void> {
@@ -59,7 +155,8 @@ async function downloadFile(endpoint: string, filename: string | null = null): P
         (config.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_URL}/api${endpoint}`, config);
+    // const response = await fetch(`${API_URL}/api${endpoint}`, config);
+    const response: any = await request(endpoint, config, /* returnResponse */ true);
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({ message: 'Download failed' }));
@@ -103,13 +200,17 @@ async function downloadFile(endpoint: string, filename: string | null = null): P
 }
 
 export const api = {
-    get: <T>(endpoint: string) => request<T>(endpoint),
+    get: <T>(endpoint: string, options: object = {}, returnResponse: boolean | null = null) =>
+        request<T>(endpoint, { method: 'GET', ...(options || {}), params: options }, returnResponse),
 
-    post: <T>(endpoint: string, data: unknown) => request<T>(endpoint, { method: 'POST', body: data }),
+    post: <T>(endpoint: string, data: unknown = {}, options: object = {}, returnResponse: boolean | null = null) =>
+        request<T>(endpoint, { method: 'POST', ...(options || {}), body: data }, returnResponse),
 
-    put: <T>(endpoint: string, data: unknown) => request<T>(endpoint, { method: 'PUT', body: data }),
+    put: <T>(endpoint: string, data: unknown = {}, options: object = {}, returnResponse: boolean | null = null) =>
+        request<T>(endpoint, { method: 'PUT', ...(options || {}), body: data }, returnResponse),
 
-    delete: <T>(endpoint: string) => request<T>(endpoint, { method: 'DELETE' }),
+    delete: <T>(endpoint: string, options: object = {}, returnResponse: boolean | null = null) =>
+        request<T>(endpoint, { method: 'DELETE', ...(options || {}) }, returnResponse),
 
     download: (endpoint: string, filename: string | null = null) => downloadFile(endpoint, filename),
 };

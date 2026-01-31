@@ -5,20 +5,14 @@
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
             @click.self="handleClose"
         >
-            <div
-                class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all"
-                @click.stop
-            >
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all" @click.stop>
                 <div class="p-6 border-b border-gray-200">
                     <div class="flex items-center justify-between">
                         <h2 class="text-xl font-semibold text-gray-900">
                             {{ row ? `Editar Linha #${row.row_number}` : 'Nova Linha' }}
                         </h2>
 
-                        <button
-                            class="text-gray-400 hover:text-gray-600"
-                            @click="handleClose"
-                        >
+                        <button class="text-gray-400 hover:text-gray-600" @click="handleClose">
                             <Icon icon="mdi:close" class="w-6 h-6" />
                         </button>
                     </div>
@@ -26,9 +20,15 @@
 
                 <form @submit.prevent="handleSubmit">
                     <div class="p-6 space-y-4">
-                        <div v-if="row && row.validation_errors && row.validation_errors.length > 0" class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div
+                            v-if="row && row.validation_errors && row.validation_errors.length > 0"
+                            class="bg-red-50 border border-red-200 rounded-lg p-4"
+                        >
                             <div class="flex items-start gap-2">
-                                <Icon icon="mdi:alert-circle-outline" class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                                <Icon
+                                    icon="mdi:alert-circle-outline"
+                                    class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5"
+                                />
                                 <div>
                                     <h4 class="text-sm font-medium text-red-900 mb-1">Erros de Validação:</h4>
                                     <ul class="list-disc list-inside text-sm text-red-800 space-y-1">
@@ -41,31 +41,15 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Data de Referência *
-                            </label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Data de Referência *</label>
 
-                            <input
-                                v-model="formData.reference_date"
-                                type="date"
-                                required
-                                :max="today"
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            />
+                            <CInput v-model="formData.reference_date" type="date" required :max="today" />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Horas *
-                            </label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Horas *</label>
 
-                            <input
-                                v-model.number="formData.hours"
-                                type="number"
-                                step="0.01"
-                                required
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            />
+                            <CInput v-model.number="formData.hours" type="number" step="0.01" required />
 
                             <p class="mt-1 text-xs text-gray-500">
                                 Use valores positivos para crédito e negativos para débito
@@ -73,35 +57,19 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Título *
-                            </label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Título *</label>
 
-                            <input
-                                v-model="formData.title"
-                                type="text"
-                                required
-                                maxlength="255"
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            />
+                            <CInput v-model="formData.title" type="text" required maxlength="255" />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Descrição
-                            </label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
 
-                            <textarea
-                                v-model="formData.description"
-                                rows="3"
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            />
+                            <CTextarea v-model="formData.description" rows="3" />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Tags
-                            </label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
 
                             <div class="space-y-2">
                                 <div class="flex gap-2">
@@ -113,12 +81,7 @@
                                         @keypress.enter.prevent="addTag"
                                     />
 
-                                    <CButton
-                                        type="button"
-                                        preset="outlined-black"
-                                        size="sm"
-                                        @click="addTag"
-                                    >
+                                    <CButton type="button" preset="outlined-black" size="sm" @click="addTag">
                                         <Icon icon="mdi:plus" class="w-4 h-4" />
                                     </CButton>
                                 </div>
@@ -144,19 +107,9 @@
                     </div>
 
                     <div class="bg-gray-50 px-6 py-4 flex gap-3 justify-end rounded-b-lg">
-                        <CButton
-                            type="button"
-                            preset="outlined-black"
-                            @click="handleClose"
-                        >
-                            Cancelar
-                        </CButton>
+                        <CButton type="button" preset="outlined-black" @click="handleClose">Cancelar</CButton>
 
-                        <CButton
-                            type="submit"
-                            preset="primary"
-                            :disabled="saving"
-                        >
+                        <CButton type="submit" preset="primary" :disabled="saving">
                             <Icon v-if="saving" icon="mdi:loading" class="w-5 h-5 animate-spin" />
                             <span v-else>{{ row ? 'Salvar' : 'Adicionar' }}</span>
                         </CButton>
@@ -205,29 +158,32 @@ const today = computed(() => {
     return date.toISOString().split('T')[0];
 });
 
-watch(() => props.isOpen, (isOpen) => {
-    if (isOpen) {
-        if (props.row) {
-            formData.value = {
-                reference_date: props.row.reference_date,
-                hours: props.row.hours,
-                title: props.row.title,
-                description: props.row.description || '',
-                tags: props.row.tags ? [...props.row.tags] : [],
-            };
-        } else {
-            formData.value = {
-                reference_date: today.value,
-                hours: 0,
-                title: '',
-                description: '',
-                tags: [],
-            };
-        }
+watch(
+    () => props.isOpen,
+    (isOpen) => {
+        if (isOpen) {
+            if (props.row) {
+                formData.value = {
+                    reference_date: props.row.reference_date,
+                    hours: props.row.hours,
+                    title: props.row.title,
+                    description: props.row.description || '',
+                    tags: props.row.tags ? [...props.row.tags] : [],
+                };
+            } else {
+                formData.value = {
+                    reference_date: today.value,
+                    hours: 0,
+                    title: '',
+                    description: '',
+                    tags: [],
+                };
+            }
 
-        newTag.value = '';
+            newTag.value = '';
+        }
     }
-});
+);
 
 function addTag(): void {
     const tag = newTag.value.trim();

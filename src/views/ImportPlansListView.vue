@@ -17,44 +17,28 @@
                 <div class="grid gap-4 md:grid-cols-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                        <select
-                            v-model="filters.status"
-                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            @change="handleFilterChange"
-                        >
+                        <CSelect v-model="filters.status" @change="handleFilterChange">
                             <option value="">Todos</option>
                             <option value="pending">Pendente</option>
                             <option value="validated">Validado</option>
                             <option value="confirmed">Confirmado</option>
                             <option value="cancelled">Cancelado</option>
-                        </select>
+                        </CSelect>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Carteira</label>
-                        <select
-                            v-model="filters.wallet_id"
-                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            @change="handleFilterChange"
-                        >
+                        <CSelect v-model="filters.wallet_id" @change="handleFilterChange">
                             <option :value="undefined">Todas</option>
-                            <option
-                                v-for="wallet in wallets"
-                                :key="wallet.id"
-                                :value="wallet.id"
-                            >
+                            <option v-for="wallet in wallets" :key="wallet.id" :value="wallet.id">
                                 {{ wallet.name }}
                                 <span v-if="wallet.client">({{ wallet.client.name }})</span>
                             </option>
-                        </select>
+                        </CSelect>
                     </div>
 
                     <div class="flex items-end">
-                        <CButton
-                            preset="outlined-black"
-                            class="w-full"
-                            @click="clearFilters"
-                        >
+                        <CButton preset="outlined-black" class="w-full" @click="clearFilters">
                             <Icon icon="mdi:filter-off" class="w-4 h-4" />
                             Limpar Filtros
                         </CButton>
@@ -75,9 +59,7 @@
         <div v-else-if="importPlans.length === 0" class="bg-white rounded-lg shadow p-12 text-center">
             <Icon icon="mdi:file-upload-outline" class="w-16 h-16 text-gray-400 mx-auto" />
             <h3 class="mt-4 text-lg font-medium text-gray-900">Nenhuma importação encontrada</h3>
-            <p class="mt-2 text-gray-600">
-                Comece fazendo upload de um arquivo CSV ou XLSX
-            </p>
+            <p class="mt-2 text-gray-600">Comece fazendo upload de um arquivo CSV ou XLSX</p>
             <CButton preset="primary" class="mt-6" @click="$router.push('/imports/upload')">
                 <Icon icon="mdi:upload" class="w-5 h-5" />
                 Nova Importação
@@ -106,7 +88,7 @@
                                             'bg-green-100 text-green-800': plan.status === 'validated',
                                             'bg-blue-100 text-blue-800': plan.status === 'confirmed',
                                             'bg-gray-100 text-gray-800': plan.status === 'cancelled',
-                                        }
+                                        },
                                     ]"
                                 >
                                     {{ statusLabels[plan.status] }}
@@ -190,9 +172,7 @@
                 </CButton>
 
                 <div class="flex items-center gap-2">
-                    <span class="text-sm text-gray-600">
-                        Página {{ currentPage }} de {{ totalPages }}
-                    </span>
+                    <span class="text-sm text-gray-600">Página {{ currentPage }} de {{ totalPages }}</span>
                 </div>
 
                 <CButton
@@ -236,10 +216,7 @@ const statusLabels: Record<string, string> = {
 };
 
 onMounted(async () => {
-    await Promise.all([
-        fetchWallets(),
-        fetchImportPlans(1, filters.value),
-    ]);
+    await Promise.all([fetchWallets(), fetchImportPlans(1, filters.value)]);
 });
 
 function formatDate(dateString: string): string {

@@ -10,7 +10,8 @@
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900">Revisar Importação</h1>
                     <p class="mt-2 text-gray-600">
-                        Arquivo: <strong>{{ currentPlan.original_filename }}</strong>
+                        Arquivo:
+                        <strong>{{ currentPlan.original_filename }}</strong>
                     </p>
                 </div>
 
@@ -23,7 +24,7 @@
                                 'bg-green-100 text-green-800': currentPlan.status === 'validated',
                                 'bg-blue-100 text-blue-800': currentPlan.status === 'confirmed',
                                 'bg-gray-100 text-gray-800': currentPlan.status === 'cancelled',
-                            }
+                            },
                         ]"
                     >
                         {{ statusLabels[currentPlan.status] }}
@@ -53,14 +54,17 @@
                 </div>
             </div>
 
-            <div v-if="currentPlan.summary && currentPlan.summary.invalid_rows > 0" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div
+                v-if="currentPlan.summary && currentPlan.summary.invalid_rows > 0"
+                class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"
+            >
                 <div class="flex items-start gap-3">
                     <Icon icon="mdi:alert-outline" class="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" />
                     <div>
                         <h3 class="font-medium text-yellow-900">Atenção: Linhas com Erros</h3>
                         <p class="text-sm text-yellow-800 mt-1">
-                            Existem {{ currentPlan.summary.invalid_rows }} linha(s) com erros de validação.
-                            Corrija os erros ou remova as linhas inválidas antes de confirmar a importação.
+                            Existem {{ currentPlan.summary.invalid_rows }} linha(s) com erros de validação. Corrija os
+                            erros ou remova as linhas inválidas antes de confirmar a importação.
                         </p>
                     </div>
                 </div>
@@ -98,11 +102,7 @@
                         </thead>
 
                         <tbody class="divide-y divide-gray-200">
-                            <tr
-                                v-for="row in currentPlan.rows"
-                                :key="row.id"
-                                :class="{'bg-red-50': !row.is_valid}"
-                            >
+                            <tr v-for="row in currentPlan.rows" :key="row.id" :class="{ 'bg-red-50': !row.is_valid }">
                                 <td class="px-4 py-3 text-sm text-gray-900">{{ row.row_number }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-900">{{ formatDate(row.reference_date) }}</td>
                                 <td class="px-4 py-3 text-sm">
@@ -142,16 +142,10 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     <div v-if="currentPlan.status !== 'confirmed'" class="flex gap-2">
-                                        <button
-                                            class="text-blue-600 hover:text-blue-800"
-                                            @click="handleEditRow(row)"
-                                        >
+                                        <button class="text-blue-600 hover:text-blue-800" @click="handleEditRow(row)">
                                             <Icon icon="mdi:pencil" class="w-5 h-5" />
                                         </button>
-                                        <button
-                                            class="text-red-600 hover:text-red-800"
-                                            @click="handleDeleteRow(row)"
-                                        >
+                                        <button class="text-red-600 hover:text-red-800" @click="handleDeleteRow(row)">
                                             <Icon icon="mdi:delete" class="w-5 h-5" />
                                         </button>
                                     </div>
@@ -162,31 +156,29 @@
                 </div>
             </div>
 
-            <div v-if="currentPlan.status !== 'confirmed' && currentPlan.status !== 'cancelled'" class="flex gap-3 justify-end">
-                <CButton
-                    preset="outlined-black"
-                    @click="handleCancel"
-                >
-                    Cancelar Importação
-                </CButton>
+            <div
+                v-if="currentPlan.status !== 'confirmed' && currentPlan.status !== 'cancelled'"
+                class="flex gap-3 justify-end"
+            >
+                <CButton preset="outlined-black" @click="handleCancel">Cancelar Importação</CButton>
 
-                <CButton
-                    preset="primary"
-                    :disabled="!canConfirm || confirming"
-                    @click="handleConfirm"
-                >
+                <CButton preset="primary" :disabled="!canConfirm || confirming" @click="handleConfirm">
                     <Icon v-if="confirming" icon="mdi:loading" class="w-5 h-5 animate-spin" />
                     <span v-else>Confirmar e Criar Lançamentos</span>
                 </CButton>
             </div>
 
-            <div v-else-if="currentPlan.status === 'confirmed'" class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div
+                v-else-if="currentPlan.status === 'confirmed'"
+                class="bg-green-50 border border-green-200 rounded-lg p-4"
+            >
                 <div class="flex items-start gap-3">
                     <Icon icon="mdi:check-circle" class="w-6 h-6 text-green-600 flex-shrink-0" />
                     <div>
                         <h3 class="font-medium text-green-900">Importação Confirmada</h3>
                         <p class="text-sm text-green-800 mt-1">
-                            Todos os registros foram importados com sucesso em {{ formatDate(currentPlan.confirmed_at!) }}.
+                            Todos os registros foram importados com sucesso em
+                            {{ formatDate(currentPlan.confirmed_at!) }}.
                         </p>
                     </div>
                 </div>
@@ -223,7 +215,8 @@ import type { ImportPlanRow, ImportRowForm } from '@/types';
 
 const route = useRoute();
 const router = useRouter();
-const { currentPlan, loading, fetchImportPlan, confirmImportPlan, cancelImportPlan, deleteRow, updateRow, addRow } = useImport();
+const { currentPlan, loading, fetchImportPlan, confirmImportPlan, cancelImportPlan, deleteRow, updateRow, addRow } =
+    useImport();
 const { confirm } = useConfirm();
 const toast = useToast();
 

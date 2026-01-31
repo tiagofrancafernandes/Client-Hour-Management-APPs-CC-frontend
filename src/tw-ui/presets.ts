@@ -1,7 +1,7 @@
 /**
- * Shared base styles
+ * Shared buttonBase styles
  */
-const base = 'cursor-pointer rounded-md font-medium transition shadow-lg active:scale-[.95]';
+const buttonBase = 'cursor-pointer rounded-md font-medium transition shadow-lg active:scale-[.95]';
 
 /**
  * Size presets
@@ -83,7 +83,7 @@ function buildPresets(colors: Record<string, string>, type: 'solid' | 'outlined'
             const prefix = type === 'outlined' ? 'outlined-' : '';
             const key = size === 'default' ? `${prefix}${color}` : `${prefix}${color}-${size}`;
 
-            result[key] = [base, sizes[size as keyof typeof sizes], colors[color]].join(' ');
+            result[key] = [buttonBase, sizes[size as keyof typeof sizes], colors[color]].join(' ');
         });
     });
 
@@ -117,7 +117,11 @@ export function buttonPresets() {
         ...buildPresets(outlinedColors, 'outlined'),
     };
 
-    const buttonCommonClasses = ['disabled:opacity-50', 'c-button-presets'];
+    const buttonCommonClasses = [
+        'disabled:opacity-50 disabled:active:scale-none disabled:cursor-default',
+        'c-button-presets',
+        //
+    ];
 
     _result = Object.fromEntries(
         Object.entries(_result).map((item: any[]) => {
@@ -173,9 +177,25 @@ export function selectPresets() {
     };
 }
 
+export function selectLabelPresets() {
+    return {
+        default: 'block text-sm font-medium text-gray-700',
+        mb1: 'block text-sm font-medium text-gray-700 mb-1',
+        mb2: 'block text-sm font-medium text-gray-700 mb-2',
+    };
+}
+
 export function dateInputPresets() {
     return {
         default: 'w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none',
+    };
+}
+
+export function dateInputLabelPresets() {
+    return {
+        default: 'block text-sm font-medium text-gray-700',
+        mb1: 'block text-sm font-medium text-gray-700 mb-1',
+        mb2: 'block text-sm font-medium text-gray-700 mb-2',
     };
 }
 
@@ -185,8 +205,24 @@ export function textInputPresets() {
     };
 }
 
+export function textInputLabelPresets() {
+    return {
+        default: 'block text-sm font-medium text-gray-700',
+        mb1: 'block text-sm font-medium text-gray-700 mb-1',
+        mb2: 'block text-sm font-medium text-gray-700 mb-2',
+    };
+}
+
 export function textareaPresets() {
     return {
         default: 'w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none',
+    };
+}
+
+export function textareaLabelPresets() {
+    return {
+        default: 'block text-sm font-medium text-gray-700',
+        mb1: 'block text-sm font-medium text-gray-700 mb-1',
+        mb2: 'block text-sm font-medium text-gray-700 mb-2',
     };
 }

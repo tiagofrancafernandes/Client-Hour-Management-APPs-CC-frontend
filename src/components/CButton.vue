@@ -22,10 +22,10 @@ const props = defineProps({
 const classes = computed(() => {
     const presets: any = buttonPresets();
 
-    let _classes: any = [presets[props.preset] ?? presets.blue];
+    let _classes: any = ['inline-flex items-center gap-2', presets[props.preset] ?? presets.blue];
 
     if (props.icon || props.rightIcon) {
-        _classes = ['inline-flex items-center gap-2', ..._classes];
+        _classes = [..._classes];
     }
 
     return _classes;
