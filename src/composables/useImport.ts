@@ -200,26 +200,16 @@ export function useImport() {
         }
     }
 
-    async function downloadTemplate(format: 'csv' | 'xlsx'): Promise<void> {
+    async function downloadTemplate(format: 'csv' | 'xlsx' = 'csv'): Promise<void> {
         loading.value = true;
         error.value = null;
 
         try {
-            const response = await api.get('/import-plans/template/download', {
-                params: { format },
-                responseType: 'blob',
-            });
+            if (!['csv', 'xlsx'].includes(format)) {
+                throw new Error('Invalid format value');
+            }
 
-            const blob = new Blob([response.data]);
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-
-            link.href = url;
-            link.download = `import_template.${format}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
+            await api.download(`/import-plans/template/download?format=${format}`, `import_template.${format}`);
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Failed to download template';
 
