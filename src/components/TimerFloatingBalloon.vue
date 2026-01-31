@@ -43,10 +43,10 @@ async function togglePlayPause(): Promise<void> {
 
 async function stopTimer(): Promise<void> {
     const confirmed = await confirm({
-        title: 'Parar Timer',
-        message: 'Tem certeza que deseja parar este timer?',
-        confirmText: 'Sim, Parar',
-        cancelText: 'Cancelar',
+        title: 'Stop Timer',
+        message: 'Are you sure you want to stop this timer?',
+        confirmText: 'Yes, Stop',
+        cancelText: 'Cancel',
         variant: 'warning',
     });
 

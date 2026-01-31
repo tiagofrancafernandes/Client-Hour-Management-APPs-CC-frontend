@@ -286,6 +286,100 @@ export const useTimerStore = defineStore('timer', () => {
         }
     }
 
+    async function pauseTimerById(id: number): Promise<boolean> {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.post<Timer>(`/timers/${id}/pause`, {});
+
+            if (activeTimer.value?.id === id) {
+                activeTimer.value = response;
+            }
+
+            await fetchTimers();
+
+            return true;
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : 'Failed to pause timer';
+
+            return false;
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function resumeTimerById(id: number): Promise<boolean> {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.post<Timer>(`/timers/${id}/resume`, {});
+
+            if (activeTimer.value?.id === id) {
+                activeTimer.value = response;
+            }
+
+            await fetchTimers();
+
+            return true;
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : 'Failed to resume timer';
+
+            return false;
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function stopTimerById(id: number): Promise<boolean> {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.post<Timer>(`/timers/${id}/stop`, {});
+
+            if (activeTimer.value?.id === id) {
+                activeTimer.value = response;
+                stopPolling();
+            }
+
+            await fetchTimers();
+
+            return true;
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : 'Failed to stop timer';
+
+            return false;
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function cancelTimerById(id: number): Promise<boolean> {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            await api.post<Timer>(`/timers/${id}/cancel`, {});
+
+            if (activeTimer.value?.id === id) {
+                activeTimer.value = null;
+                stopPolling();
+            }
+
+            await fetchTimers();
+
+            return true;
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : 'Failed to cancel timer';
+
+            return false;
+        } finally {
+            loading.value = false;
+        }
+    }
+
     function startPolling(): void {
         if (pollInterval.value !== null) {
             return;
@@ -349,6 +443,10 @@ export const useTimerStore = defineStore('timer', () => {
         updateTimer,
         updateTimerCycles,
         deleteTimer,
+        pauseTimerById,
+        resumeTimerById,
+        stopTimerById,
+        cancelTimerById,
         initialize,
         cleanup,
         clearError,

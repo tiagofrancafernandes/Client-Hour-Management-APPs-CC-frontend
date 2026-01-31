@@ -77,31 +77,21 @@ function handleConfirmTimer(timer: Timer): void {
 }
 
 async function handlePauseTimer(timer: Timer): Promise<void> {
-    const currentTimer = timerStore.activeTimer;
-
-    if (currentTimer?.id === timer.id) {
-        await timerStore.pauseTimer();
-    }
-
+    await timerStore.pauseTimerById(timer.id);
     await loadTimers();
 }
 
 async function handleResumeTimer(timer: Timer): Promise<void> {
-    const currentTimer = timerStore.activeTimer;
-
-    if (currentTimer?.id === timer.id) {
-        await timerStore.resumeTimer();
-    }
-
+    await timerStore.resumeTimerById(timer.id);
     await loadTimers();
 }
 
 async function handleStopTimer(timer: Timer): Promise<void> {
     const confirmed = await confirm({
-        title: 'Parar Timer',
-        message: 'Tem certeza que deseja parar este timer? Você poderá confirmar ou editar os ciclos depois.',
-        confirmText: 'Sim, Parar',
-        cancelText: 'Cancelar',
+        title: 'Stop Timer',
+        message: 'Are you sure you want to stop this timer? You can confirm or edit cycles later.',
+        confirmText: 'Yes, Stop',
+        cancelText: 'Cancel',
         variant: 'warning',
     });
 
@@ -109,21 +99,16 @@ async function handleStopTimer(timer: Timer): Promise<void> {
         return;
     }
 
-    const currentTimer = timerStore.activeTimer;
-
-    if (currentTimer?.id === timer.id) {
-        await timerStore.stopTimer();
-    }
-
+    await timerStore.stopTimerById(timer.id);
     await loadTimers();
 }
 
 async function handleCancelTimer(timer: Timer): Promise<void> {
     const confirmed = await confirm({
-        title: 'Cancelar Timer',
-        message: 'Tem certeza que deseja cancelar este timer? Todos os dados serão perdidos.',
-        confirmText: 'Sim, Cancelar',
-        cancelText: 'Não',
+        title: 'Cancel Timer',
+        message: 'Are you sure you want to cancel this timer? All data will be lost.',
+        confirmText: 'Yes, Cancel',
+        cancelText: 'No',
         variant: 'danger',
     });
 
@@ -131,21 +116,16 @@ async function handleCancelTimer(timer: Timer): Promise<void> {
         return;
     }
 
-    const currentTimer = timerStore.activeTimer;
-
-    if (currentTimer?.id === timer.id) {
-        await timerStore.cancelTimer();
-    }
-
+    await timerStore.cancelTimerById(timer.id);
     await loadTimers();
 }
 
 async function handleDeleteTimer(timer: Timer): Promise<void> {
     const confirmed = await confirm({
-        title: 'Excluir Timer',
-        message: 'Tem certeza que deseja excluir este timer?',
-        confirmText: 'Sim, Excluir',
-        cancelText: 'Cancelar',
+        title: 'Delete Timer',
+        message: 'Are you sure you want to delete this timer?',
+        confirmText: 'Yes, Delete',
+        cancelText: 'Cancel',
         variant: 'danger',
     });
 

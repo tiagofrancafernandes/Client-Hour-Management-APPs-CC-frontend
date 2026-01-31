@@ -43,10 +43,10 @@ async function togglePlayPause(): Promise<void> {
 
 async function handleStop(): Promise<void> {
     const confirmed = await confirm({
-        title: 'Parar Timer',
-        message: 'Tem certeza que deseja parar este timer? Você poderá confirmar ou editar os ciclos depois.',
-        confirmText: 'Sim, Parar',
-        cancelText: 'Cancelar',
+        title: 'Stop Timer',
+        message: 'Are you sure you want to stop this timer? You can confirm or edit cycles later.',
+        confirmText: 'Yes, Stop',
+        cancelText: 'Cancel',
         variant: 'warning',
     });
 
@@ -58,10 +58,10 @@ async function handleStop(): Promise<void> {
 
 async function handleCancel(): Promise<void> {
     const confirmed = await confirm({
-        title: 'Cancelar Timer',
-        message: 'Tem certeza que deseja cancelar este timer? Todos os dados serão perdidos.',
-        confirmText: 'Sim, Cancelar',
-        cancelText: 'Não',
+        title: 'Cancel Timer',
+        message: 'Are you sure you want to cancel this timer? All data will be lost.',
+        confirmText: 'Yes, Cancel',
+        cancelText: 'No',
         variant: 'danger',
     });
 
