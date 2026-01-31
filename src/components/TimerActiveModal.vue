@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
+import { computed, watch } from 'vue';
 import { useTimerStore } from '@/stores/timer';
 import { useConfirm } from '@/composables/useConfirm';
 import { Icon } from '@iconify/vue';
@@ -15,15 +15,16 @@ const emit = defineEmits<{
 const timerStore = useTimerStore();
 const { confirm } = useConfirm();
 
-const localTime = ref(0);
-const intervalId = ref<number | null>(null);
-
 const timer = computed(() => timerStore.activeTimer);
 const isRunning = computed(() => timerStore.isRunning);
 const isPaused = computed(() => timerStore.isPaused);
 
 const formattedTime = computed(() => {
-    const totalSeconds = localTime.value;
+    if (!timer.value) {
+        return '00:00:00';
+    }
+
+    const totalSeconds = timer.value.total_seconds;
 
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -31,39 +32,6 @@ const formattedTime = computed(() => {
 
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 });
-
-function updateLocalTime(): void {
-    if (!timer.value) {
-        return;
-    }
-
-    localTime.value = timer.value.total_seconds;
-
-    if (isRunning.value) {
-        localTime.value += 1;
-    }
-}
-
-function startLocalTimer(): void {
-    if (intervalId.value !== null) {
-        return;
-    }
-
-    updateLocalTime();
-
-    intervalId.value = window.setInterval(() => {
-        if (isRunning.value) {
-            localTime.value += 1;
-        }
-    }, 1000);
-}
-
-function stopLocalTimer(): void {
-    if (intervalId.value !== null) {
-        clearInterval(intervalId.value);
-        intervalId.value = null;
-    }
-}
 
 async function togglePlayPause(): Promise<void> {
     if (isRunning.value) {
@@ -107,35 +75,11 @@ function handleClose(): void {
     emit('close');
 }
 
-watch(
-    () => props.show,
-    (newValue) => {
-        if (newValue && timer.value) {
-            startLocalTimer();
-        } else {
-            stopLocalTimer();
-        }
-    }
-);
-
 watch(timer, (newTimer) => {
-    if (newTimer) {
-        localTime.value = newTimer.total_seconds;
-    } else {
-        localTime.value = 0;
+    if (!newTimer) {
         emit('close');
     }
 }, { deep: true });
-
-onMounted(() => {
-    if (props.show && timer.value) {
-        startLocalTimer();
-    }
-});
-
-onUnmounted(() => {
-    stopLocalTimer();
-});
 </script>
 
 <template>
