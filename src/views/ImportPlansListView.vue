@@ -15,31 +15,29 @@
         <div class="bg-white rounded-lg shadow mb-6">
             <div class="p-4 border-b border-gray-200">
                 <div class="grid gap-4 md:grid-cols-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                        <CSelect v-model="filters.status" @change="handleFilterChange">
-                            <option value="">Todos</option>
-                            <option value="pending">Pendente</option>
-                            <option value="validated">Validado</option>
-                            <option value="confirmed">Confirmado</option>
-                            <option value="cancelled">Cancelado</option>
-                        </CSelect>
-                    </div>
+                    <CSelect label="Status" v-model="filters.status" @change="handleFilterChange">
+                        <option value="">Todos</option>
+                        <option value="pending">Pendente</option>
+                        <option value="validated">Validado</option>
+                        <option value="confirmed">Confirmado</option>
+                        <option value="cancelled">Cancelado</option>
+                    </CSelect>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Carteira</label>
-                        <CSelect v-model="filters.wallet_id" @change="handleFilterChange">
-                            <option :value="undefined">Todas</option>
-                            <option v-for="wallet in wallets" :key="wallet.id" :value="wallet.id">
-                                {{ wallet.name }}
-                                <span v-if="wallet.client">({{ wallet.client.name }})</span>
-                            </option>
-                        </CSelect>
-                    </div>
+                    <CSelect label="Carteira" v-model="filters.wallet_id" @change="handleFilterChange">
+                        <option :value="undefined">Todas</option>
+                        <option v-for="wallet in wallets" :key="wallet.id" :value="wallet.id">
+                            {{ wallet.name }}
+                            <span v-if="wallet.client">({{ wallet.client.name }})</span>
+                        </option>
+                    </CSelect>
 
-                    <div class="flex items-end">
-                        <CButton preset="outlined-black" class="w-full" @click="clearFilters">
-                            <Icon icon="mdi:filter-off" class="w-4 h-4" />
+                    <div class="flex items-end align-middle justify-end-safe">
+                        <CButton
+                            preset="outlined-black-md"
+                            class="w-full md:w-6/12"
+                            @click="clearFilters"
+                            icon="mdi:filter-off"
+                        >
                             Limpar Filtros
                         </CButton>
                     </div>

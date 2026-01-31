@@ -116,11 +116,7 @@ watch(
 </script>
 
 <template>
-    <div
-        v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-        @click.self="handleClose"
-    >
+    <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="handleClose">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-screen overflow-y-auto">
             <!-- Header -->
             <div class="flex items-center justify-between p-6 border-b border-gray-200">
@@ -229,28 +225,18 @@ watch(
 
                 <!-- Actions -->
                 <div class="flex gap-3">
-                    <button
-                        type="button"
-                        class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors"
-                        :disabled="loading"
-                        @click="handleClose"
-                    >
+                    <CButton type="button" preset="lightgray-md" :disabled="loading" @click="handleClose">
                         Cancel
-                    </button>
-                    <button
-                        type="button"
-                        :class="[
-                            'flex-1 px-4 py-2 rounded-lg font-medium transition-colors',
-                            {
-                                'bg-green-600 hover:bg-green-700 text-white': canSubmit,
-                                'bg-gray-300 text-gray-500 cursor-not-allowed': !canSubmit,
-                            },
-                        ]"
+                    </CButton>
+                    <CButton
+                        type="submit"
+                        :preset="canSubmit ? 'green-md' : 'lightgray-md'"
+                        :class="['transition-colors']"
                         :disabled="!canSubmit"
                         @click="handleConfirm"
                     >
                         {{ loading ? 'Confirming...' : 'Confirm Timer' }}
-                    </button>
+                    </CButton>
                 </div>
             </div>
         </div>

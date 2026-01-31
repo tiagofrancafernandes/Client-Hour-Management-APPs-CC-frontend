@@ -119,7 +119,7 @@ onMounted(() => {
 
 <template>
     <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="handleClose">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 max-h-screen overflow-y-auto">
             <!-- Header -->
             <div class="flex items-center justify-between p-6 border-b border-gray-200">
                 <h2 class="text-xl font-semibold text-gray-900">Start Timer</h2>

@@ -75,6 +75,8 @@ onMounted(async () => {
 
     if (isAuthenticated.value) {
         await timerStore.initialize();
+        // await timerStore.fetchActiveTimer();
+        // await timerStore.fetchTimers();
     }
 });
 

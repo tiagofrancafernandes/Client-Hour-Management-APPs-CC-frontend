@@ -38,5 +38,8 @@ export default defineConfig({
             'app.hml.tiagoapps.com.br',
             // ... other hosts
         ],
+        fs: {
+            strict: false,
+        },
     },
 });

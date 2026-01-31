@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { computed, ref } from 'vue';
+import { computed, ref, type ComputedRef, type Ref } from 'vue';
 import { api } from '@/services/api';
 import type { Timer, TimerForm, TimerCycleForm, PaginatedResponse } from '@/types';
 
@@ -11,6 +11,7 @@ export const useTimerStore = defineStore('timer', () => {
     const loading = ref(false);
     const error = ref<string | null>(null);
     const pollInterval = ref<number | null>(null);
+    const storedFormattedTime = ref('00:00:00');
 
     // Getters
     const hasActiveTimer = computed(() => activeTimer.value !== null);
@@ -403,6 +404,7 @@ export const useTimerStore = defineStore('timer', () => {
 
     async function initialize(): Promise<void> {
         await fetchActiveTimer();
+        fetchTimers();
 
         if (hasActiveTimer.value && (isRunning.value || isPaused.value)) {
             startPolling();
@@ -417,6 +419,34 @@ export const useTimerStore = defineStore('timer', () => {
         error.value = null;
     }
 
+    function getStoredFormattedTime() {
+        return storedFormattedTime.value;
+    }
+
+    function setStoredFormattedTime(value: string = '00:00:00') {
+        storedFormattedTime.value = value;
+    }
+
+    function ressetStoredFormattedTime() {
+        storedFormattedTime.value = '00:00:00';
+    }
+
+    function formatTimeState(timer: any = null, localTime: any) {
+        if (!timer) {
+            return '00:00:00';
+        }
+
+        const totalSeconds = localTime;
+
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    const computedStoredFormattedTime = computed(getStoredFormattedTime);
+
     return {
         // State
         activeTimer,
@@ -424,6 +454,8 @@ export const useTimerStore = defineStore('timer', () => {
         currentTimer,
         loading,
         error,
+        storedFormattedTime,
+        computedStoredFormattedTime,
 
         // Getters
         hasActiveTimer,
@@ -452,6 +484,10 @@ export const useTimerStore = defineStore('timer', () => {
         clearError,
         startPolling,
         stopPolling,
+        setStoredFormattedTime,
+        getStoredFormattedTime,
+        ressetStoredFormattedTime,
+        formatTimeState,
     };
 });
 

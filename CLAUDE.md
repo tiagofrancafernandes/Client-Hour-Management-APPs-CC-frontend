@@ -171,6 +171,31 @@ Example:
 </template>
 ```
 
+## Using Custom Components (src/components/C*.vue file)
+
+Example:
+```vue
+<template>
+<!-- src/components/CButton.vue -->
+ <CButton label="My Button label" />
+
+<!-- src/components/CDropZone.vue -->
+ <CDropZone label="My DropZone label" />
+
+<!-- src/components/CInput.vue -->
+ <CInput label="My Input label" />
+
+<!-- src/components/CSelect.vue -->
+ <CSelect label="My Select label"  >
+
+    <option>Opção</option>
+ </CSelect>
+<!-- src/components/CTextarea.vue -->
+ <CTextarea label="My Textarea label" />
+
+</template>
+```
+
 
 ### Using buttons with icons
 

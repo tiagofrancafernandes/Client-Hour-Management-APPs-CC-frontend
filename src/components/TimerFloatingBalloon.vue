@@ -20,6 +20,11 @@ const isRunning = computed(() => timerStore.isRunning);
 const isPaused = computed(() => timerStore.isPaused);
 
 const formattedTime = computed(() => {
+    if (!timer.value) {
+        // timerStore.activeTimer
+        return '00:00:00';
+    }
+
     const totalSeconds = localTime.value;
 
     const hours = Math.floor(totalSeconds / 3600);
@@ -111,13 +116,17 @@ watch(hasTimer, (newValue, oldValue) => {
 });
 
 // Watch for timer object changes to update local time
-watch(timer, (newTimer) => {
-    if (newTimer) {
-        localTime.value = newTimer.total_seconds;
-    } else {
-        localTime.value = 0;
-    }
-}, { deep: true });
+watch(
+    timer,
+    (newTimer) => {
+        if (newTimer) {
+            localTime.value = newTimer.total_seconds;
+        } else {
+            localTime.value = 0;
+        }
+    },
+    { deep: true }
+);
 </script>
 
 <template>
@@ -175,6 +184,7 @@ watch(timer, (newTimer) => {
             <div class="text-center mb-4">
                 <div class="text-3xl font-bold text-gray-900 font-mono">
                     {{ formattedTime }}
+                    {{ timerStore.computedStoredFormattedTime }}
                 </div>
                 <div v-if="timer?.wallet" class="text-sm text-gray-500 mt-1">
                     {{ timer.wallet.client?.name }} - {{ timer.wallet.name }}

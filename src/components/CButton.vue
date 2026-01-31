@@ -17,12 +17,26 @@ const props = defineProps({
     rightIcon: {
         type: String,
     },
+    flex: {
+        type: Boolean,
+        default: () => false,
+    },
 });
 
 const classes = computed(() => {
     const presets: any = buttonPresets();
 
-    let _classes: any = ['inline-flex items-center gap-2', presets[props.preset] ?? presets.blue];
+    let hasIcon = props.icon || props.rightIcon;
+
+    let _classes: any = [
+        'inline-flex items-center align-center',
+        presets[props.preset] ?? presets.blue,
+        {
+            'justify-center gap-5': !hasIcon,
+            'justify-between': hasIcon,
+            'flex-1': props.flex,
+        },
+    ];
 
     if (props.icon || props.rightIcon) {
         _classes = [..._classes];

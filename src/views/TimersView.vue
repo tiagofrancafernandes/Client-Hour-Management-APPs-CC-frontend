@@ -370,7 +370,9 @@ onMounted(() => {
                             </div>
 
                             <!-- Confirmed/Cancelled timer actions -->
-                            <div v-if="(timer.status === 'confirmed' || timer.status === 'cancelled') && canDeleteTimer">
+                            <div
+                                v-if="(timer.status === 'confirmed' || timer.status === 'cancelled') && canDeleteTimer"
+                            >
                                 <CButton preset="red-sm" @click="handleDeleteTimer(timer)">Delete</CButton>
                             </div>
                         </div>

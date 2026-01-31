@@ -32,23 +32,25 @@ const badgeSizes = {
  * Solid color presets
  */
 const solidColors = {
-    black: 'bg-neutral-950 text-white shadow-neutral-500/20',
-    neutral: 'bg-neutral-950 text-neutral-100 shadow-neutral-500/20',
+    black: 'bg-neutral-950 text-white shadow-neutral-500/20 hover:bg-neutral-800',
+    neutral: 'bg-neutral-950 text-neutral-100 shadow-neutral-500/20 hover:bg-neutral-800',
     none: '',
-    red: 'bg-red-600 text-white shadow-red-500/20',
-    green: 'bg-green-600 text-white shadow-green-500/20',
-    blue: 'bg-blue-600 text-white shadow-blue-500/20',
-    sky: 'bg-sky-600 text-white shadow-sky-500/20',
-    yellow: 'bg-yellow-500 text-black shadow-yellow-500/20',
-    orange: 'bg-orange-600 text-white shadow-orange-500/20',
+    red: 'bg-red-600 text-white shadow-red-500/20 hover:bg-red-650',
+    green: 'bg-green-600 text-white shadow-green-500/20 hover:bg-green-700',
+    blue: 'bg-blue-600 text-white shadow-blue-500/20 hover:bg-blue-700',
+    gray: 'bg-gray-600 text-white shadow-gray-500/20 hover:bg-gray-700',
+    lightgray: 'bg-gray-200 text-gray-700 shadow-gray-300/20 hover:bg-gray-300',
+    sky: 'bg-sky-600 text-white shadow-sky-500/20 hover:bg-sky-700',
+    yellow: 'bg-yellow-500 text-black shadow-yellow-500/20 hover:bg-yellow-600',
+    orange: 'bg-orange-600 text-white shadow-orange-500/20 hover:bg-orange-700',
 
     white: 'bg-gray-50 text-neutral-900 shadow-gray-400/20 hover:bg-gray-100',
 
-    success: 'bg-green-600 text-white shadow-green-500/20',
-    danger: 'bg-red-600 text-white shadow-red-500/20',
-    warning: 'bg-yellow-500 text-black shadow-yellow-500/20',
-    info: 'bg-sky-600 text-white shadow-sky-500/20',
-    error: 'bg-red-700 text-white shadow-red-500/30',
+    success: 'bg-green-600 text-white shadow-green-500/20 hover:bg-green-700',
+    danger: 'bg-red-600 text-white shadow-red-500/20 hover:bg-red-700',
+    warning: 'bg-yellow-500 text-black shadow-yellow-500/20 hover:bg-yellow-600',
+    info: 'bg-sky-600 text-white shadow-sky-500/20 hover:bg-sky-700',
+    error: 'bg-red-700 text-white shadow-red-500/30 hover:bg-red-800',
 };
 
 /**
@@ -61,6 +63,8 @@ const outlinedColors = {
     red: 'border border-red-600 text-red-600 hover:bg-red-600 hover:text-white',
     green: 'border border-green-600 text-green-600 hover:bg-green-600 hover:text-white',
     blue: 'border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white',
+    gray: 'border border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white',
+    lightgray: 'border border-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-700',
     sky: 'border border-sky-600 text-sky-600 hover:bg-sky-600 hover:text-white',
     yellow: 'border border-yellow-500 text-yellow-600 hover:bg-yellow-500 hover:text-black',
     orange: 'border border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white',
