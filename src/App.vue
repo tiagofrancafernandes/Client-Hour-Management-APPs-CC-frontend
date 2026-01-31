@@ -6,6 +6,7 @@ import { usePermissions } from '@/composables/usePermissions';
 import { useTimerStore } from '@/stores/timer';
 import { useConfirm } from '@/composables/useConfirm';
 import TimerFloatingBalloon from '@/components/TimerFloatingBalloon.vue';
+import TimerActiveModal from '@/components/TimerActiveModal.vue';
 import ConfirmModal from '@/components/ConfirmModal.vue';
 
 const router = useRouter();
@@ -16,6 +17,7 @@ const timerStore = useTimerStore();
 const { state: confirmState, handleConfirm, handleCancel } = useConfirm();
 
 const showUserMenu = ref(false);
+const showTimerModal = ref(false);
 const userMenuRef = ref<HTMLElement | null>(null);
 const canViewTimers = computed(() => {
     return (
@@ -58,6 +60,14 @@ async function handleLogout() {
     closeUserMenu();
     await logout();
     router.push({ name: 'login' });
+}
+
+function openTimerModal() {
+    showTimerModal.value = true;
+}
+
+function closeTimerModal() {
+    showTimerModal.value = false;
 }
 
 onMounted(async () => {
@@ -194,7 +204,10 @@ onUnmounted(() => {
         </main>
 
         <!-- Timer Floating Balloon -->
-        <TimerFloatingBalloon v-if="isAuthenticated" />
+        <TimerFloatingBalloon v-if="isAuthenticated" @open-modal="openTimerModal" />
+
+        <!-- Timer Active Modal -->
+        <TimerActiveModal :show="showTimerModal" @close="closeTimerModal" />
 
         <!-- Global Confirm Modal -->
         <ConfirmModal

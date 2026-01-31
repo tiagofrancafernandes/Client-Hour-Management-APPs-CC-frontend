@@ -3,6 +3,10 @@ import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 import { useTimerStore } from '@/stores/timer';
 import { useConfirm } from '@/composables/useConfirm';
 
+const emit = defineEmits<{
+    openModal: [];
+}>();
+
 const timerStore = useTimerStore();
 const { confirm } = useConfirm();
 
@@ -181,26 +185,34 @@ watch(timer, (newTimer) => {
             </div>
 
             <!-- Controls -->
-            <div class="flex gap-2">
+            <div class="space-y-2">
                 <button
-                    :class="[
-                        'flex-1 px-4 py-2 rounded-lg font-medium text-sm transition-colors',
-                        {
-                            'bg-red-600 hover:bg-red-700 text-white': isRunning,
-                            'bg-green-600 hover:bg-green-700 text-white': isPaused,
-                        },
-                    ]"
-                    @click="togglePlayPause"
+                    class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition-colors"
+                    @click="emit('openModal')"
                 >
-                    <span v-if="isRunning">Pause</span>
-                    <span v-else>Resume</span>
+                    Open Full View
                 </button>
-                <button
-                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium text-sm transition-colors"
-                    @click="stopTimer"
-                >
-                    Stop
-                </button>
+                <div class="flex gap-2">
+                    <button
+                        :class="[
+                            'flex-1 px-4 py-2 rounded-lg font-medium text-sm transition-colors',
+                            {
+                                'bg-red-600 hover:bg-red-700 text-white': isRunning,
+                                'bg-green-600 hover:bg-green-700 text-white': isPaused,
+                            },
+                        ]"
+                        @click="togglePlayPause"
+                    >
+                        <span v-if="isRunning">Pause</span>
+                        <span v-else>Resume</span>
+                    </button>
+                    <button
+                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium text-sm transition-colors"
+                        @click="stopTimer"
+                    >
+                        Stop
+                    </button>
+                </div>
             </div>
         </div>
     </div>

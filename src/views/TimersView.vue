@@ -76,6 +76,70 @@ function handleConfirmTimer(timer: Timer): void {
     showConfirmModal.value = true;
 }
 
+async function handlePauseTimer(timer: Timer): Promise<void> {
+    const currentTimer = timerStore.activeTimer;
+
+    if (currentTimer?.id === timer.id) {
+        await timerStore.pauseTimer();
+    }
+
+    await loadTimers();
+}
+
+async function handleResumeTimer(timer: Timer): Promise<void> {
+    const currentTimer = timerStore.activeTimer;
+
+    if (currentTimer?.id === timer.id) {
+        await timerStore.resumeTimer();
+    }
+
+    await loadTimers();
+}
+
+async function handleStopTimer(timer: Timer): Promise<void> {
+    const confirmed = await confirm({
+        title: 'Parar Timer',
+        message: 'Tem certeza que deseja parar este timer? Você poderá confirmar ou editar os ciclos depois.',
+        confirmText: 'Sim, Parar',
+        cancelText: 'Cancelar',
+        variant: 'warning',
+    });
+
+    if (!confirmed) {
+        return;
+    }
+
+    const currentTimer = timerStore.activeTimer;
+
+    if (currentTimer?.id === timer.id) {
+        await timerStore.stopTimer();
+    }
+
+    await loadTimers();
+}
+
+async function handleCancelTimer(timer: Timer): Promise<void> {
+    const confirmed = await confirm({
+        title: 'Cancelar Timer',
+        message: 'Tem certeza que deseja cancelar este timer? Todos os dados serão perdidos.',
+        confirmText: 'Sim, Cancelar',
+        cancelText: 'Não',
+        variant: 'danger',
+    });
+
+    if (!confirmed) {
+        return;
+    }
+
+    const currentTimer = timerStore.activeTimer;
+
+    if (currentTimer?.id === timer.id) {
+        await timerStore.cancelTimer();
+    }
+
+    await loadTimers();
+}
+
 async function handleDeleteTimer(timer: Timer): Promise<void> {
     const confirmed = await confirm({
         title: 'Excluir Timer',
@@ -304,21 +368,31 @@ onMounted(() => {
                         </div>
 
                         <!-- Actions -->
-                        <div class="flex gap-2 ml-4">
-                            <button
-                                v-if="timer.status === 'stopped' && canConfirmTimer"
-                                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
-                                @click="handleConfirmTimer(timer)"
-                            >
-                                Confirm
-                            </button>
-                            <button
-                                v-if="(timer.status === 'confirmed' || timer.status === 'cancelled') && canDeleteTimer"
-                                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
-                                @click="handleDeleteTimer(timer)"
-                            >
-                                Delete
-                            </button>
+                        <div class="flex flex-col gap-2 ml-4">
+                            <!-- Running timer actions -->
+                            <div v-if="timer.status === 'running'" class="flex gap-2">
+                                <CButton preset="yellow-sm" @click="handlePauseTimer(timer)">Pause</CButton>
+                                <CButton preset="orange-sm" @click="handleStopTimer(timer)">Stop</CButton>
+                                <CButton preset="red-sm" @click="handleCancelTimer(timer)">Cancel</CButton>
+                            </div>
+
+                            <!-- Paused timer actions -->
+                            <div v-if="timer.status === 'paused'" class="flex gap-2">
+                                <CButton preset="green-sm" @click="handleResumeTimer(timer)">Resume</CButton>
+                                <CButton preset="orange-sm" @click="handleStopTimer(timer)">Stop</CButton>
+                                <CButton preset="red-sm" @click="handleCancelTimer(timer)">Cancel</CButton>
+                            </div>
+
+                            <!-- Stopped timer actions -->
+                            <div v-if="timer.status === 'stopped' && canConfirmTimer" class="flex gap-2">
+                                <CButton preset="green-sm" @click="handleConfirmTimer(timer)">Confirm</CButton>
+                                <CButton preset="red-sm" @click="handleCancelTimer(timer)">Cancel</CButton>
+                            </div>
+
+                            <!-- Confirmed/Cancelled timer actions -->
+                            <div v-if="(timer.status === 'confirmed' || timer.status === 'cancelled') && canDeleteTimer">
+                                <CButton preset="red-sm" @click="handleDeleteTimer(timer)">Delete</CButton>
+                            </div>
                         </div>
                     </div>
                 </div>
