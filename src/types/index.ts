@@ -59,13 +59,13 @@ export interface ReportSummary {
 }
 
 export interface ReportFilters {
-    client_id?: number;
-    wallet_id?: number;
+    client_id?: number | null;
+    wallet_id?: number | null;
     date_from?: string;
     date_to?: string;
     tags?: number[];
-    type?: 'credit' | 'debit';
-    group_by?: 'wallet' | 'client';
+    type?: 'credit' | 'debit' | null;
+    group_by?: 'wallet' | 'client' | null;
     per_page?: number;
 }
 

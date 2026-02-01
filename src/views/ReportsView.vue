@@ -14,13 +14,13 @@ const { wallets, fetchWallets } = useWallets();
 const { tags, fetchTags } = useTags();
 
 const filters = ref<ReportFilters>({
-    client_id: undefined,
-    wallet_id: undefined,
+    client_id: null,
+    wallet_id: null,
     date_from: '',
     date_to: '',
     tags: [],
-    type: undefined,
-    group_by: undefined,
+    type: null,
+    group_by: null,
 });
 
 const hasAppliedFilters = ref(false);
@@ -46,7 +46,7 @@ watch(
             const selectedWallet = wallets.value.find((w) => w.id === filters.value.wallet_id);
 
             if (selectedWallet && selectedWallet.client_id !== newClientId) {
-                filters.value.wallet_id = undefined;
+                filters.value.wallet_id = null;
             }
         }
     }
@@ -94,13 +94,13 @@ async function handleFilter() {
 
 function clearFilters() {
     filters.value = {
-        client_id: undefined,
-        wallet_id: undefined,
+        client_id: null,
+        wallet_id: null,
         date_from: '',
         date_to: '',
         tags: [],
-        type: undefined,
-        group_by: undefined,
+        type: null,
+        group_by: null,
     };
 
     hasAppliedFilters.value = false;
@@ -194,14 +194,14 @@ async function exportReport(format: 'pdf' | 'excel') {
             <h2 class="mb-4 text-lg font-semibold">Filters</h2>
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <CSelect label="Client" v-model="filters.client_id">
-                    <option :value="undefined">All Clients</option>
+                    <option :value="null">All Clients</option>
                     <option v-for="client in clients" :key="client.id" :value="client.id">
                         {{ client.name }}
                     </option>
                 </CSelect>
 
                 <CSelect label="Wallet" v-model="filters.wallet_id">
-                    <option :value="undefined">All Wallets</option>
+                    <option :value="null">All Wallets</option>
                     <option v-for="wallet in filteredWallets" :key="wallet.id" :value="wallet.id">
                         {{ getWalletLabel(wallet) }}
                     </option>
@@ -212,13 +212,13 @@ async function exportReport(format: 'pdf' | 'excel') {
                 <CInput label="Date To" v-model="filters.date_to" type="date" />
 
                 <CSelect label="Type" v-model="filters.type">
-                    <option :value="undefined">All Types</option>
+                    <option :value="null">All Types</option>
                     <option value="credit">Credits Only</option>
                     <option value="debit">Debits Only</option>
                 </CSelect>
 
                 <CSelect label="Group By" v-model="filters.group_by">
-                    <option :value="undefined">No Grouping</option>
+                    <option :value="null">No Grouping</option>
                     <option value="wallet">By Wallet</option>
                     <option value="client">By Client</option>
                 </CSelect>
