@@ -4,16 +4,19 @@ import { useRoute, useRouter } from 'vue-router';
 import { useClients } from '@/composables/useClients';
 import { useWallets } from '@/composables/useWallets';
 import { usePermissions } from '@/composables/usePermissions';
+import type { WalletWithBalance } from '@/types';
 
 const route = useRoute();
 const router = useRouter();
 const clientId = Number(route.params.id);
 
 const { client, loading: clientLoading, error: clientError, fetchClient } = useClients();
-const { createWallet } = useWallets();
+const { createWallet, updateWallet } = useWallets();
 const { canManageWallets } = usePermissions();
 
 const showCreateWalletModal = ref(false);
+const showEditWalletModal = ref(false);
+const editingWallet = ref<WalletWithBalance | null>(null);
 const newWalletName = ref('');
 const newWalletDescription = ref('');
 const newWalletHourlyRate = ref<number | undefined>(undefined);
@@ -39,6 +42,32 @@ async function handleCreateWallet() {
         newWalletName.value = '';
         newWalletDescription.value = '';
         newWalletHourlyRate.value = undefined;
+        fetchClient(clientId);
+    } catch {
+        // Error handled in composable
+    }
+}
+
+function handleEditWallet(wallet: WalletWithBalance, event: Event) {
+    event.stopPropagation();
+    editingWallet.value = { ...wallet };
+    showEditWalletModal.value = true;
+}
+
+async function handleUpdateWallet() {
+    if (!editingWallet.value || !editingWallet.value.name.trim()) {
+        return;
+    }
+
+    try {
+        await updateWallet(editingWallet.value.id, {
+            name: editingWallet.value.name,
+            description: editingWallet.value.description || undefined,
+            hourly_rate_reference: editingWallet.value.hourly_rate_reference || undefined,
+        });
+
+        showEditWalletModal.value = false;
+        editingWallet.value = null;
         fetchClient(clientId);
     } catch {
         // Error handled in composable
@@ -116,8 +145,8 @@ function getBalanceColor(balance: string): string {
                     class="cursor-pointer rounded-lg bg-white p-4 shadow transition-shadow hover:shadow-md"
                     @click="goToWallet(wallet.id)"
                 >
-                    <div class="flex items-start justify-between">
-                        <div>
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="flex-1">
                             <h3 class="font-semibold text-gray-900">{{ wallet.name }}</h3>
                             <p v-if="wallet.description" class="mt-1 text-sm text-gray-500">
                                 {{ wallet.description }}
@@ -129,8 +158,17 @@ function getBalanceColor(balance: string): string {
                             </p>
                         </div>
                     </div>
-                    <div v-if="wallet.hourly_rate_reference" class="mt-2 text-sm text-gray-500">
-                        Rate: ${{ wallet.hourly_rate_reference }}/h
+                    <div class="flex items-center justify-between">
+                        <div v-if="wallet.hourly_rate_reference" class="text-sm text-gray-500">
+                            Rate: ${{ wallet.hourly_rate_reference }}/h
+                        </div>
+                        <button
+                            v-if="canManageWallets"
+                            class="ml-auto text-sm text-blue-600 hover:text-blue-800"
+                            @click="handleEditWallet(wallet, $event)"
+                        >
+                            Edit
+                        </button>
                     </div>
                 </div>
             </div>
@@ -141,7 +179,7 @@ function getBalanceColor(balance: string): string {
         </div>
 
         <!-- Create Wallet Modal -->
-        <div v-if="showCreateWalletModal" class="fixed inset-0 flex items-center justify-center bg-black/50">
+        <div v-if="showCreateWalletModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div class="w-full max-w-md rounded-lg bg-white p-6">
                 <h2 class="mb-4 text-lg font-semibold">New Wallet</h2>
                 <div class="mb-4">
@@ -178,6 +216,48 @@ function getBalanceColor(balance: string): string {
                         Cancel
                     </button>
                     <CButton @click="handleCreateWallet">Create</CButton>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Wallet Modal -->
+        <div v-if="showEditWalletModal && editingWallet" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div class="w-full max-w-md rounded-lg bg-white p-6">
+                <h2 class="mb-4 text-lg font-semibold">Edit Wallet</h2>
+                <div class="mb-4">
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Name</label>
+                    <input
+                        v-model="editingWallet.name"
+                        type="text"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    />
+                </div>
+                <div class="mb-4">
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Description</label>
+                    <textarea
+                        v-model="editingWallet.description"
+                        rows="2"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    ></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Hourly Rate Reference (optional)</label>
+                    <input
+                        v-model.number="editingWallet.hourly_rate_reference"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    />
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button
+                        class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
+                        @click="showEditWalletModal = false"
+                    >
+                        Cancel
+                    </button>
+                    <CButton @click="handleUpdateWallet">Update</CButton>
                 </div>
             </div>
         </div>

@@ -3,12 +3,15 @@ import { onMounted, ref } from 'vue';
 import { useClients } from '@/composables/useClients';
 import { useRouter } from 'vue-router';
 import { usePermissions } from '@/composables/usePermissions';
+import type { Client } from '@/types';
 
 const router = useRouter();
-const { clients, loading, error, pagination, fetchClients, createClient, deleteClient } = useClients();
+const { clients, loading, error, pagination, fetchClients, createClient, updateClient, deleteClient } = useClients();
 const { canManageClients } = usePermissions();
 
 const showCreateModal = ref(false);
+const showEditModal = ref(false);
+const editingClient = ref<Client | null>(null);
 const newClientName = ref('');
 const newClientNotes = ref('');
 const searchQuery = ref('');
@@ -31,6 +34,29 @@ async function handleCreate() {
         showCreateModal.value = false;
         newClientName.value = '';
         newClientNotes.value = '';
+    } catch {
+        // Error handled in composable
+    }
+}
+
+function handleEdit(client: Client) {
+    editingClient.value = { ...client };
+    showEditModal.value = true;
+}
+
+async function handleUpdate() {
+    if (!editingClient.value || !editingClient.value.name.trim()) {
+        return;
+    }
+
+    try {
+        await updateClient(editingClient.value.id, {
+            name: editingClient.value.name,
+            notes: editingClient.value.notes || undefined,
+        });
+
+        showEditModal.value = false;
+        editingClient.value = null;
     } catch {
         // Error handled in composable
     }
@@ -108,13 +134,14 @@ function goToClient(id: number) {
                             {{ client.notes || '-' }}
                         </td>
                         <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
-                            <button
-                                v-if="canManageClients"
-                                class="text-red-600 hover:text-red-900"
-                                @click.stop="handleDelete(client.id)"
-                            >
-                                Delete
-                            </button>
+                            <div v-if="canManageClients" class="flex justify-end gap-2">
+                                <button class="text-blue-600 hover:text-blue-900" @click.stop="handleEdit(client)">
+                                    Edit
+                                </button>
+                                <button class="text-red-600 hover:text-red-900" @click.stop="handleDelete(client.id)">
+                                    Delete
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -148,7 +175,7 @@ function goToClient(id: number) {
         </div>
 
         <!-- Create Modal -->
-        <div v-if="showCreateModal" class="fixed inset-0 flex items-center justify-center bg-black/50">
+        <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div class="w-full max-w-md rounded-lg bg-white p-6">
                 <h2 class="mb-4 text-lg font-semibold">New Client</h2>
                 <div class="mb-4">
@@ -175,6 +202,38 @@ function goToClient(id: number) {
                         Cancel
                     </button>
                     <CButton @click="handleCreate">Create</CButton>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Modal -->
+        <div v-if="showEditModal && editingClient" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div class="w-full max-w-md rounded-lg bg-white p-6">
+                <h2 class="mb-4 text-lg font-semibold">Edit Client</h2>
+                <div class="mb-4">
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Name</label>
+                    <input
+                        v-model="editingClient.name"
+                        type="text"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    />
+                </div>
+                <div class="mb-4">
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Notes</label>
+                    <textarea
+                        v-model="editingClient.notes"
+                        rows="3"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    ></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button
+                        class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
+                        @click="showEditModal = false"
+                    >
+                        Cancel
+                    </button>
+                    <CButton @click="handleUpdate">Update</CButton>
                 </div>
             </div>
         </div>
