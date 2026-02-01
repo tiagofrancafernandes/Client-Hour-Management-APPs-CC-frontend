@@ -18,10 +18,11 @@ const {
     isAuthenticated,
 } = useAuth();
 
+const cycleIsAsc = ref(false);
+
 const timerStore = useTimerStore();
 const { confirm } = useConfirm();
 
-const expanded = ref(true);
 const intervalId = ref<number | null>(null);
 
 const hasTimer = computed(() => timerStore.hasActiveTimer);
@@ -88,6 +89,24 @@ async function handleCancel(): Promise<void> {
     }
 }
 
+const orderedCycleItems = computed(() => {
+    let _items = (timer.value || {}).cycles || [];
+
+    const list = [..._items];
+
+    return list.sort((a, b) => {
+        if (a?.id < b?.id) {
+            return cycleIsAsc.value ? -1 : 1;
+        }
+
+        if (a?.id > b?.id) {
+            return cycleIsAsc.value ? 1 : -1;
+        }
+
+        return 0;
+    });
+});
+
 function handleClose(): void {
     emit('close');
 }
@@ -102,8 +121,6 @@ watch(
     { deep: true }
 );
 
-/* ------ */
-
 function updateLocalTime(): void {
     if (!timer.value) {
         return;
@@ -113,6 +130,8 @@ function updateLocalTime(): void {
 
     if (isRunning.value) {
         localTime.value += 1;
+        timerStore.setStoredFormattedTime(formattedTimeState());
+        return;
     }
 
     timerStore.setStoredFormattedTime(formattedTimeState());
@@ -141,6 +160,8 @@ function stopLocalTimer(): void {
 }
 
 onMounted(async () => {
+    console.log('onMounted', 'formattedTime.value', formattedTime.value, 'formattedTimeState()', formattedTimeState());
+
     if (hasTimer.value) {
         startLocalTimer();
     }
@@ -150,12 +171,23 @@ onMounted(async () => {
         // await timerStore.fetchActiveTimer();
         // await timerStore.fetchTimers();
     }
+
+    setTimeout(() => {
+        updateLocalTime();
+
+        console.log(
+            'onMounted settimout',
+            'formattedTime.value',
+            formattedTime.value,
+            'formattedTimeState()',
+            formattedTimeState()
+        );
+    }, 3000);
 });
 
 onUnmounted(() => {
     stopLocalTimer();
 });
-/* ------ */
 </script>
 
 <template>
@@ -191,9 +223,7 @@ onUnmounted(() => {
                 <!-- Timer Display -->
                 <div class="text-center">
                     <div class="text-5xl font-bold text-gray-900 font-mono mb-2">
-                        {{ formattedTime }}
-                        {{ timerStore.getStoredFormattedTime() }}
-                        {{ timerStore.computedStoredFormattedTime }}
+                        {{ formattedTimeState() }}
                     </div>
                     <div class="text-sm text-gray-500">{{ timer.total_hours.toFixed(2) }} hours</div>
                 </div>
@@ -230,14 +260,19 @@ onUnmounted(() => {
 
                 <!-- Cycles -->
                 <div v-if="timer.cycles && timer.cycles.length > 0">
-                    <p class="text-sm font-medium text-gray-900 mb-2">Cycles ({{ timer.cycles.length }})</p>
+                    <div class="text-sm font-medium text-gray-900 mb-2 flex justify-between">
+                        <CButton preset="lightgray" @click.stop.prevent="cycleIsAsc = !cycleIsAsc">Asc/Desc</CButton>
+
+                        <span>Cycles ({{ timer.cycles.length }})</span>
+                    </div>
                     <div class="space-y-2 max-h-32 overflow-y-auto">
                         <div
-                            v-for="(cycle, index) in timer.cycles"
+                            av-for="(cycle, index) in timer.cycles"
+                            v-for="(cycle, index) in orderedCycleItems"
                             :key="cycle.id"
                             class="flex items-center justify-between p-2 bg-gray-50 rounded text-xs"
                         >
-                            <span class="text-gray-600">Cycle {{ index + 1 }}</span>
+                            <span class="text-gray-600">#{{ cycle?.id || index + 1 }}</span>
                             <span class="font-mono text-gray-900">
                                 {{
                                     new Date(cycle.started_at).toLocaleTimeString('pt-BR', {

@@ -22,8 +22,6 @@ async function request<T>(
 
     let bodyIsFormData = (body || {})?.constructor?.name === 'FormData';
 
-    console.log('options', options, 'bodyIsFormData', bodyIsFormData);
-
     let responseType: any =
         (options || {})['responseType'] || (body || {})['responseType'] || (params || {})['responseType'] || null;
 

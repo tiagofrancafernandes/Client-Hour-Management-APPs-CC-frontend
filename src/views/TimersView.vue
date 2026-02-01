@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { useTimerStore } from '@/stores/timer';
 import { useAuthStore } from '@/stores/auth';
 import { useConfirm } from '@/composables/useConfirm';
@@ -11,6 +11,7 @@ const timerStore = useTimerStore();
 const authStore = useAuthStore();
 const { confirm } = useConfirm();
 
+const callAction = ref<any>(null);
 const showStartModal = ref(false);
 const showConfirmModal = ref(false);
 const selectedTimer = ref<Timer | null>(null);
@@ -156,8 +157,34 @@ function formatDate(dateString: string): string {
     });
 }
 
+function checkCallAction() {
+    if (callAction.value === 'startTimer') {
+        showStartModal.value = true;
+    }
+}
+
+function startTimerAction() {
+    showStartModal.value = true;
+}
+
 onMounted(() => {
     loadTimers();
+
+    if (typeof location !== 'undefined') {
+        callAction.value = new URL(location.href).searchParams.get('call');
+    }
+
+    if (typeof document !== 'undefined') {
+        document.addEventListener('callAction::startTimer', startTimerAction);
+    }
+
+    checkCallAction();
+});
+
+onUnmounted(() => {
+    if (typeof document !== 'undefined') {
+        document.removeEventListener('callAction::startTimer', startTimerAction);
+    }
 });
 </script>
 

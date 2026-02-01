@@ -55,10 +55,14 @@ async function handleConfirm(): Promise<void> {
         return;
     }
 
+    console.log('handleConfirm');
+
     loading.value = true;
 
     try {
+        console.log('handleConfirm');
         const success = await timerStore.confirmTimer(cycles.value);
+        console.log('handleConfirm', success);
 
         if (success) {
             emit('confirmed');

@@ -1,13 +1,42 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
+import { RouterLink, useRouter, useRoute } from 'vue-router';
 import { useTimerStore } from '@/stores/timer';
 import { useConfirm } from '@/composables/useConfirm';
 
-const emit = defineEmits<{
-    openModal: [];
-}>();
+const props = defineProps({
+    timerStore: {
+        type: Object,
+        defaul: () => null,
+    },
+});
 
-const timerStore = useTimerStore();
+const emit = defineEmits(['openModal']);
+
+const router = useRouter();
+const route = useRoute();
+
+console.log(
+    // 'router', router,
+    'route',
+    route.fullPath
+);
+
+function callStartTimer() {
+    if (typeof document !== 'undefined') {
+        document.dispatchEvent(
+            new CustomEvent('callAction::startTimer', {
+                detail: {
+                    router,
+                    route,
+                    from: location.href,
+                },
+            })
+        );
+    }
+}
+
+const timerStore = props.timerStore || useTimerStore();
 const { confirm } = useConfirm();
 
 const expanded = ref(true);
@@ -36,6 +65,10 @@ const formattedTime = computed(() => {
 
 function toggleExpanded(): void {
     expanded.value = !expanded.value;
+
+    if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('expanded', JSON.stringify(expanded.value));
+    }
 }
 
 async function togglePlayPause(): Promise<void> {
@@ -70,6 +103,7 @@ function updateLocalTime(): void {
 
     if (isRunning.value) {
         localTime.value += 1;
+        timerStore.setStoredFormattedTime(formattedTime.value);
     }
 }
 
@@ -83,6 +117,7 @@ function startLocalTimer(): void {
     intervalId.value = window.setInterval(() => {
         if (isRunning.value) {
             localTime.value += 1;
+            timerStore.setStoredFormattedTime(formattedTime.value);
         }
     }, 1000);
 }
@@ -94,9 +129,16 @@ function stopLocalTimer(): void {
     }
 }
 
+const allwaysShowFloatingModal = ref(true);
+const showFloatingModal = computed(() => allwaysShowFloatingModal.value || hasTimer.value);
+
 onMounted(() => {
     if (hasTimer.value) {
         startLocalTimer();
+    }
+
+    if (typeof localStorage !== 'undefined') {
+        expanded.value = ['true', '1'].includes((localStorage as any)?.getItem('expanded'));
     }
 });
 
@@ -127,13 +169,19 @@ watch(
     },
     { deep: true }
 );
+
+function openModal() {
+    emit('openModal', {
+        timerStore,
+    });
+}
 </script>
 
 <template>
     <div
-        v-if="hasTimer"
+        v-if="showFloatingModal"
         :class="[
-            'fixed bottom-4 right-4 z-50 bg-white border border-gray-200 rounded-lg shadow-lg transition-all duration-300',
+            'fixed bottom-4 right-4 z-40 bg-white border border-gray-200 rounded-lg shadow-lg transition-all duration-300',
             {
                 'w-80': expanded,
                 'w-16 h-16': !expanded,
@@ -151,7 +199,9 @@ watch(
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                 </svg>
-                <span class="text-xs text-gray-600 mt-1">{{ formattedTime }}</span>
+                <span class="text-xs text-gray-600 mt-1">
+                    {{ formattedTime }}
+                </span>
             </div>
         </div>
 
@@ -169,7 +219,7 @@ watch(
                             },
                         ]"
                     ></div>
-                    <span class="text-sm font-medium text-gray-700">
+                    <span v-if="hasTimer" class="text-sm font-medium text-gray-700">
                         {{ isRunning ? 'Running' : 'Paused' }}
                     </span>
                 </div>
@@ -180,25 +230,38 @@ watch(
                 </button>
             </div>
 
-            <!-- Timer Display -->
-            <div class="text-center mb-4">
-                <div class="text-3xl font-bold text-gray-900 font-mono">
-                    {{ formattedTime }}
-                    {{ timerStore.computedStoredFormattedTime }}
+            <template v-if="hasTimer">
+                <!-- Timer Display -->
+                <div class="text-center mb-4">
+                    <div class="text-3xl font-bold text-gray-900 font-mono">
+                        {{ formattedTime }}
+                    </div>
+                    <div v-if="timer?.wallet" class="text-sm text-gray-500 mt-1">
+                        {{ timer.wallet.client?.name }} - {{ timer.wallet.name }}
+                    </div>
+                    <div v-if="timer?.title" class="text-sm text-gray-700 mt-1">
+                        {{ timer.title }}
+                    </div>
                 </div>
-                <div v-if="timer?.wallet" class="text-sm text-gray-500 mt-1">
-                    {{ timer.wallet.client?.name }} - {{ timer.wallet.name }}
-                </div>
-                <div v-if="timer?.title" class="text-sm text-gray-700 mt-1">
-                    {{ timer.title }}
-                </div>
-            </div>
+            </template>
 
             <!-- Controls -->
-            <div class="space-y-2">
+            <div v-if="!hasTimer" class="space-y-2">
+                <CButton
+                    preset="dark-lg"
+                    flex
+                    to="/timers?call=startTimer"
+                    @click.stop.prevent="callStartTimer"
+                    class="w-full"
+                >
+                    Start Timer
+                </CButton>
+            </div>
+
+            <div v-if="hasTimer" class="space-y-2">
                 <button
                     class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition-colors"
-                    @click="emit('openModal')"
+                    @click="openModal"
                 >
                     Open Full View
                 </button>

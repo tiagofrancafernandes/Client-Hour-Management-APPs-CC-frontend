@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { computed, ref, type ComputedRef, type Ref } from 'vue';
 import { api } from '@/services/api';
 import type { Timer, TimerForm, TimerCycleForm, PaginatedResponse } from '@/types';
+import { debounce } from 'radash';
 
 export const useTimerStore = defineStore('timer', () => {
     // State
@@ -188,7 +189,9 @@ export const useTimerStore = defineStore('timer', () => {
     }
 
     async function confirmTimer(cycles?: TimerCycleForm[]): Promise<boolean> {
+        console.log('aaaa');
         if (!activeTimer.value) {
+            console.log('aaaa');
             return false;
         }
 
@@ -196,6 +199,7 @@ export const useTimerStore = defineStore('timer', () => {
         error.value = null;
 
         try {
+            console.log('aaaa');
             const payload = cycles ? { cycles } : {};
             const response = await api.post<Timer>(`/timers/${activeTimer.value.id}/confirm`, payload);
 
@@ -424,7 +428,9 @@ export const useTimerStore = defineStore('timer', () => {
     }
 
     function setStoredFormattedTime(value: string = '00:00:00') {
-        storedFormattedTime.value = value;
+        debounce({ delay: 600 }, () => {
+            storedFormattedTime.value = value;
+        });
     }
 
     function ressetStoredFormattedTime() {

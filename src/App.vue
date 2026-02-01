@@ -14,6 +14,7 @@ const route = useRoute();
 const { user, isAuthenticated, logout, loading } = useAuth();
 const { canViewClients, canViewReports, canViewTags } = usePermissions();
 const timerStore = useTimerStore();
+const eventTimerStore = ref(null);
 const { state: confirmState, handleConfirm, handleCancel } = useConfirm();
 
 const showUserMenu = ref(false);
@@ -62,7 +63,9 @@ async function handleLogout() {
     router.push({ name: 'login' });
 }
 
-function openTimerModal() {
+function openTimerModal(eventData: any) {
+    console.log('eventData', eventData);
+    eventTimerStore.value = eventData?.timerStore || null;
     showTimerModal.value = true;
 }
 
@@ -88,7 +91,8 @@ onUnmounted(() => {
 
 <template>
     <div class="min-h-screen bg-gray-100">
-        <nav v-if="showNavigation" class="bg-white shadow">
+        <div v-if="showNavigation" class="pt-12 w-full"></div>
+        <nav v-if="showNavigation" class="bg-white shadow fixed w-full top-0">
             <div class="container mx-auto px-4">
                 <div class="flex h-16 items-center justify-between">
                     <div class="flex items-center gap-8">
@@ -206,10 +210,20 @@ onUnmounted(() => {
         </main>
 
         <!-- Timer Floating Balloon -->
-        <TimerFloatingBalloon v-if="isAuthenticated" @open-modal="openTimerModal" />
+        <TimerFloatingBalloon v-if="isAuthenticated" :timerStore="timerStore" @open-modal="openTimerModal" />
 
         <!-- Timer Active Modal -->
-        <TimerActiveModal :show="showTimerModal" @close="closeTimerModal" />
+        <TimerActiveModal
+            av-if="isAuthenticated"
+            v-if="showTimerModal"
+            v-bind="{
+                isAuthenticated: 'aa=' + isAuthenticated,
+                showTimerModal: 'aa=' + showTimerModal,
+            }"
+            :show="true"
+            :timerStore="eventTimerStore || timerStore"
+            @close="closeTimerModal"
+        />
 
         <!-- Global Confirm Modal -->
         <ConfirmModal
