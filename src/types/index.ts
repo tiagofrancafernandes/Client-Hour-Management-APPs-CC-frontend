@@ -2,6 +2,7 @@ export interface Client {
     id: number;
     name: string;
     notes: string | null;
+    customer_since?: string | null;
     total_balance?: string;
     wallets?: WalletWithBalance[];
     created_at: string;
@@ -17,6 +18,7 @@ export interface Wallet {
     hourly_rate_reference: string | null;
     currency_code: string | null;
     client?: Client;
+    credit_purchase_allowed: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -85,6 +87,8 @@ export interface User {
     id: number;
     name: string;
     email: string;
+    customer_id?: number | null;
+    client?: Client | null;
 }
 
 export interface AuthState {
@@ -173,9 +177,12 @@ export interface ImportPlanRow {
     import_plan_id: number;
     row_number: number;
     reference_date: string;
-    hours: number;
+    start_time: string | null;
+    end_time: string | null;
+    hours: number | null;
     title: string;
     description: string | null;
+    input_type: 'debit' | 'credit' | 'adjustment';
     tags: string[];
     validation_errors: string[];
     is_valid: boolean;
@@ -208,8 +215,46 @@ export interface ImportPlanForm {
 
 export interface ImportRowForm {
     reference_date: string;
-    hours: number;
+    start_time?: string | null;
+    end_time?: string | null;
+    hours?: number | null;
     title: string;
-    description?: string;
+    description?: string | null;
+    input_type?: 'debit' | 'credit' | 'adjustment';
     tags?: string[];
+}
+
+export interface CreditPurchasePayment {
+    id: number;
+    credit_purchase_id: number;
+    payment_method: 'pix_offline' | 'bank_transfer';
+    payment_status: 'pending' | 'approved' | 'rejected' | 'completed';
+    pix_receipt_path?: string | null;
+    receipt_approved_by?: number | null;
+    receipt_approved_at?: string | null;
+    notes?: string | null;
+    approvedBy?: User;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface CreditPurchase {
+    id: number;
+    wallet_id: number;
+    customer_id: number;
+    total_hours: string;
+    total_price: string;
+    currency_code: string;
+    status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+    wallet?: Wallet;
+    customer?: User;
+    payments?: CreditPurchasePayment[];
+    created_at: string;
+    updated_at: string;
+}
+
+export interface CreditPurchaseForm {
+    wallet_id: number;
+    total_hours: number;
+    total_price: number;
 }
