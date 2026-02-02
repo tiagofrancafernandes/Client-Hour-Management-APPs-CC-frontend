@@ -79,10 +79,14 @@ function goToClient(id: number) {
 
 <template>
     <div class="container mx-auto px-4 py-8">
-        <div class="mb-6 flex items-center justify-between">
-            <h1 class="text-2xl font-bold text-gray-900">Clients</h1>
-            <CButton v-if="canManageClients" preset="slim-blue" @click="showCreateModal = true">New Client</CButton>
-        </div>
+        <!-- Header -->
+        <UIPageHeader title="Clients" description="Manage your clients.">
+            <template v-slot:actions>
+                <CButton v-if="canManageClients" preset="primary" @click="showCreateModal = true" icon="mdi:plus">
+                    New Client
+                </CButton>
+            </template>
+        </UIPageHeader>
 
         <div class="mb-6">
             <div class="flex gap-2">
@@ -207,7 +211,10 @@ function goToClient(id: number) {
         </div>
 
         <!-- Edit Modal -->
-        <div v-if="showEditModal && editingClient" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div
+            v-if="showEditModal && editingClient"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+        >
             <div class="w-full max-w-md rounded-lg bg-white p-6">
                 <h2 class="mb-4 text-lg font-semibold">Edit Client</h2>
                 <div class="mb-4">

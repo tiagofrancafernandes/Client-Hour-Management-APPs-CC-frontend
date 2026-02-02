@@ -2,6 +2,7 @@
 import { ref, watch, computed } from 'vue';
 import type { WalletWithBalance } from '@/types';
 import { useWallets } from '@/composables/useWallets';
+import { usePermissions } from '@/composables/usePermissions';
 import { useToast } from '@/composables/useToast';
 
 const props = defineProps<{
@@ -22,6 +23,7 @@ const form = ref({
     description: '',
     hourly_rate_reference: '',
     currency_code: 'USD',
+    internal_note: '',
 });
 
 const isSubmitting = computed(() => updating.value);
@@ -38,11 +40,15 @@ watch(
                 description: newWallet.description || '',
                 hourly_rate_reference: newWallet.hourly_rate_reference ? String(newWallet.hourly_rate_reference) : '',
                 currency_code: newWallet.currency_code || 'USD',
+                internal_note: newWallet.internal_note || '',
             };
         }
     },
     { immediate: true }
 );
+
+const { hasPermission } = usePermissions();
+const canViewInternalNote = computed(() => hasPermission('wallet.view_internal_note'));
 
 async function handleSubmit() {
     if (!props.wallet || !form.value.name.trim()) {
@@ -54,8 +60,11 @@ async function handleSubmit() {
         await updateWallet(props.wallet.id, {
             name: form.value.name,
             description: form.value.description || undefined,
-            hourly_rate_reference: form.value.hourly_rate_reference ? parseFloat(form.value.hourly_rate_reference) : undefined,
+            hourly_rate_reference: form.value.hourly_rate_reference
+                ? parseFloat(form.value.hourly_rate_reference)
+                : undefined,
             currency_code: form.value.currency_code || undefined,
+            ...(canViewInternalNote.value ? { internal_note: form.value.internal_note || undefined } : {}),
         });
 
         toast.success('Wallet updated successfully');
@@ -79,7 +88,12 @@ function handleClose() {
                 <h2 class="text-lg font-semibold text-gray-900">Edit Wallet</h2>
                 <button class="text-gray-400 hover:text-gray-600" :disabled="isSubmitting" @click="handleClose">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"
+                        />
                     </svg>
                 </button>
             </div>
@@ -111,9 +125,26 @@ function handleClose() {
                     ></textarea>
                 </div>
 
+                <!-- Internal Note (only for permitted users) -->
+                <div v-if="canViewInternalNote">
+                    <label for="internal_note" class="mb-1 block text-sm font-medium text-gray-700">
+                        Internal Note
+                    </label>
+                    <textarea
+                        id="internal_note"
+                        v-model="form.internal_note"
+                        rows="3"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                        :disabled="isSubmitting"
+                        placeholder="Visible only to authorized users"
+                    ></textarea>
+                </div>
+
                 <!-- Hourly Rate Reference -->
                 <div>
-                    <label for="hourly_rate" class="mb-1 block text-sm font-medium text-gray-700">Hourly Rate Reference</label>
+                    <label for="hourly_rate" class="mb-1 block text-sm font-medium text-gray-700">
+                        Hourly Rate Reference
+                    </label>
                     <input
                         id="hourly_rate"
                         v-model="form.hourly_rate_reference"
@@ -128,7 +159,9 @@ function handleClose() {
 
                 <!-- Currency Code -->
                 <div>
-                    <label for="currency_code" class="mb-1 block text-sm font-medium text-gray-700">Currency Code</label>
+                    <label for="currency_code" class="mb-1 block text-sm font-medium text-gray-700">
+                        Currency Code
+                    </label>
                     <select
                         id="currency_code"
                         v-model="form.currency_code"

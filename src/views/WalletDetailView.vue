@@ -21,6 +21,9 @@ const {
     pagination,
     fetchWallet,
     fetchWalletEntries,
+    toggleInternalNoteVisibility,
+    isInternalNoteVisible,
+    hasInternalNotePermission,
 } = useWallets();
 
 const { createEntry, loading: entryLoading } = useLedger();
@@ -162,12 +165,64 @@ function handleWalletUpdated() {
                         <p v-if="wallet.hourly_rate_reference" class="mt-1 text-sm text-gray-500">
                             Rate: {{ wallet.currency_code || 'USD' }} {{ wallet.hourly_rate_reference }}/h
                         </p>
+                        <!-- Internal Note display (permission + toggle) -->
+                        <div v-if="hasInternalNotePermission() && wallet.internal_note" class="mt-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="text-sm font-semibold text-gray-700">Internal Note</label>
+                                <button
+                                    @click="toggleInternalNoteVisibility(wallet.id)"
+                                    class="p-1 text-gray-500 hover:text-gray-700 transition-colors"
+                                    :title="isInternalNoteVisible(wallet.id) ? 'Hide' : 'Show'"
+                                >
+                                    <svg
+                                        v-if="isInternalNoteVisible(wallet.id)"
+                                        class="w-5 h-5"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                        />
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                        />
+                                    </svg>
+                                    <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.953 9.953 0 012.223-3.412"
+                                        />
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M3 3l18 18"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div
+                                v-if="isInternalNoteVisible(wallet.id)"
+                                class="p-3 bg-gray-50 rounded border border-gray-200 text-sm"
+                            >
+                                {{ wallet.internal_note }}
+                            </div>
+                            <div v-else class="text-gray-500 italic text-sm">Internal note hidden</div>
+                        </div>
                     </div>
                     <div class="text-right">
                         <div class="mb-4 flex justify-end gap-2">
-                            <CButton v-if="canEditWallet" preset="gray-md" @click="showEditModal = true">
-                                Edit
-                            </CButton>
+                            <CButton v-if="canEditWallet" preset="gray-md" @click="showEditModal = true">Edit</CButton>
                         </div>
                         <p class="text-sm text-gray-500">Current Balance</p>
                         <p class="text-3xl font-bold" :class="getBalanceColor(currentBalance)">

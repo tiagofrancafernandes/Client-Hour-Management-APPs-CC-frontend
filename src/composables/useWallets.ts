@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import api from '@/services/api';
+import { useAuth } from '@/composables/useAuth';
 import type { LedgerEntry, PaginatedResponse, WalletWithBalance } from '@/types';
 
 export function useWallets() {
@@ -13,6 +14,22 @@ export function useWallets() {
         lastPage: 1,
         total: 0,
     });
+
+    // Internal note visibility state per-wallet
+    const internalNoteVisibility = ref<Record<number, boolean>>({});
+    const auth = useAuth();
+
+    function toggleInternalNoteVisibility(walletId: number): void {
+        internalNoteVisibility.value[walletId] = !internalNoteVisibility.value[walletId];
+    }
+
+    function isInternalNoteVisible(walletId: number): boolean {
+        return internalNoteVisibility.value[walletId] ?? false;
+    }
+
+    function hasInternalNotePermission(): boolean {
+        return !!auth.hasPermission && auth.hasPermission('wallet.view_internal_note');
+    }
 
     async function fetchWallets(clientId?: number, page = 1) {
         loading.value = true;
@@ -45,7 +62,9 @@ export function useWallets() {
         error.value = null;
 
         try {
-            wallet.value = await api.get<WalletWithBalance>(`/wallets/${id}`);
+            const response = await api.get<WalletWithBalance>(`/wallets/${id}`);
+            // API returns full wallet object
+            wallet.value = response;
         } catch (e) {
             error.value = e instanceof Error ? e.message : 'Failed to fetch wallet';
         } finally {
@@ -79,6 +98,7 @@ export function useWallets() {
         description?: string;
         hourly_rate_reference?: number;
         currency_code?: string;
+        internal_note?: string;
     }) {
         loading.value = true;
         error.value = null;
@@ -103,6 +123,7 @@ export function useWallets() {
             description?: string;
             hourly_rate_reference?: number;
             currency_code?: string;
+            internal_note?: string;
         }
     ) {
         loading.value = true;
@@ -137,5 +158,10 @@ export function useWallets() {
         fetchWalletEntries,
         createWallet,
         updateWallet,
+        // Internal note helpers
+        internalNoteVisibility,
+        toggleInternalNoteVisibility,
+        isInternalNoteVisible,
+        hasInternalNotePermission,
     };
 }

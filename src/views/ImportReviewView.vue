@@ -2,15 +2,15 @@
     <div class="container mx-auto px-4 py-8">
         <div v-if="loading && !currentPlan" class="text-center py-12">
             <Icon icon="mdi:loading" class="w-12 h-12 animate-spin text-blue-600 mx-auto" />
-            <p class="mt-4 text-gray-600">Carregando plano de importação...</p>
+            <p class="mt-4 text-gray-600">Loading import plan...</p>
         </div>
 
         <div v-else-if="currentPlan" class="space-y-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Revisar Importação</h1>
+                    <h1 class="text-3xl font-bold text-gray-900">Review Import</h1>
                     <p class="mt-2 text-gray-600">
-                        Arquivo:
+                        File:
                         <strong>{{ currentPlan.original_filename }}</strong>
                     </p>
                 </div>
@@ -34,22 +34,22 @@
 
             <div v-if="currentPlan.summary" class="grid gap-4 md:grid-cols-4">
                 <div class="bg-white rounded-lg shadow p-4">
-                    <p class="text-sm text-gray-600">Total de Linhas</p>
+                    <p class="text-sm text-gray-600">Total Rows</p>
                     <p class="text-2xl font-bold text-gray-900">{{ currentPlan.summary.total_rows }}</p>
                 </div>
 
                 <div class="bg-white rounded-lg shadow p-4">
-                    <p class="text-sm text-gray-600">Linhas Válidas</p>
+                    <p class="text-sm text-gray-600">Valid Rows</p>
                     <p class="text-2xl font-bold text-green-600">{{ currentPlan.summary.valid_rows }}</p>
                 </div>
 
                 <div class="bg-white rounded-lg shadow p-4">
-                    <p class="text-sm text-gray-600">Linhas com Erros</p>
+                    <p class="text-sm text-gray-600">Rows with Errors</p>
                     <p class="text-2xl font-bold text-red-600">{{ currentPlan.summary.invalid_rows }}</p>
                 </div>
 
                 <div class="bg-white rounded-lg shadow p-4">
-                    <p class="text-sm text-gray-600">Total de Horas</p>
+                    <p class="text-sm text-gray-600">Total Hours</p>
                     <p class="text-2xl font-bold text-blue-600">{{ currentPlan.summary.total_hours }}</p>
                 </div>
             </div>
@@ -61,10 +61,10 @@
                 <div class="flex items-start gap-3">
                     <Icon icon="mdi:alert-outline" class="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" />
                     <div>
-                        <h3 class="font-medium text-yellow-900">Atenção: Linhas com Erros</h3>
+                        <h3 class="font-medium text-yellow-900">Warning: Rows with Errors</h3>
                         <p class="text-sm text-yellow-800 mt-1">
-                            Existem {{ currentPlan.summary.invalid_rows }} linha(s) com erros de validação. Corrija os
-                            erros ou remova as linhas inválidas antes de confirmar a importação.
+                            There are {{ currentPlan.summary.invalid_rows }} row(s) with validation errors. Fix the
+                            errors or remove invalid rows before confirming the import.
                         </p>
                     </div>
                 </div>
@@ -72,7 +72,7 @@
 
             <div class="bg-white rounded-lg shadow">
                 <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-gray-900">Registros a Importar</h2>
+                    <h2 class="text-lg font-semibold text-gray-900">Records to Import</h2>
 
                     <div class="flex gap-2">
                         <CButton
@@ -82,7 +82,7 @@
                             @click="handleAddRow"
                         >
                             <Icon icon="mdi:plus" class="w-4 h-4" />
-                            Adicionar Linha
+                            Add Row
                         </CButton>
                     </div>
                 </div>
@@ -92,12 +92,12 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Horas</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Título</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hours</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tags</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                             </tr>
                         </thead>
 
@@ -133,11 +133,11 @@
                                 <td class="px-4 py-3">
                                     <div v-if="row.is_valid" class="flex items-center gap-1 text-green-600">
                                         <Icon icon="mdi:check-circle" class="w-5 h-5" />
-                                        <span class="text-xs">Válido</span>
+                                        <span class="text-xs">Valid</span>
                                     </div>
                                     <div v-else class="flex items-center gap-1 text-red-600">
                                         <Icon icon="mdi:alert-circle" class="w-5 h-5" />
-                                        <span class="text-xs">{{ row.validation_errors.length }} erro(s)</span>
+                                        <span class="text-xs">{{ row.validation_errors.length }} error(s)</span>
                                     </div>
                                 </td>
                                 <td class="px-4 py-3">
@@ -160,11 +160,11 @@
                 v-if="currentPlan.status !== 'confirmed' && currentPlan.status !== 'cancelled'"
                 class="flex gap-3 justify-end"
             >
-                <CButton preset="outlined-black" @click="handleCancel">Cancelar Importação</CButton>
+                <CButton preset="outlined-black" @click="handleCancel">Cancel Import</CButton>
 
                 <CButton preset="primary" :disabled="!canConfirm || confirming" @click="handleConfirm">
                     <Icon v-if="confirming" icon="mdi:loading" class="w-5 h-5 animate-spin" />
-                    <span v-else>Confirmar e Criar Lançamentos</span>
+                    <span v-else>Confirm and Create Entries</span>
                 </CButton>
             </div>
 
@@ -173,11 +173,11 @@
                 class="bg-green-50 border border-green-200 rounded-lg p-4"
             >
                 <div class="flex items-start gap-3">
-                    <Icon icon="mdi:check-circle" class="w-6 h-6 text-green-600 flex-shrink-0" />
+                    <Icon icon="mdi:check-circle" class="w-6 h-6 text-green-600 shrink-0" />
                     <div>
-                        <h3 class="font-medium text-green-900">Importação Confirmada</h3>
+                        <h3 class="font-medium text-green-900">Import Confirmed</h3>
                         <p class="text-sm text-green-800 mt-1">
-                            Todos os registros foram importados com sucesso em
+                            All records were imported successfully on
                             {{ formatDate(currentPlan.confirmed_at!) }}.
                         </p>
                     </div>
@@ -187,10 +187,8 @@
 
         <div v-else class="text-center py-12">
             <Icon icon="mdi:file-alert-outline" class="w-16 h-16 text-gray-400 mx-auto" />
-            <p class="mt-4 text-gray-600">Plano de importação não encontrado</p>
-            <CButton preset="outlined-black" class="mt-4" @click="$router.push('/imports')">
-                Voltar para Importações
-            </CButton>
+            <p class="mt-4 text-gray-600">Import plan not found</p>
+            <CButton preset="outlined-black" class="mt-4" @click="$router.push('/imports')">Back to Imports</CButton>
         </div>
 
         <!-- Edit Row Modal -->
@@ -225,10 +223,10 @@ const showEditModal: Ref<boolean> = ref(false);
 const editingRow: Ref<ImportPlanRow | null> = ref(null);
 
 const statusLabels: Record<string, string> = {
-    pending: 'Pendente',
-    validated: 'Validado',
-    confirmed: 'Confirmado',
-    cancelled: 'Cancelado',
+    pending: 'Pending',
+    validated: 'Validated',
+    confirmed: 'Confirmed',
+    cancelled: 'Cancelled',
 };
 
 const canConfirm = computed(() => {
@@ -264,10 +262,10 @@ function handleEditRow(row: ImportPlanRow): void {
 
 async function handleDeleteRow(row: ImportPlanRow): Promise<void> {
     const confirmed = await confirm({
-        title: 'Excluir Linha',
-        message: `Tem certeza que deseja excluir a linha ${row.row_number}?`,
-        confirmText: 'Excluir',
-        cancelText: 'Cancelar',
+        title: 'Delete Row',
+        message: `Are you sure you want to delete row ${row.row_number}?`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
         variant: 'danger',
     });
 
@@ -277,9 +275,9 @@ async function handleDeleteRow(row: ImportPlanRow): Promise<void> {
 
     try {
         await deleteRow(row.id);
-        toast.success('Linha excluída com sucesso');
+        toast.success('Row deleted successfully');
     } catch (err) {
-        toast.error('Erro ao excluir linha');
+        toast.error('Error deleting row');
     }
 }
 
@@ -296,16 +294,16 @@ async function handleSaveRow(data: ImportRowForm): Promise<void> {
     try {
         if (editingRow.value) {
             await updateRow(editingRow.value.id, data);
-            toast.success('Linha atualizada com sucesso');
+            toast.success('Row updated successfully');
         } else {
             await addRow(currentPlan.value.id, data);
-            toast.success('Linha adicionada com sucesso');
+            toast.success('Row added successfully');
         }
 
         showEditModal.value = false;
         editingRow.value = null;
     } catch (err) {
-        toast.error('Erro ao salvar linha');
+        toast.error('Error saving row');
     }
 }
 
@@ -315,10 +313,10 @@ async function handleConfirm(): Promise<void> {
     }
 
     const confirmed = await confirm({
-        title: 'Confirmar Importação',
-        message: `Confirmar a importação de ${currentPlan.value.summary?.valid_rows} registro(s)? Esta ação não pode ser desfeita.`,
-        confirmText: 'Confirmar',
-        cancelText: 'Cancelar',
+        title: 'Confirm Import',
+        message: `Confirm importing ${currentPlan.value.summary?.valid_rows} record(s)? This action cannot be undone.`,
+        confirmText: 'Confirm',
+        cancelText: 'Cancel',
         variant: 'warning',
     });
 
@@ -330,13 +328,13 @@ async function handleConfirm(): Promise<void> {
 
     try {
         await confirmImportPlan(currentPlan.value.id);
-        toast.success('Importação confirmada com sucesso!');
+        toast.success('Import confirmed successfully!');
 
         setTimeout(() => {
             router.push('/imports');
         }, 2000);
     } catch (err) {
-        toast.error('Erro ao confirmar importação');
+        toast.error('Error confirming import');
     } finally {
         confirming.value = false;
     }
@@ -348,10 +346,10 @@ async function handleCancel(): Promise<void> {
     }
 
     const confirmed = await confirm({
-        title: 'Cancelar Importação',
-        message: 'Tem certeza que deseja cancelar esta importação? O arquivo será removido.',
-        confirmText: 'Sim, Cancelar',
-        cancelText: 'Não',
+        title: 'Cancel Import',
+        message: 'Are you sure you want to cancel this import? The file will be deleted.',
+        confirmText: 'Yes, Cancel',
+        cancelText: 'No',
         variant: 'danger',
     });
 
@@ -361,13 +359,13 @@ async function handleCancel(): Promise<void> {
 
     try {
         await cancelImportPlan(currentPlan.value.id);
-        toast.success('Importação cancelada');
+        toast.success('Import cancelled');
 
         setTimeout(() => {
             router.push('/imports');
         }, 1000);
     } catch (err) {
-        toast.error('Erro ao cancelar importação');
+        toast.error('Error cancelling import');
     }
 }
 </script>

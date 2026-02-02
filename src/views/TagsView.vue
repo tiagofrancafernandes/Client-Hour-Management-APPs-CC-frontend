@@ -38,9 +38,8 @@ async function handleDelete(id: number) {
 
 <template>
     <div class="container mx-auto px-4 py-8">
-        <div class="mb-6 flex items-center justify-between">
-            <h1 class="text-2xl font-bold text-gray-900">Tags</h1>
-            <div class="flex justify-between gap-2">
+        <UIPageHeader title="Tags" description="Manage tags to categorize your time entries.">
+            <template v-slot:actions>
                 <CButton
                     v-if="canManageTags"
                     @click="lockToEditTags = !lockToEditTags"
@@ -56,8 +55,8 @@ async function handleDelete(id: number) {
                 </CButton>
 
                 <CButton v-if="canManageTags" @click="showCreateModal = true">New Tag</CButton>
-            </div>
-        </div>
+            </template>
+        </UIPageHeader>
 
         <div v-if="error" class="mb-4 rounded-lg bg-red-100 p-4 text-red-700">
             {{ error }}

@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+dist/
+dist_tmp_build/
+.vite/
+
 # Editor directories and files
 #.vscode/*
 !.vscode/extensions.json

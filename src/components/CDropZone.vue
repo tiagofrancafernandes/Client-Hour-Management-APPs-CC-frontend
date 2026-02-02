@@ -57,7 +57,7 @@ const toast = useToast();
 const props = defineProps({
     label: {
         type: String,
-        default: () => 'Drag and drop files here',
+        default: () => 'Click or drag files here',
     },
     accept: {
         type: [String, Array],
@@ -98,7 +98,7 @@ const labelClasses = computed(() => {
 });
 
 const label = computed(() => {
-    return props?.label || 'Drag and drop a file here or click to select';
+    return props?.label || 'Click or drag a file here or click to select';
 });
 
 const maxSize = computed(() => {

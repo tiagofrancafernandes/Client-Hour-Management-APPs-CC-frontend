@@ -189,23 +189,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-50 p-6">
-        <div class="max-w-6xl mx-auto">
-            <!-- Header -->
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Timers</h1>
-                    <p class="text-gray-600 mt-1">Track and manage your time entries</p>
-                </div>
-                <button
-                    v-if="canCreateTimer"
-                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
-                    @click="showStartModal = true"
-                >
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <UIPageHeader title="Timers" description="Track and manage your time entries.">
+            <template v-slot:actions>
+                <CButton v-if="canCreateTimer" preset="primary" @click="showStartModal = true" icon="mdi:timer-plus">
                     Start Timer
-                </button>
-            </div>
+                </CButton>
+            </template>
+        </UIPageHeader>
 
+        <div class="w-full">
             <!-- Filter Tabs -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
                 <div class="flex overflow-x-auto">

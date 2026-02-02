@@ -27,11 +27,12 @@ export function useImport() {
                 params.wallet_id = filters.wallet_id;
             }
 
-            const response = await api.get<PaginatedResponse<ImportPlan>>('/import-plans', { params });
+            const response: any = await api.get('/import-plans', { params });
+            const body = response?.data ?? response;
 
-            importPlans.value = response.data.data || [];
-            totalPages.value = response.data.last_page || 1;
-            currentPage.value = response.data.current_page || 1;
+            importPlans.value = body?.data || body || [];
+            totalPages.value = body?.last_page || 1;
+            currentPage.value = body?.current_page || 1;
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Failed to fetch import plans';
             importPlans.value = [];
@@ -45,11 +46,12 @@ export function useImport() {
         error.value = null;
 
         try {
-            const response = await api.get<ImportPlan>(`/import-plans/${id}`);
+            const response: any = await api.get(`/import-plans/${id}`);
+            const body = response?.data ?? response;
 
-            currentPlan.value = response.data;
+            currentPlan.value = body;
 
-            return response.data;
+            return body;
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Failed to fetch import plan';
 
@@ -114,14 +116,14 @@ export function useImport() {
         error.value = null;
 
         try {
-            const response: any = await api.post<{ data: ImportPlan }>(`/import-plans/${planId}/confirm`);
+            const response: any = await api.post(`/import-plans/${planId}/confirm`);
+            const body = response?.data ?? response;
 
             if (currentPlan.value && currentPlan.value.id === planId) {
-                currentPlan.value =
-                    'data' in response || 'data' in response.data ? response?.data || response?.data?.data : response;
+                currentPlan.value = body?.data || body;
             }
 
-            return response.data.data;
+            return body?.data || body;
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Failed to confirm import plan';
 
@@ -136,13 +138,14 @@ export function useImport() {
         error.value = null;
 
         try {
-            const response = await api.post<{ data: ImportPlan }>(`/import-plans/${planId}/cancel`);
+            const response: any = await api.post(`/import-plans/${planId}/cancel`);
+            const body = response?.data ?? response;
 
             if (currentPlan.value && currentPlan.value.id === planId) {
-                currentPlan.value = response.data.data;
+                currentPlan.value = body?.data || body;
             }
 
-            return response.data.data;
+            return body?.data || body;
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Failed to cancel import plan';
 
@@ -157,19 +160,20 @@ export function useImport() {
         error.value = null;
 
         try {
-            const response = await api.put<{ data: ImportPlanRow }>(`/import-plans/rows/${rowId}`, data);
+            const response: any = await api.put(`/import-plans/rows/${rowId}`, data);
+            const body = response?.data ?? response;
 
             if (currentPlan.value && currentPlan.value.rows) {
                 const index = currentPlan.value.rows.findIndex((row) => row.id === rowId);
 
                 if (index !== -1) {
-                    currentPlan.value.rows[index] = response.data.data;
+                    currentPlan.value.rows[index] = body?.data || body;
                 }
 
                 await fetchImportPlan(currentPlan.value.id);
             }
 
-            return response.data.data;
+            return body?.data || body;
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Failed to update row';
 
@@ -184,13 +188,14 @@ export function useImport() {
         error.value = null;
 
         try {
-            const response = await api.post<{ data: ImportPlanRow }>(`/import-plans/${planId}/rows`, data);
+            const response: any = await api.post(`/import-plans/${planId}/rows`, data);
+            const body = response?.data ?? response;
 
             if (currentPlan.value && currentPlan.value.id === planId) {
                 await fetchImportPlan(planId);
             }
 
-            return response.data.data;
+            return body?.data || body;
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Failed to add row';
 

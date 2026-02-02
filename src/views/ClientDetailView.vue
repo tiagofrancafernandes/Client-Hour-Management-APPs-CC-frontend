@@ -63,7 +63,9 @@ async function handleUpdateWallet() {
         await updateWallet(editingWallet.value.id, {
             name: editingWallet.value.name,
             description: editingWallet.value.description || undefined,
-            hourly_rate_reference: editingWallet.value.hourly_rate_reference || undefined,
+            hourly_rate_reference: editingWallet.value.hourly_rate_reference
+                ? parseFloat(String(editingWallet.value.hourly_rate_reference))
+                : undefined,
         });
 
         showEditWalletModal.value = false;
@@ -221,7 +223,10 @@ function getBalanceColor(balance: string): string {
         </div>
 
         <!-- Edit Wallet Modal -->
-        <div v-if="showEditWalletModal && editingWallet" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div
+            v-if="showEditWalletModal && editingWallet"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+        >
             <div class="w-full max-w-md rounded-lg bg-white p-6">
                 <h2 class="mb-4 text-lg font-semibold">Edit Wallet</h2>
                 <div class="mb-4">

@@ -139,7 +139,7 @@ onUnmounted(() => {
                                 class="text-gray-600 hover:text-gray-900"
                                 active-class="text-blue-600 font-medium"
                             >
-                                Importações
+                                Imports
                             </RouterLink>
                         </div>
                     </div>

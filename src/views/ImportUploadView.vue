@@ -1,23 +1,21 @@
 <template>
     <div class="container mx-auto px-4 py-8">
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Importar Registros</h1>
-            <p class="mt-2 text-gray-600">
-                Faça upload de um arquivo CSV ou XLSX para importar múltiplos registros de horas
-            </p>
+            <h1 class="text-3xl font-bold text-gray-900">Import Records</h1>
+            <p class="mt-2 text-gray-600">Upload a CSV or XLSX file to import multiple hour records</p>
         </div>
 
         <div class="grid gap-6 lg:grid-cols-2">
             <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">Upload de Arquivo</h2>
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">File Upload</h2>
 
                 <form @submit.prevent="handleUpload">
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Selecione a Carteira</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Wallet</label>
 
                             <CSelect v-model="selectedWalletId" required>
-                                <option :value="undefined">Selecione uma carteira</option>
+                                <option :value="undefined">Select a wallet</option>
                                 <option v-for="wallet in wallets" :key="wallet.id" :value="wallet.id">
                                     {{ wallet.name }}
                                     <span v-if="wallet.client">({{ wallet.client.name }})</span>
@@ -26,7 +24,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Arquivo (CSV ou XLSX)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">File (CSV or XLSX)</label>
 
                             <CDropZone
                                 accept="csv,xlsx"
@@ -42,7 +40,7 @@
                                 @dragover.prevent="isDragging = true"
                                 @dragleave.prevent="isDragging = false"
                                 @drop.prevent="handleFileDrop"
-                                @click="$refs.fileInput?.click()"
+                                @click="fileInputClick"
                             >
                                 <input
                                     ref="fileInput"
@@ -62,7 +60,7 @@
 
                                 <div v-else class="flex items-center justify-center gap-2">
                                     <Icon icon="mdi:file-document-outline" class="w-6 h-6 text-blue-600" />
-                                    <span class="text-sm text-gray-700">{{ selectedFile.name }}</span>
+                                    <span class="text-sm text-gray-700">{{ selectedFile?.name }}</span>
                                     <button
                                         type="button"
                                         class="text-red-600 hover:text-red-800"
@@ -86,11 +84,11 @@
                                 class="flex-1"
                             >
                                 <Icon v-if="uploading" icon="mdi:loading" class="w-5 h-5 animate-spin" />
-                                <span v-else>Fazer Upload e Validar</span>
+                                <span v-else>Upload and Validate</span>
                             </CButton>
 
                             <CButton type="button" preset="outlined-black" @click="$router.push('/imports')">
-                                Cancelar
+                                Cancel
                             </CButton>
                         </div>
                     </div>
@@ -98,12 +96,12 @@
             </div>
 
             <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">Como Usar</h2>
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">How to Use</h2>
 
                 <div class="space-y-4 text-sm text-gray-600">
                     <div>
-                        <h3 class="font-medium text-gray-900 mb-2">1. Baixe o Template</h3>
-                        <p class="mb-2">Use nosso template para garantir que o arquivo está no formato correto.</p>
+                        <h3 class="font-medium text-gray-900 mb-2">1. Download Template</h3>
+                        <p class="mb-2">Use our template to ensure your file is in the correct format.</p>
 
                         <div class="flex gap-2">
                             <CButton
@@ -114,7 +112,7 @@
                             >
                                 <Icon v-if="downloading" icon="mdi:loading" class="w-4 h-4 animate-spin" />
                                 <Icon v-else icon="mdi:file-delimited-outline" class="w-4 h-4" />
-                                Baixar CSV
+                                Download CSV
                             </CButton>
 
                             <CButton
@@ -125,52 +123,50 @@
                             >
                                 <Icon v-if="downloading" icon="mdi:loading" class="w-4 h-4 animate-spin" />
                                 <Icon v-else icon="mdi:file-excel-outline" class="w-4 h-4" />
-                                Baixar XLSX
+                                Download XLSX
                             </CButton>
                         </div>
                     </div>
 
                     <div>
-                        <h3 class="font-medium text-gray-900 mb-2">2. Preencha os Dados</h3>
-                        <p>Complete o arquivo com seus dados. Campos obrigatórios:</p>
+                        <h3 class="font-medium text-gray-900 mb-2">2. Fill in the Data</h3>
+                        <p>Complete the file with your data. Required fields:</p>
 
                         <ul class="list-disc list-inside mt-2 space-y-1">
                             <li>
                                 <strong>reference_date</strong>
-                                : Data de referência (YYYY-MM-DD)
+                                : Reference date (YYYY-MM-DD)
                             </li>
                             <li>
                                 <strong>hours</strong>
-                                : Horas (positivo = crédito, negativo = débito)
+                                : Hours (positive = credit, negative = debit)
                             </li>
                             <li>
                                 <strong>title</strong>
-                                : Título do registro
+                                : Record title
                             </li>
                         </ul>
 
                         <p class="mt-2">
-                            Campos opcionais:
+                            Optional fields:
                             <strong>description</strong>
                             ,
                             <strong>tags</strong>
-                            (separadas por vírgula)
+                            (separated by comma)
                         </p>
                     </div>
 
                     <div>
-                        <h3 class="font-medium text-gray-900 mb-2">3. Validação</h3>
+                        <h3 class="font-medium text-gray-900 mb-2">3. Validation</h3>
                         <p>
-                            Após o upload, o sistema irá validar todos os registros. Você poderá revisar e corrigir
-                            erros antes de confirmar a importação.
+                            After uploading, the system will validate all records. You can review and correct errors
+                            before confirming the import.
                         </p>
                     </div>
 
                     <div>
-                        <h3 class="font-medium text-gray-900 mb-2">4. Confirmação</h3>
-                        <p>
-                            Uma vez confirmada, a importação criará entradas no ledger. Esta ação não pode ser desfeita.
-                        </p>
+                        <h3 class="font-medium text-gray-900 mb-2">4. Confirmation</h3>
+                        <p>Once confirmed, the import will create ledger entries. This action cannot be undone.</p>
                     </div>
                 </div>
             </div>
@@ -214,6 +210,10 @@ function handleFileSelect(event: Event): void {
     }
 }
 
+function fileInputClick(): void {
+    fileInput.value?.click();
+}
+
 function handleFileDrop(event: DragEvent): void {
     isDragging.value = false;
 
@@ -235,12 +235,12 @@ function validateAndSetFile(file: File): void {
     const maxSize = 10 * 1024 * 1024;
 
     if (!allowedTypes.includes(file.type) && !file.name.endsWith('.csv') && !file.name.endsWith('.xlsx')) {
-        uploadError.value = 'Apenas arquivos CSV e XLSX são permitidos.';
+        uploadError.value = 'Only CSV and XLSX files are allowed.';
         return;
     }
 
     if (file.size > maxSize) {
-        uploadError.value = 'O arquivo não pode exceder 10MB.';
+        uploadError.value = 'The file cannot exceed 10MB.';
         return;
     }
 
@@ -272,18 +272,18 @@ async function handleUpload(): Promise<void> {
 
         if (!importPlan?.id) {
             console.log('importPlan', importPlan);
-            toast.error('Houve algum erro ao enviar o arquivo...');
+            toast.error('There was an error uploading the file...');
             return;
         }
 
-        toast.success('Arquivo enviado com sucesso! Redirecionando para revisão...');
+        toast.success('File uploaded successfully! Redirecting for review...');
 
         setTimeout(() => {
             router.push(`/imports/${importPlan?.id}/review`);
         }, 1000);
     } catch (err) {
-        uploadError.value = err instanceof Error ? err.message : 'Erro ao fazer upload do arquivo.';
-        toast.error('Erro ao fazer upload do arquivo');
+        uploadError.value = err instanceof Error ? err.message : 'Error uploading the file.';
+        toast.error('Error uploading the file');
     } finally {
         uploading.value = false;
     }
@@ -296,9 +296,9 @@ async function handleDownloadTemplate(format: 'csv' | 'xlsx' = 'csv'): Promise<v
 
     try {
         await downloadTemplate(format);
-        toast.success(`Template ${format.toUpperCase()} baixado com sucesso`);
+        toast.success(`Template ${format.toUpperCase()} downloaded successfully`);
     } catch (err) {
-        toast.error('Erro ao baixar template');
+        toast.error('Error downloading template');
     } finally {
         downloading.value = false;
     }

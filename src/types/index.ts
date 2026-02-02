@@ -13,6 +13,7 @@ export interface Wallet {
     client_id: number;
     name: string;
     description: string | null;
+    internal_note?: string | null;
     hourly_rate_reference: string | null;
     currency_code: string | null;
     client?: Client;

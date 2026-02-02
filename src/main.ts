@@ -7,6 +7,7 @@ import CSelect from './components/CSelect.vue';
 import CInput from './components/CInput.vue';
 import CTextarea from './components/CTextarea.vue';
 import CDropZone from './components/CDropZone.vue';
+import UIPageHeader from './components/UIPageHeader.vue';
 import { Icon } from '@iconify/vue';
 import router from './router';
 import authPlugin from './plugins/auth';
@@ -22,6 +23,7 @@ const components = {
     CInput: CInput,
     CTextarea: CTextarea,
     CDropZone: CDropZone,
+    UIPageHeader: UIPageHeader,
     Icon: Icon,
     UIcon: Icon,
 };

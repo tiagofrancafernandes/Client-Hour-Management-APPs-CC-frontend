@@ -7,6 +7,9 @@ import { fileURLToPath, URL } from 'node:url';
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [vue(), tailwindcss()],
+    build: {
+        outDir: process.env.BUILD_OUT_DIR || 'dist',
+    },
     resolve: {
         alias: {
             '@@': path.resolve(__dirname, './'), // Mapeia '@' para o diretório 'src'

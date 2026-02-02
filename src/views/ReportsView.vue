@@ -271,7 +271,7 @@ async function exportReport(format: 'pdf' | 'excel') {
 
 <template>
     <div class="container mx-auto px-4 py-8">
-        <h1 class="mb-6 text-2xl font-bold text-gray-900">Reports</h1>
+        <UIPageHeader title="Reports" description="View and export your time reports."></UIPageHeader>
 
         <!-- Filters -->
         <div class="mb-6 rounded-lg bg-white p-4 shadow">
@@ -417,134 +417,134 @@ async function exportReport(format: 'pdf' | 'excel') {
 
             <!-- Grouped Data -->
             <div v-if="groupedData.length > 0" class="overflow-hidden rounded-lg bg-white shadow">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            {{ filters.group_by === 'client' ? 'Client' : 'Wallet' }}
-                        </th>
-                        <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Credits
-                        </th>
-                        <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Debits
-                        </th>
-                        <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Balance
-                        </th>
-                        <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Entries
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 bg-white">
-                    <tr v-for="(item, index) in groupedData" :key="index">
-                        <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                            {{ item.client_name || item.wallet_name }}
-                        </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-green-600">
-                            +{{ item.total_credits }}h
-                        </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-red-600">
-                            {{ item.total_debits }}h
-                        </td>
-                        <td
-                            class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium"
-                            :class="getHoursColor(item.net_balance)"
-                        >
-                            {{ formatHours(item.net_balance) }}
-                        </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500">
-                            {{ item.entry_count }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                {{ filters.group_by === 'client' ? 'Client' : 'Wallet' }}
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Credits
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Debits
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Balance
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Entries
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                        <tr v-for="(item, index) in groupedData" :key="index">
+                            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                                {{ item.client_name || item.wallet_name }}
+                            </td>
+                            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-green-600">
+                                +{{ item.total_credits }}h
+                            </td>
+                            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-red-600">
+                                {{ item.total_debits }}h
+                            </td>
+                            <td
+                                class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium"
+                                :class="getHoursColor(item.net_balance)"
+                            >
+                                {{ formatHours(item.net_balance) }}
+                            </td>
+                            <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500">
+                                {{ item.entry_count }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <!-- Entries Table -->
             <div v-else-if="entries.length > 0" class="overflow-hidden rounded-lg bg-white shadow">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Date
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Client / Wallet
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Title
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Tags
-                        </th>
-                        <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Hours
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 bg-white">
-                    <tr v-for="entry in entries" :key="entry.id">
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                            {{ formatDate(entry.reference_date) }}
-                        </td>
-                        <td class="px-6 py-4 text-sm">
-                            <div class="font-medium text-gray-900">
-                                {{ entry.wallet?.client?.name }}
-                            </div>
-                            <div class="text-gray-500">{{ entry.wallet?.name }}</div>
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-900">
-                            {{ entry.title || '-' }}
-                        </td>
-                        <td class="px-6 py-4 text-sm">
-                            <div class="flex flex-wrap gap-1">
-                                <span
-                                    v-for="tag in entry.tags"
-                                    :key="tag.id"
-                                    class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
-                                >
-                                    {{ tag.name }}
-                                </span>
-                            </div>
-                        </td>
-                        <td
-                            class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium"
-                            :class="getHoursColor(entry.hours)"
-                        >
-                            {{ formatHours(entry.hours) }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Date
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Client / Wallet
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Title
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Tags
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Hours
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                        <tr v-for="entry in entries" :key="entry.id">
+                            <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                                {{ formatDate(entry.reference_date) }}
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                <div class="font-medium text-gray-900">
+                                    {{ entry.wallet?.client?.name }}
+                                </div>
+                                <div class="text-gray-500">{{ entry.wallet?.name }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                {{ entry.title || '-' }}
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                <div class="flex flex-wrap gap-1">
+                                    <span
+                                        v-for="tag in entry.tags"
+                                        :key="tag.id"
+                                        class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
+                                    >
+                                        {{ tag.name }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td
+                                class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium"
+                                :class="getHoursColor(entry.hours)"
+                            >
+                                {{ formatHours(entry.hours) }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
 
-            <div v-if="pagination.lastPage > 1" class="flex justify-center gap-2 border-t p-4">
-                <CButton
-                    preset="none-sm"
-                    :disabled="pagination.currentPage === 1"
-                    class="rounded px-3 py-1 disabled:opacity-50"
-                    :class="{
-                        'bg-gray-200': pagination.currentPage === 1,
-                        'bg-blue-600 text-white': pagination.currentPage !== 1,
-                    }"
-                >
-                    Previous
-                </CButton>
-                <span class="px-3 py-1">Page {{ pagination.currentPage }} of {{ pagination.lastPage }}</span>
-                <CButton
-                    preset="none-sm"
-                    :disabled="pagination.currentPage === pagination.lastPage"
-                    class="rounded px-3 py-1 disabled:opacity-50"
-                    :class="{
-                        'bg-gray-200': pagination.currentPage === pagination.lastPage,
-                        'bg-blue-600 text-white': pagination.currentPage !== pagination.lastPage,
-                    }"
-                >
-                    Next
-                </CButton>
+                <div v-if="pagination.lastPage > 1" class="flex justify-center gap-2 border-t p-4">
+                    <CButton
+                        preset="none-sm"
+                        :disabled="pagination.currentPage === 1"
+                        class="rounded px-3 py-1 disabled:opacity-50"
+                        :class="{
+                            'bg-gray-200': pagination.currentPage === 1,
+                            'bg-blue-600 text-white': pagination.currentPage !== 1,
+                        }"
+                    >
+                        Previous
+                    </CButton>
+                    <span class="px-3 py-1">Page {{ pagination.currentPage }} of {{ pagination.lastPage }}</span>
+                    <CButton
+                        preset="none-sm"
+                        :disabled="pagination.currentPage === pagination.lastPage"
+                        class="rounded px-3 py-1 disabled:opacity-50"
+                        :class="{
+                            'bg-gray-200': pagination.currentPage === pagination.lastPage,
+                            'bg-blue-600 text-white': pagination.currentPage !== pagination.lastPage,
+                        }"
+                    >
+                        Next
+                    </CButton>
+                </div>
             </div>
-        </div>
 
             <!-- No Data Message -->
             <div v-else class="rounded-lg bg-white border border-gray-200 p-8 text-center">

@@ -90,7 +90,7 @@ const router = createRouter({
             name: 'imports',
             component: () => import('@/views/ImportPlansListView.vue'),
             meta: {
-                title: 'Importações',
+                title: 'Imports',
                 requiresAuth: true,
                 permissions: ['import.view'],
             },
@@ -100,7 +100,7 @@ const router = createRouter({
             name: 'imports-upload',
             component: () => import('@/views/ImportUploadView.vue'),
             meta: {
-                title: 'Nova Importação',
+                title: 'New Import',
                 requiresAuth: true,
                 permissions: ['import.create'],
             },
@@ -110,7 +110,7 @@ const router = createRouter({
             name: 'imports-review',
             component: () => import('@/views/ImportReviewView.vue'),
             meta: {
-                title: 'Revisar Importação',
+                title: 'Review Import',
                 requiresAuth: true,
                 permissions: ['import.view'],
             },

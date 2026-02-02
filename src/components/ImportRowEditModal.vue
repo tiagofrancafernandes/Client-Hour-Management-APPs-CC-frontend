@@ -9,7 +9,7 @@
                 <div class="p-6 border-b border-gray-200">
                     <div class="flex items-center justify-between">
                         <h2 class="text-xl font-semibold text-gray-900">
-                            {{ row ? `Editar Linha #${row.row_number}` : 'Nova Linha' }}
+                            {{ row ? `Edit Row #${row.row_number}` : 'New Row' }}
                         </h2>
 
                         <button class="text-gray-400 hover:text-gray-600" @click="handleClose">
@@ -30,7 +30,7 @@
                                     class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5"
                                 />
                                 <div>
-                                    <h4 class="text-sm font-medium text-red-900 mb-1">Erros de Validação:</h4>
+                                    <h4 class="text-sm font-medium text-red-900 mb-1">Validation Errors:</h4>
                                     <ul class="list-disc list-inside text-sm text-red-800 space-y-1">
                                         <li v-for="(validationError, index) in row.validation_errors" :key="index">
                                             {{ validationError }}
@@ -41,42 +41,40 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Data de Referência *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Reference Date *</label>
 
                             <CInput v-model="formData.reference_date" type="date" required :max="today" />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Horas *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Hours *</label>
 
                             <CInput v-model.number="formData.hours" type="number" step="0.01" required />
 
                             <p class="mt-1 text-xs text-gray-500">
-                                Use valores positivos para crédito e negativos para débito
+                                Use positive values for credit and negative values for debit
                             </p>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Título *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Title *</label>
 
                             <CInput v-model="formData.title" type="text" required maxlength="255" />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
 
                             <CTextarea v-model="formData.description" rows="3" />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
-
                             <div class="space-y-2">
                                 <div class="flex gap-2">
                                     <input
                                         v-model="newTag"
                                         type="text"
-                                        placeholder="Digite uma tag e pressione Enter"
+                                        placeholder="Type a tag and press Enter"
                                         class="flex-1 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                         @keypress.enter.prevent="addTag"
                                     />
@@ -107,11 +105,11 @@
                     </div>
 
                     <div class="bg-gray-50 px-6 py-4 flex gap-3 justify-end rounded-b-lg">
-                        <CButton type="button" preset="outlined-black" @click="handleClose">Cancelar</CButton>
+                        <CButton type="button" preset="outlined-black" @click="handleClose">Cancel</CButton>
 
                         <CButton type="submit" preset="primary" :disabled="saving">
                             <Icon v-if="saving" icon="mdi:loading" class="w-5 h-5 animate-spin" />
-                            <span v-else>{{ row ? 'Salvar' : 'Adicionar' }}</span>
+                            <span v-else>{{ row ? 'Save' : 'Add' }}</span>
                         </CButton>
                     </div>
                 </form>
@@ -172,7 +170,7 @@ watch(
                 };
             } else {
                 formData.value = {
-                    reference_date: today.value,
+                    reference_date: today.value ?? '',
                     hours: 0,
                     title: '',
                     description: '',
