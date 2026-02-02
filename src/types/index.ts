@@ -14,6 +14,7 @@ export interface Wallet {
     name: string;
     description: string | null;
     hourly_rate_reference: string | null;
+    currency_code: string | null;
     client?: Client;
     created_at: string;
     updated_at: string;

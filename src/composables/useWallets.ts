@@ -78,6 +78,7 @@ export function useWallets() {
         name: string;
         description?: string;
         hourly_rate_reference?: number;
+        currency_code?: string;
     }) {
         loading.value = true;
         error.value = null;
@@ -101,6 +102,7 @@ export function useWallets() {
             name?: string;
             description?: string;
             hourly_rate_reference?: number;
+            currency_code?: string;
         }
     ) {
         loading.value = true;

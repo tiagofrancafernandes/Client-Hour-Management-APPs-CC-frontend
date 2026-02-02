@@ -6,6 +6,7 @@ import { useLedger } from '@/composables/useLedger';
 import { useTags } from '@/composables/useTags';
 import { usePermissions } from '@/composables/usePermissions';
 import TagInput from '@/components/TagInput.vue';
+import WalletEditModal from '@/components/WalletEditModal.vue';
 import type { LedgerEntryForm } from '@/types';
 
 const route = useRoute();
@@ -30,7 +31,12 @@ const canAddEntry = computed(() => {
     return canAddCredits.value || canAddDebits.value || canAddAdjustments.value;
 });
 
+const canEditWallet = computed(() => {
+    return true; // Replace with actual permission check if needed
+});
+
 const showEntryModal = ref(false);
+const showEditModal = ref(false);
 const entryForm = ref<LedgerEntryForm>({
     wallet_id: walletId,
     type: 'debit',
@@ -127,6 +133,11 @@ function formatDate(date: string | null): string {
 
     return new Date(date).toLocaleDateString();
 }
+
+function handleWalletUpdated() {
+    // Refresh wallet data after update
+    fetchWallet(walletId);
+}
 </script>
 
 <template>
@@ -149,10 +160,15 @@ function formatDate(date: string | null): string {
                             {{ wallet.description }}
                         </p>
                         <p v-if="wallet.hourly_rate_reference" class="mt-1 text-sm text-gray-500">
-                            Rate: ${{ wallet.hourly_rate_reference }}/h
+                            Rate: {{ wallet.currency_code || 'USD' }} {{ wallet.hourly_rate_reference }}/h
                         </p>
                     </div>
                     <div class="text-right">
+                        <div class="mb-4 flex justify-end gap-2">
+                            <CButton v-if="canEditWallet" preset="gray-md" @click="showEditModal = true">
+                                Edit
+                            </CButton>
+                        </div>
                         <p class="text-sm text-gray-500">Current Balance</p>
                         <p class="text-3xl font-bold" :class="getBalanceColor(currentBalance)">
                             {{ formatBalance(currentBalance) }}
@@ -245,6 +261,14 @@ function formatDate(date: string | null): string {
                 </button>
             </div>
         </div>
+
+        <!-- Edit Wallet Modal -->
+        <WalletEditModal
+            :show="showEditModal"
+            :wallet="wallet"
+            @close="showEditModal = false"
+            @updated="handleWalletUpdated"
+        />
 
         <!-- Add Entry Modal -->
         <div v-if="showEntryModal" class="fixed inset-0 flex items-center justify-center bg-black/50">
