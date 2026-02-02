@@ -5,12 +5,17 @@ import { useWallets } from '@/composables/useWallets';
 import { useLedger } from '@/composables/useLedger';
 import { useTags } from '@/composables/useTags';
 import { usePermissions } from '@/composables/usePermissions';
+import { useAuth } from '@/composables/useAuth';
+import { useToast } from '@/composables/useToast';
 import TagInput from '@/components/TagInput.vue';
 import WalletEditModal from '@/components/WalletEditModal.vue';
+import CCreditPurchaseModal from '@/components/CCreditPurchaseModal.vue';
 import type { LedgerEntryForm } from '@/types';
 
 const route = useRoute();
 const router = useRouter();
+const toast = useToast();
+const auth = useAuth();
 const walletId = Number(route.params.id);
 
 const {
@@ -28,18 +33,24 @@ const {
 
 const { createEntry, loading: entryLoading } = useLedger();
 const { fetchTags } = useTags();
-const { canAddCredits, canAddDebits, canAddAdjustments } = usePermissions();
+const { canBuyCredits, canAddCredits, canAddDebits, canAddAdjustments } = usePermissions();
 
 const canAddEntry = computed(() => {
     return canAddCredits.value || canAddDebits.value || canAddAdjustments.value;
 });
 
 const canEditWallet = computed(() => {
-    return true; // Replace with actual permission check if needed
+    // Customers cannot edit wallets
+    if (auth.isCustomer.value) {
+        return false;
+    }
+
+    return true;
 });
 
 const showEntryModal = ref(false);
 const showEditModal = ref(false);
+const showBuyCreditsModal = ref(false);
 const entryForm = ref<LedgerEntryForm>({
     wallet_id: walletId,
     type: 'debit',
@@ -53,7 +64,23 @@ const entryForm = ref<LedgerEntryForm>({
 const currentBalance = computed(() => wallet.value?.balance || '0');
 
 onMounted(async () => {
-    await Promise.all([fetchWallet(walletId), fetchWalletEntries(walletId), fetchTags()]);
+    try {
+        await fetchWallet(walletId);
+
+        // Verify ownership for customers
+        if (auth.isCustomer.value && wallet.value) {
+            if (!auth.canAccessWallet(wallet.value)) {
+                toast.error('Você não tem acesso a esta carteira');
+                router.push({ name: 'customer-dashboard' });
+
+                return;
+            }
+        }
+
+        await Promise.all([fetchWalletEntries(walletId), fetchTags()]);
+    } catch (e) {
+        toast.error('Erro ao carregar a carteira');
+    }
 });
 
 async function handleCreateEntry() {
@@ -137,9 +164,16 @@ function formatDate(date: string | null): string {
     return new Date(date).toLocaleDateString();
 }
 
-function handleWalletUpdated() {
+function handleWalletUpdated(): void {
     // Refresh wallet data after update
     fetchWallet(walletId);
+}
+
+function handleCreditPurchaseSuccess(): void {
+    // Refresh wallet data and entries after credit purchase
+    fetchWallet(walletId);
+    fetchWalletEntries(walletId);
+    toast.success('Credit purchase created successfully!');
 }
 </script>
 
@@ -165,8 +199,8 @@ function handleWalletUpdated() {
                         <p v-if="wallet.hourly_rate_reference" class="mt-1 text-sm text-gray-500">
                             Rate: {{ wallet.currency_code || 'USD' }} {{ wallet.hourly_rate_reference }}/h
                         </p>
-                        <!-- Internal Note display (permission + toggle) -->
-                        <div v-if="hasInternalNotePermission() && wallet.internal_note" class="mt-4">
+                        <!-- Internal Note display (permission + toggle) - Hidden for customers -->
+                        <div v-if="!auth.isCustomer.value && hasInternalNotePermission() && wallet.internal_note" class="mt-4">
                             <div class="flex items-center justify-between mb-2">
                                 <label class="text-sm font-semibold text-gray-700">Internal Note</label>
                                 <button
@@ -222,7 +256,13 @@ function handleWalletUpdated() {
                     </div>
                     <div class="text-right">
                         <div class="mb-4 flex justify-end gap-2">
-                            <CButton v-if="canEditWallet" preset="gray-md" @click="showEditModal = true">Edit</CButton>
+                            <CButton v-if="canEditWallet" preset="gray" @click="showEditModal = true" icon="hugeicons:pencil-edit-01">Edit</CButton>
+                            <CButton
+                                v-if="(wallet?.credit_purchase_allowed && canBuyCredits)"
+                                preset="green"
+                                @click="showBuyCreditsModal = true"
+                                icon="hugeicons:add-money-circle"
+                            >Buy Credits</CButton>
                         </div>
                         <p class="text-sm text-gray-500">Current Balance</p>
                         <p class="text-3xl font-bold" :class="getBalanceColor(currentBalance)">
@@ -234,7 +274,7 @@ function handleWalletUpdated() {
 
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="text-xl font-semibold text-gray-900">Ledger Entries</h2>
-                <CButton v-if="canAddEntry" @click="showEntryModal = true">Add Entry</CButton>
+                <CButton v-if="canAddEntry" @click="showEntryModal = true" icon="hugeicons:add-circle">Add Entry</CButton>
             </div>
 
             <div class="overflow-hidden rounded-lg bg-white shadow">
@@ -323,6 +363,14 @@ function handleWalletUpdated() {
             :wallet="wallet"
             @close="showEditModal = false"
             @updated="handleWalletUpdated"
+        />
+
+        <!-- Credit Purchase Modal -->
+        <CCreditPurchaseModal
+            :show="showBuyCreditsModal"
+            :wallet="wallet"
+            @close="showBuyCreditsModal = false"
+            @success="handleCreditPurchaseSuccess"
         />
 
         <!-- Add Entry Modal -->

@@ -28,7 +28,24 @@ const router = createRouter({
         {
             path: '/',
             name: 'home',
-            redirect: '/clients',
+            redirect: (to) => {
+                const auth = useAuth();
+
+                if (auth.isCustomer.value) {
+                    return '/dashboard';
+                }
+
+                return '/clients';
+            },
+        },
+        {
+            path: '/dashboard',
+            name: 'customer-dashboard',
+            component: () => import('@/views/CustomerDashboardView.vue'),
+            meta: {
+                title: 'Dashboard',
+                requiresAuth: true,
+            },
         },
         {
             path: '/clients',
@@ -124,6 +141,26 @@ const router = createRouter({
                 requiresAuth: true,
             },
         },
+        {
+            path: '/payments/history',
+            name: 'payment-history',
+            component: () => import('@/views/PaymentHistoryView.vue'),
+            meta: {
+                title: 'Payment History',
+                requiresAuth: true,
+                permissions: ['credit_purchase.view'],
+            },
+        },
+        {
+            path: '/payments/approvals',
+            name: 'payment-approvals',
+            component: () => import('@/views/AdminPaymentApprovalView.vue'),
+            meta: {
+                title: 'Payment Approvals',
+                requiresAuth: true,
+                permissions: ['credit_purchase.approve'],
+            },
+        },
     ],
 });
 
@@ -149,6 +186,29 @@ router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormal
         next({ name: 'home' });
 
         return;
+    }
+
+    // Redirect customers away from admin routes
+    if (isAuthenticated && auth.isCustomer.value) {
+        const adminRoutes = ['clients', 'tags', 'timers', 'imports', 'imports-upload', 'imports-review'];
+
+        if (adminRoutes.includes(to.name as string)) {
+            next({ name: 'customer-dashboard' });
+
+            return;
+        }
+
+        // Block customers from viewing other clients' details
+        if (to.name === 'client-detail') {
+            const clientId = Number(to.params.id);
+            const customerId = auth.getCustomerId();
+
+            if (clientId !== customerId) {
+                next({ name: 'customer-dashboard' });
+
+                return;
+            }
+        }
     }
 
     if (to.meta.permissions && to.meta.permissions.length > 0) {
