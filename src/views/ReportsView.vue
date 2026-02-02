@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useReports } from '@/composables/useReports';
 import { useClients } from '@/composables/useClients';
 import { useWallets } from '@/composables/useWallets';
@@ -7,6 +8,9 @@ import { useTags } from '@/composables/useTags';
 import api from '@/services/api';
 import type { ReportFilters } from '@/types';
 import CButton from '@/components/CButton.vue';
+
+const route = useRoute();
+const router = useRouter();
 
 const { summary, entries, groupedData, loading, error, pagination, fetchReport } = useReports();
 const { clients, fetchClients } = useClients();
@@ -39,6 +43,74 @@ function getWalletLabel(wallet: any): string {
     return `${wallet.name} (${clientName})`;
 }
 
+function readFiltersFromUrl(): void {
+    const query = route.query;
+
+    if (query.client_id) {
+        filters.value.client_id = Number(query.client_id);
+    }
+
+    if (query.wallet_id) {
+        filters.value.wallet_id = Number(query.wallet_id);
+    }
+
+    if (query.date_from && typeof query.date_from === 'string') {
+        filters.value.date_from = query.date_from;
+    }
+
+    if (query.date_to && typeof query.date_to === 'string') {
+        filters.value.date_to = query.date_to;
+    }
+
+    if (query.tags) {
+        const tagsParam = Array.isArray(query.tags) ? query.tags : [query.tags];
+
+        filters.value.tags = tagsParam.map((tag) => Number(tag)).filter((id) => !isNaN(id));
+    }
+
+    if (query.type && (query.type === 'credit' || query.type === 'debit')) {
+        filters.value.type = query.type;
+    }
+
+    if (query.group_by && (query.group_by === 'wallet' || query.group_by === 'client')) {
+        filters.value.group_by = query.group_by;
+    }
+}
+
+function updateUrlFromFilters(activeFilters: ReportFilters): void {
+    const query: Record<string, string | string[]> = {};
+
+    if (activeFilters.client_id) {
+        query.client_id = String(activeFilters.client_id);
+    }
+
+    if (activeFilters.wallet_id) {
+        query.wallet_id = String(activeFilters.wallet_id);
+    }
+
+    if (activeFilters.date_from) {
+        query.date_from = activeFilters.date_from;
+    }
+
+    if (activeFilters.date_to) {
+        query.date_to = activeFilters.date_to;
+    }
+
+    if (activeFilters.tags && activeFilters.tags.length > 0) {
+        query.tags = activeFilters.tags.map((tag) => String(tag));
+    }
+
+    if (activeFilters.type) {
+        query.type = activeFilters.type;
+    }
+
+    if (activeFilters.group_by) {
+        query.group_by = activeFilters.group_by;
+    }
+
+    router.replace({ query });
+}
+
 watch(
     () => filters.value.client_id,
     (newClientId, oldClientId) => {
@@ -54,6 +126,14 @@ watch(
 
 onMounted(async () => {
     await Promise.all([fetchClients(1, ''), fetchWallets(), fetchTags()]);
+
+    readFiltersFromUrl();
+
+    const hasUrlParams = Object.keys(route.query).length > 0;
+
+    if (hasUrlParams) {
+        await handleFilter();
+    }
 });
 
 async function handleFilter() {
@@ -89,6 +169,8 @@ async function handleFilter() {
 
     hasAppliedFilters.value = true;
 
+    updateUrlFromFilters(activeFilters);
+
     await fetchReport(activeFilters);
 }
 
@@ -104,6 +186,8 @@ function clearFilters() {
     };
 
     hasAppliedFilters.value = false;
+
+    router.replace({ query: {} });
 }
 
 function formatHours(hours: string): string {
@@ -193,14 +277,14 @@ async function exportReport(format: 'pdf' | 'excel') {
         <div class="mb-6 rounded-lg bg-white p-4 shadow">
             <h2 class="mb-4 text-lg font-semibold">Filters</h2>
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <CSelect label="Client" v-model="filters.client_id">
+                <CSelect label="Client" v-model.number="filters.client_id">
                     <option :value="null">All Clients</option>
                     <option v-for="client in clients" :key="client.id" :value="client.id">
                         {{ client.name }}
                     </option>
                 </CSelect>
 
-                <CSelect label="Wallet" v-model="filters.wallet_id">
+                <CSelect label="Wallet" v-model.number="filters.wallet_id">
                     <option :value="null">All Wallets</option>
                     <option v-for="wallet in filteredWallets" :key="wallet.id" :value="wallet.id">
                         {{ getWalletLabel(wallet) }}
