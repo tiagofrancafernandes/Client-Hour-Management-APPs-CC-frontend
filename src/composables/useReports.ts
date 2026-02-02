@@ -73,6 +73,9 @@ export function useReports() {
         loading.value = true;
         error.value = null;
 
+        entries.value = [];
+        groupedData.value = [];
+
         try {
             const queryString = buildQueryString(filters);
             const response = await api.get<ReportResponse>(`/reports?${queryString}`);
@@ -86,10 +89,19 @@ export function useReports() {
                     lastPage: response.entries.last_page,
                     total: response.entries.total,
                 };
+            } else {
+                entries.value = [];
+                pagination.value = {
+                    currentPage: 1,
+                    lastPage: 1,
+                    total: 0,
+                };
             }
 
             if (response.grouped) {
                 groupedData.value = response.grouped;
+            } else {
+                groupedData.value = [];
             }
         } catch (e) {
             error.value = e instanceof Error ? e.message : 'Failed to fetch report';
