@@ -12,6 +12,7 @@
         "noFallthroughCasesInSwitch": true,
         "noUncheckedSideEffectImports": true,
         "skipLibCheck": true,
+        "lib": ["ES2023", "DOM", "DOM.Iterable"],
         "paths": {
             "@/*": ["src/*"],
             "@components/*": ["src/components/*"],

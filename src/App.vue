@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router';
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import { useAuth } from '@/composables/useAuth';
 import { usePermissions } from '@/composables/usePermissions';
 import { useTimerStore } from '@/stores/timer';
@@ -11,8 +11,8 @@ import ConfirmModal from '@/components/ConfirmModal.vue';
 
 const router = useRouter();
 const route = useRoute();
-const { user, isAuthenticated, logout, loading } = useAuth();
-const { canViewClients, canViewReports, canViewTags } = usePermissions();
+const { user, isAuthenticated, logout, loading, isCustomer } = useAuth();
+const { canViewClients, canViewReports, canViewTags, canViewPaymentHistory, canApprovePayments } = usePermissions();
 const timerStore = useTimerStore();
 const eventTimerStore = ref(null);
 const { state: confirmState, handleConfirm, handleCancel } = useConfirm();
@@ -73,13 +73,22 @@ function closeTimerModal() {
     showTimerModal.value = false;
 }
 
+// Inicializa o timer store quando o usuário faz login (inclusive login fresco após mount)
+watch(isAuthenticated, async (newValue, oldValue) => {
+    if (newValue && !oldValue) {
+        await timerStore.initialize();
+    }
+
+    if (!newValue && oldValue) {
+        timerStore.cleanup();
+    }
+});
+
 onMounted(async () => {
     document.addEventListener('click', handleClickOutside);
 
     if (isAuthenticated.value) {
         await timerStore.initialize();
-        // await timerStore.fetchActiveTimer();
-        // await timerStore.fetchTimers();
     }
 });
 
@@ -92,6 +101,7 @@ onUnmounted(() => {
 <template>
     <div class="min-h-screen bg-gray-100">
         <div v-if="showNavigation" class="pt-12 w-full"></div>
+        <!-- TOP Navbar -->
         <nav v-if="showNavigation" class="bg-white shadow fixed w-full top-0">
             <div class="container mx-auto px-4">
                 <div class="flex h-16 items-center justify-between">
@@ -101,14 +111,36 @@ onUnmounted(() => {
                         </RouterLink>
 
                         <div class="flex gap-4">
+                            <!-- Customer Navigation -->
                             <RouterLink
-                                v-if="canViewClients"
+                                v-if="isCustomer"
+                                to="/dashboard"
+                                class="text-gray-600 hover:text-gray-900"
+                                active-class="text-blue-600 font-medium"
+                            >
+                                Dashboard
+                            </RouterLink>
+
+                            <RouterLink
+                                v-if="isCustomer && canViewPaymentHistory"
+                                to="/payments/history"
+                                class="text-gray-600 hover:text-gray-900"
+                                active-class="text-blue-600 font-medium"
+                            >
+                                Payment History
+                            </RouterLink>
+
+                            <!-- Admin Navigation -->
+                            <RouterLink
+                                v-if="!isCustomer && canViewClients"
                                 to="/clients"
                                 class="text-gray-600 hover:text-gray-900"
                                 active-class="text-blue-600 font-medium"
                             >
                                 Clients
                             </RouterLink>
+
+                            <!-- Reports (available to both) -->
                             <RouterLink
                                 v-if="canViewReports"
                                 to="/reports"
@@ -117,24 +149,37 @@ onUnmounted(() => {
                             >
                                 Reports
                             </RouterLink>
+
                             <RouterLink
-                                v-if="canViewTags"
+                                v-if="!isCustomer && canApprovePayments"
+                                to="/payments/approvals"
+                                class="text-gray-600 hover:text-gray-900"
+                                active-class="text-blue-600 font-medium"
+                            >
+                                Payment Approvals
+                            </RouterLink>
+
+                            <!-- Admin-only features -->
+                            <RouterLink
+                                v-if="!isCustomer && canViewTags"
                                 to="/tags"
                                 class="text-gray-600 hover:text-gray-900"
                                 active-class="text-blue-600 font-medium"
                             >
                                 Tags
                             </RouterLink>
+
                             <RouterLink
-                                v-if="canViewTimers"
+                                v-if="!isCustomer && canViewTimers"
                                 to="/timers"
                                 class="text-gray-600 hover:text-gray-900"
                                 active-class="text-blue-600 font-medium"
                             >
                                 Timers
                             </RouterLink>
+
                             <RouterLink
-                                v-if="canViewImports"
+                                v-if="!isCustomer && canViewImports"
                                 to="/imports"
                                 class="text-gray-600 hover:text-gray-900"
                                 active-class="text-blue-600 font-medium"

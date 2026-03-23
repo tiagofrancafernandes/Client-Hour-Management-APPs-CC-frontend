@@ -272,6 +272,34 @@ export const useTimerStore = defineStore('timer', () => {
         }
     }
 
+    async function confirmTimerById(id: number, cycles?: TimerCycleForm[]): Promise<boolean> {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const payload = cycles ? { cycles } : {};
+
+            await api.post<Timer>(`/timers/${id}/confirm`, payload);
+
+            if (activeTimer.value?.id === id) {
+                activeTimer.value = null;
+                stopPolling();
+            }
+
+            await fetchTimers();
+
+            return true;
+        } catch (err: any) {
+            const errorMessage = err?.response?.data?.message || err?.message || 'Failed to confirm timer';
+
+            error.value = errorMessage;
+
+            throw new Error(errorMessage);
+        } finally {
+            loading.value = false;
+        }
+    }
+
     async function deleteTimer(id: number): Promise<boolean> {
         loading.value = true;
         error.value = null;
@@ -485,6 +513,7 @@ export const useTimerStore = defineStore('timer', () => {
         resumeTimerById,
         stopTimerById,
         cancelTimerById,
+        confirmTimerById,
         initialize,
         cleanup,
         clearError,

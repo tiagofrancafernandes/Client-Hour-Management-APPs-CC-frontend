@@ -51,23 +51,19 @@ function initializeCycles(): void {
 }
 
 async function handleConfirm(): Promise<void> {
-    if (!canSubmit.value) {
+    if (!canSubmit.value || !props.timer) {
         return;
     }
-
-    console.log('handleConfirm');
 
     loading.value = true;
 
     try {
-        console.log('handleConfirm');
-        const success = await timerStore.confirmTimer(cycles.value);
-        console.log('handleConfirm', success);
+        await timerStore.confirmTimerById(props.timer.id, cycles.value);
 
-        if (success) {
-            emit('confirmed');
-            emit('close');
-        }
+        emit('confirmed');
+        emit('close');
+    } catch {
+        // erro já salvo em timerStore.error, exibido no template
     } finally {
         loading.value = false;
     }

@@ -1,133 +1,106 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { Icon } from '@iconify/vue';
 import { useTags } from '@/composables/useTags';
 import type { Tag } from '@/types';
 
 interface Props {
     modelValue?: number[];
+    availableTags?: Tag[];
     placeholder?: string;
     allowCreate?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     modelValue: () => [],
-    placeholder: 'Add tags...',
+    availableTags: () => [],
+    placeholder: 'Search tags...',
     allowCreate: true,
 });
 
 const emit = defineEmits<{
-    (e: 'update:modelValue', value: number[]): void;
+    'update:modelValue': [value: number[]];
 }>();
 
-const { tags: allTags, fetchTags, createTag } = useTags();
+const { tags: fetchedTags, fetchTags, createTag } = useTags();
 
 const inputValue = ref('');
 const showDropdown = ref(false);
 const isCreating = ref(false);
+const inputRef = ref<HTMLInputElement | null>(null);
 
-const selectedTags = computed(() => {
-    return allTags.value.filter((tag) => props.modelValue.includes(tag.id));
+const allKnownTags = computed((): Tag[] => {
+    const map = new Map<number, Tag>();
+
+    for (const tag of props.availableTags) {
+        map.set(tag.id, tag);
+    }
+
+    for (const tag of fetchedTags.value) {
+        map.set(tag.id, tag);
+    }
+
+    return Array.from(map.values());
+});
+
+const selectedTagObjects = computed(() => {
+    return allKnownTags.value.filter((tag) => props.modelValue.includes(tag.id));
 });
 
 const filteredTags = computed(() => {
-    if (!inputValue.value.trim()) {
-        return allTags.value.filter((tag) => !props.modelValue.includes(tag.id));
-    }
+    const search = inputValue.value.toLowerCase().trim();
 
-    const searchLower = inputValue.value.toLowerCase().trim();
+    return allKnownTags.value.filter((tag) => {
+        if (props.modelValue.includes(tag.id)) {
+            return false;
+        }
 
-    return allTags.value.filter((tag) => {
-        const isNotSelected = !props.modelValue.includes(tag.id);
-        const matchesSearch = tag.name.toLowerCase().includes(searchLower);
+        if (!search) {
+            return true;
+        }
 
-        return isNotSelected && matchesSearch;
+        return tag.name.toLowerCase().includes(search);
     });
 });
 
 const exactMatchExists = computed(() => {
-    const searchLower = inputValue.value.toLowerCase().trim();
+    const search = inputValue.value.toLowerCase().trim();
 
-    if (!searchLower) {
+    if (!search) {
         return true;
     }
 
-    return allTags.value.some((tag) => tag.name.toLowerCase() === searchLower);
+    return allKnownTags.value.some((tag) => tag.name.toLowerCase() === search);
 });
 
-watch(inputValue, (newValue) => {
-    if (newValue.trim()) {
-        showDropdown.value = true;
-    } else {
-        showDropdown.value = false;
-    }
-});
+function emitChange(newValue: number[]): void {
+    emit('update:modelValue', newValue);
+}
 
-async function handleInput(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const value = target.value;
-
-    const lastChar = value.slice(-1);
-
-    if (lastChar === ',') {
-        await handleCreateTag(value.slice(0, -1).trim());
-
+function addTag(tag: Tag): void {
+    if (props.modelValue.includes(tag.id)) {
         return;
     }
 
-    inputValue.value = value;
+    emitChange([...props.modelValue, tag.id]);
 
-    await fetchTags(value.trim());
+    inputValue.value = '';
 }
 
-async function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-
-        const trimmedValue = inputValue.value.trim();
-
-        if (!trimmedValue) {
-            return;
-        }
-
-        if (filteredTags.value.length === 1) {
-            const firstTag = filteredTags.value[0];
-
-            if (firstTag !== undefined) {
-                addTag(firstTag);
-            }
-
-            return;
-        }
-
-        if (props.allowCreate && !exactMatchExists.value) {
-            await handleCreateTag(trimmedValue);
-
-            return;
-        }
-
-        const exactMatch = allTags.value.find((tag) => tag.name.toLowerCase() === trimmedValue.toLowerCase());
-
-        if (exactMatch !== undefined) {
-            addTag(exactMatch);
-        }
-    }
-
-    if (event.key === 'Escape') {
-        showDropdown.value = false;
-        inputValue.value = '';
-    }
+function removeTag(tagId: number): void {
+    emitChange(props.modelValue.filter((id) => id !== tagId));
 }
 
-async function handleCreateTag(tagName: string) {
+async function handleCreateTag(tagName: string): Promise<void> {
     if (!tagName || !props.allowCreate) {
         return;
     }
 
-    if (exactMatchExists.value) {
-        const existingTag = allTags.value.find((tag) => tag.name.toLowerCase() === tagName.toLowerCase());
+    const existing = allKnownTags.value.find((tag) => tag.name.toLowerCase() === tagName.toLowerCase());
 
-        if (existingTag && !props.modelValue.includes(existingTag.id)) {
-            addTag(existingTag);
+    if (existing) {
+        if (!props.modelValue.includes(existing.id)) {
+            addTag(existing);
         }
 
         inputValue.value = '';
@@ -150,91 +123,193 @@ async function handleCreateTag(tagName: string) {
     }
 }
 
-function addTag(tag: Tag) {
-    if (props.modelValue.includes(tag.id)) {
+async function handleInput(): Promise<void> {
+    const value = inputValue.value;
+    const lastChar = value.slice(-1);
+
+    if (lastChar === ',') {
+        inputValue.value = value.slice(0, -1).trim();
+
+        await handleCreateTag(inputValue.value);
+
         return;
     }
 
-    const newValue = [...props.modelValue, tag.id];
+    showDropdown.value = true;
 
-    emit('update:modelValue', newValue);
-
-    inputValue.value = '';
-    showDropdown.value = false;
+    await fetchTags(value.trim());
 }
 
-function removeTag(tagId: number) {
-    const newValue = props.modelValue.filter((id) => id !== tagId);
+async function handleKeydown(event: KeyboardEvent): Promise<void> {
+    if (event.key === 'Enter') {
+        event.preventDefault();
 
-    emit('update:modelValue', newValue);
-}
+        const trimmed = inputValue.value.trim();
 
-function handleDropdownClick(tag: Tag) {
-    addTag(tag);
-}
+        if (!trimmed) {
+            return;
+        }
 
-function handleInputFocus() {
-    if (inputValue.value.trim()) {
-        showDropdown.value = true;
+        if (filteredTags.value.length === 1 && filteredTags.value[0]) {
+            addTag(filteredTags.value[0]);
+
+            return;
+        }
+
+        if (props.allowCreate && !exactMatchExists.value) {
+            await handleCreateTag(trimmed);
+
+            return;
+        }
+
+        const match = allKnownTags.value.find((tag) => tag.name.toLowerCase() === trimmed.toLowerCase());
+
+        if (match) {
+            addTag(match);
+        }
+    }
+
+    if (event.key === 'Escape') {
+        showDropdown.value = false;
+        inputValue.value = '';
+    }
+
+    if (event.key === 'Backspace' && !inputValue.value && selectedTagObjects.value.length > 0) {
+        const lastTag = selectedTagObjects.value[selectedTagObjects.value.length - 1];
+
+        if (lastTag) {
+            removeTag(lastTag.id);
+        }
     }
 }
 
-function handleInputBlur() {
+function handleFocus(): void {
+    showDropdown.value = true;
+}
+
+function handleBlur(): void {
     setTimeout(() => {
         showDropdown.value = false;
     }, 200);
 }
+
+function focusInput(): void {
+    inputRef.value?.focus();
+}
+
+onMounted(async () => {
+    await fetchTags('');
+});
 </script>
 
 <template>
     <div class="relative">
-        <div class="flex flex-wrap gap-2 rounded-lg border border-gray-300 p-2 focus-within:border-blue-500">
-            <span
-                v-for="tag in selectedTags"
-                :key="tag.id"
-                class="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-sm text-blue-700"
+        <!-- Main container -->
+        <div
+            class="rounded-lg border border-gray-300 bg-white transition-colors focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20"
+            @click="focusInput"
+        >
+            <!-- Selected tags row (horizontal scroll) -->
+            <div
+                v-if="selectedTagObjects.length > 0"
+                class="flex gap-1.5 overflow-x-auto px-3 pt-2.5 pb-1 scrollbar-thin"
             >
-                {{ tag.name }}
-                <button type="button" class="text-blue-700 hover:text-blue-900" @click="removeTag(tag.id)">×</button>
-            </span>
+                <span
+                    v-for="tag in selectedTagObjects"
+                    :key="tag.id"
+                    class="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700"
+                >
+                    {{ tag.name }}
+                    <button
+                        type="button"
+                        class="flex items-center rounded-full text-red-500 transition-colors hover:text-red-800 focus:outline-none"
+                        :aria-label="`Remove tag ${tag.name}`"
+                        @click.stop="removeTag(tag.id)"
+                    >
+                        <Icon icon="heroicons:x-mark" class="h-3 w-3" />
+                    </button>
+                </span>
+            </div>
 
-            <input
-                v-model="inputValue"
-                type="text"
-                class="flex-1 border-none bg-transparent px-1 py-1 text-sm outline-none"
-                :placeholder="selectedTags.length === 0 ? placeholder : ''"
-                :disabled="isCreating"
-                @input="handleInput"
-                @keydown="handleKeydown"
-                @focus="handleInputFocus"
-                @blur="handleInputBlur"
-            />
+            <!-- Search input row -->
+            <div class="flex items-center gap-2 px-3 py-2">
+                <Icon icon="heroicons:magnifying-glass" class="h-4 w-4 shrink-0 text-gray-400" />
+
+                <input
+                    ref="inputRef"
+                    v-model="inputValue"
+                    type="text"
+                    class="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-400 outline-none"
+                    :placeholder="selectedTagObjects.length === 0 ? placeholder : 'Add more...'"
+                    :disabled="isCreating"
+                    @input="handleInput"
+                    @keydown="handleKeydown"
+                    @focus="handleFocus"
+                    @blur="handleBlur"
+                />
+
+                <Icon
+                    v-if="isCreating"
+                    icon="heroicons:arrow-path"
+                    class="h-4 w-4 shrink-0 animate-spin text-red-500"
+                />
+            </div>
         </div>
 
+        <!-- Dropdown -->
         <div
             v-if="showDropdown && (filteredTags.length > 0 || (allowCreate && inputValue.trim() && !exactMatchExists))"
-            class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+            class="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
         >
-            <button
-                v-for="tag in filteredTags"
-                :key="tag.id"
-                type="button"
-                class="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
-                @click="handleDropdownClick(tag)"
-            >
-                {{ tag.name }}
-            </button>
+            <!-- Heading -->
+            <div class="border-b border-gray-100 px-3 py-1.5">
+                <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                    {{ inputValue.trim() ? 'Results' : 'Suggestions' }}
+                </span>
+            </div>
 
-            <button
-                v-if="allowCreate && inputValue.trim() && !exactMatchExists"
-                type="button"
-                class="w-full border-t border-gray-200 px-4 py-2 text-left text-sm text-blue-600 hover:bg-blue-50"
-                @click="handleCreateTag(inputValue.trim())"
-            >
-                Create "{{ inputValue.trim() }}"
-            </button>
+            <!-- Tag options -->
+            <div v-if="filteredTags.length > 0" class="p-1">
+                <button
+                    v-for="tag in filteredTags"
+                    :key="tag.id"
+                    type="button"
+                    class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700"
+                    @mousedown.prevent="addTag(tag)"
+                >
+                    <Icon icon="heroicons:tag" class="h-3.5 w-3.5 text-gray-400" />
+                    {{ tag.name }}
+                </button>
+            </div>
+
+            <!-- Empty search result -->
+            <div v-else-if="inputValue.trim() && !allowCreate" class="px-4 py-3 text-center text-sm text-gray-400">
+                No tags found
+            </div>
+
+            <!-- Create new tag option -->
+            <div v-if="allowCreate && inputValue.trim() && !exactMatchExists" class="border-t border-gray-100 p-1">
+                <button
+                    type="button"
+                    class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-50"
+                    @mousedown.prevent="handleCreateTag(inputValue.trim())"
+                >
+                    <Icon icon="heroicons:plus" class="h-3.5 w-3.5" />
+                    Create
+                    <strong class="ml-1">"{{ inputValue.trim() }}"</strong>
+                </button>
+            </div>
         </div>
 
-        <p v-if="allowCreate" class="mt-1 text-xs text-gray-500">Type and press Enter or comma to create a new tag</p>
+        <!-- Helper text -->
+        <p v-if="allowCreate" class="mt-1 text-xs text-gray-400">
+            Press
+            <kbd class="rounded bg-gray-100 px-1 py-0.5 font-mono text-xs text-gray-500">Enter</kbd>
+            or
+            <kbd class="rounded bg-gray-100 px-1 py-0.5 font-mono text-xs text-gray-500">,</kbd>
+            to create a new tag &middot;
+            <kbd class="rounded bg-gray-100 px-1 py-0.5 font-mono text-xs text-gray-500">Backspace</kbd>
+            to remove last
+        </p>
     </div>
 </template>

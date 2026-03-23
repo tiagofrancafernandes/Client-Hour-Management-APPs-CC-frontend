@@ -16,12 +16,6 @@ const emit = defineEmits(['openModal']);
 const router = useRouter();
 const route = useRoute();
 
-console.log(
-    // 'router', router,
-    'route',
-    route.fullPath
-);
-
 function callStartTimer() {
     if (typeof document !== 'undefined') {
         document.dispatchEvent(
@@ -29,7 +23,7 @@ function callStartTimer() {
                 detail: {
                     router,
                     route,
-                    from: location.href,
+                    from: route.fullPath,
                 },
             })
         );
@@ -100,11 +94,6 @@ function updateLocalTime(): void {
     }
 
     localTime.value = timer.value.total_seconds;
-
-    if (isRunning.value) {
-        localTime.value += 1;
-        timerStore.setStoredFormattedTime(formattedTime.value);
-    }
 }
 
 function startLocalTimer(): void {
@@ -232,14 +221,14 @@ function openModal() {
 
             <template v-if="hasTimer">
                 <!-- Timer Display -->
-                <div class="text-center mb-4">
-                    <div class="text-3xl font-bold text-gray-900 font-mono">
+                <div class="text-center mb-4 truncate">
+                    <div class="text-3xl font-bold text-gray-900 font-mono truncate">
                         {{ formattedTime }}
                     </div>
-                    <div v-if="timer?.wallet" class="text-sm text-gray-500 mt-1">
+                    <div v-if="timer?.wallet" class="text-sm text-gray-500 mt-1 truncate">
                         {{ timer.wallet.client?.name }} - {{ timer.wallet.name }}
                     </div>
-                    <div v-if="timer?.title" class="text-sm text-gray-700 mt-1">
+                    <div v-if="timer?.title" class="text-sm text-gray-700 mt-1 truncate">
                         {{ timer.title }}
                     </div>
                 </div>
@@ -252,7 +241,7 @@ function openModal() {
                     flex
                     to="/timers?call=startTimer"
                     @click.stop.prevent="callStartTimer"
-                    class="w-full"
+                    class="w-full truncate"
                 >
                     Start Timer
                 </CButton>
@@ -260,7 +249,7 @@ function openModal() {
 
             <div v-if="hasTimer" class="space-y-2">
                 <button
-                    class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition-colors"
+                    class="w-full truncate px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition-colors"
                     @click="openModal"
                 >
                     Open Full View
@@ -268,7 +257,7 @@ function openModal() {
                 <div class="flex gap-2">
                     <button
                         :class="[
-                            'flex-1 px-4 py-2 rounded-lg font-medium text-sm transition-colors',
+                            'flex-1 px-4 py-2 rounded-lg font-medium text-sm transition-colors truncate',
                             {
                                 'bg-red-600 hover:bg-red-700 text-white': isRunning,
                                 'bg-green-600 hover:bg-green-700 text-white': isPaused,

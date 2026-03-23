@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { useTimerStore } from '@/stores/timer';
 import { useAuthStore } from '@/stores/auth';
 import { useConfirm } from '@/composables/useConfirm';
@@ -7,6 +8,7 @@ import TimerStartModal from '@/components/TimerStartModal.vue';
 import TimerConfirmModal from '@/components/TimerConfirmModal.vue';
 import type { Timer } from '@/types';
 
+const route = useRoute();
 const timerStore = useTimerStore();
 const authStore = useAuthStore();
 const { confirm } = useConfirm();
@@ -135,6 +137,7 @@ async function handleDeleteTimer(timer: Timer): Promise<void> {
     }
 
     await timerStore.deleteTimer(timer.id);
+    await loadTimers();
 }
 
 function handleTimerConfirmed(): void {
@@ -170,9 +173,7 @@ function startTimerAction() {
 onMounted(() => {
     loadTimers();
 
-    if (typeof location !== 'undefined') {
-        callAction.value = new URL(location.href).searchParams.get('call');
-    }
+    callAction.value = (route.query.call as string) || null;
 
     if (typeof document !== 'undefined') {
         document.addEventListener('callAction::startTimer', startTimerAction);
@@ -403,7 +404,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Modals -->
-        <TimerStartModal :show="showStartModal" @close="showStartModal = false" />
+        <TimerStartModal :show="showStartModal" @close="showStartModal = false" @started="loadTimers" />
 
         <TimerConfirmModal
             :show="showConfirmModal"

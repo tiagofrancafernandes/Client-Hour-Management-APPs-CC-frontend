@@ -11,6 +11,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     close: [];
+    started: [];
 }>();
 
 const timerStore = useTimerStore();
@@ -84,6 +85,7 @@ async function handleSubmit(): Promise<void> {
 
         if (success) {
             resetForm();
+            emit('started');
             emit('close');
         }
     } finally {
@@ -105,10 +107,6 @@ function handleClose(): void {
         resetForm();
         emit('close');
     }
-}
-
-function handleTagsChange(selectedTags: number[]): void {
-    form.value.tags = selectedTags;
 }
 
 onMounted(() => {
@@ -198,11 +196,7 @@ onMounted(() => {
                 <!-- Tags -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-                    <TagInput
-                        :available-tags="tags"
-                        :selected-tags="form.tags"
-                        @update:selected-tags="handleTagsChange"
-                    />
+                    <TagInput v-model="form.tags" :available-tags="tags" />
                 </div>
 
                 <!-- Actions -->

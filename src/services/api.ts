@@ -1,10 +1,69 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://api.local.tiagoapps.com.br';
+// import type { URL as URLType } from 'node:url';
+import type { URLType } from '@/utils/data-helpers';
+import {
+    getWindowLocation,
+    ifObjectOrEmpty,
+    ifStringOrEmpty,
+    ifValidUrl,
+    isString,
+    makeUrlPath,
+} from '@/utils/data-helpers';
+import type { Response } from 'undici-types';
+// import { fetch } from 'undici';
+
+const DEFAUL_API_DOMAIN = 'api.local.tiagoapps.com.br';
+const API_DOMAIN = import.meta.env.VITE_API_DOMAIN || DEFAUL_API_DOMAIN;
+const API_URL = import.meta.env.VITE_API_URL || 'http://api.local.tiagoapps.com.br/api';
 
 interface RequestOptions {
     method?: string;
     body?: unknown;
     params?: unknown;
     headers?: Record<string, string>;
+}
+
+export function getApiBaseUrl(defaultValue: string | null | undefined = null): URLType {
+    /** @ts-ignore */
+    let _protocol: string = ifObjectOrEmpty(getWindowLocation())?.protocol || 'https:';
+
+    let _apiUrl: string | null =
+        ifStringOrEmpty(API_URL)
+            ?.trim()
+            ?.replaceAll(/[\/]{0,}$/g, '')
+            ?.trim() || null;
+    _apiUrl = ifStringOrEmpty(_apiUrl)?.trim() || defaultValue || `${_protocol}//${API_DOMAIN}`;
+
+    /** @ts-ignore */
+    let apiUrl: URLType = ifValidUrl(_apiUrl, true) as URLType;
+    apiUrl.pathname = makeUrlPath(apiUrl.pathname || '');
+
+    return apiUrl;
+}
+
+export function getApiUrl(path: string | null | undefined = ''): URLType {
+    path = ifStringOrEmpty(path)?.trim() || '/';
+
+    let [pathname, queryString] = path.split('?');
+
+    pathname =
+        ifStringOrEmpty(pathname)
+            ?.trim()
+            ?.replaceAll(/^[\/]{0,}/g, '')
+            ?.trim() || '/';
+    let apiBaseUrl: URLType = getApiBaseUrl(null);
+    apiBaseUrl.pathname = makeUrlPath(
+        [makeUrlPath(apiBaseUrl.pathname), makeUrlPath(pathname || '')].filter(Boolean).join('/').replaceAll('//', '/')
+    );
+
+    if (queryString) {
+        let queryParams = new URLSearchParams(queryString);
+
+        queryParams.forEach((value, key) => {
+            apiBaseUrl.searchParams.append(key, value);
+        });
+    }
+
+    return apiBaseUrl;
 }
 
 async function request<T>(
@@ -92,7 +151,8 @@ async function request<T>(
         config.method = 'GET';
 
         let _data: any = { ...params, ...(body || {}) };
-        let _url = new URL(`${API_URL}/api${endpoint}`);
+        let _url: URL = getApiUrl(endpoint);
+
         Object.keys(_data || {})
             .filter((key: any) => typeof _data[key] !== 'object')
             .forEach((key) => _url.searchParams.append(key, _data[key]));
@@ -109,8 +169,12 @@ async function request<T>(
     }
 
     if (!isGet) {
+        let _url: URL = getApiUrl(endpoint);
+        console.log('getApiBaseUrl(null)', getApiBaseUrl(null));
+        console.log('getApiUrl', getApiUrl());
+        console.log('_url', _url);
         console.log('config', config);
-        response = await fetch(`${API_URL}/api${endpoint}`, config);
+        response = await fetch(_url, config);
     }
 
     if (!response.ok) {
@@ -153,7 +217,6 @@ async function downloadFile(endpoint: string, filename: string | null = null): P
         (config.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
     }
 
-    // const response = await fetch(`${API_URL}/api${endpoint}`, config);
     const response: any = await request(endpoint, config, /* returnResponse */ true);
 
     if (!response.ok) {
@@ -183,6 +246,11 @@ async function downloadFile(endpoint: string, filename: string | null = null): P
 
     if (!filename) {
         filename = filename || `download_${Date.now()}`;
+    }
+
+    /** @ts-ignore */
+    if (typeof document === 'undefined') {
+        return;
     }
 
     const blob = await response.blob();
