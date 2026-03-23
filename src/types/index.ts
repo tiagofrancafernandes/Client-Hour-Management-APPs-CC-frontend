@@ -235,12 +235,13 @@ export interface ImportRowForm {
 export interface CreditPurchasePayment {
     id: number;
     credit_purchase_id: number;
-    payment_method: 'pix_offline' | 'bank_transfer';
+    payment_method: 'pix_offline' | 'bank_transfer' | null;
     payment_status: 'pending' | 'approved' | 'rejected' | 'completed';
     pix_receipt_path?: string | null;
     receipt_approved_by?: number | null;
     receipt_approved_at?: string | null;
     notes?: string | null;
+    expires_at?: string | null;
     approvedBy?: User;
     created_at: string;
     updated_at: string;

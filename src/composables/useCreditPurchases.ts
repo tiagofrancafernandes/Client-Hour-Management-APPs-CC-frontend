@@ -63,16 +63,20 @@ export function useCreditPurchases() {
         }
     }
 
-    async function createPayment(purchaseId: number, paymentMethod: 'pix_offline' | 'bank_transfer') {
+    async function createPayment(purchaseId: number, paymentMethod: 'pix_offline' | 'bank_transfer' | null) {
         loading.value = true;
         error.value = null;
 
         try {
+            const body: Record<string, unknown> = {};
+
+            if (paymentMethod) {
+                body.payment_method = paymentMethod;
+            }
+
             const response = await api.post<{ data: CreditPurchasePayment }>(
                 `/credit-purchases/${purchaseId}/payments`,
-                {
-                    payment_method: paymentMethod,
-                }
+                body
             );
 
             payment.value = response.data;
@@ -80,6 +84,31 @@ export function useCreditPurchases() {
             return response.data;
         } catch (e) {
             error.value = e instanceof Error ? e.message : 'Failed to create payment';
+            throw e;
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function setPaymentMethod(
+        purchaseId: number,
+        paymentId: number,
+        paymentMethod: 'pix_offline' | 'bank_transfer'
+    ) {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.put<{ data: CreditPurchasePayment }>(
+                `/credit-purchases/${purchaseId}/payments/${paymentId}/set-method`,
+                { payment_method: paymentMethod }
+            );
+
+            payment.value = response.data;
+
+            return response.data;
+        } catch (e) {
+            error.value = e instanceof Error ? e.message : 'Failed to update payment method';
             throw e;
         } finally {
             loading.value = false;
@@ -96,12 +125,7 @@ export function useCreditPurchases() {
 
             const response = await api.post<{ data: CreditPurchasePayment }>(
                 `/credit-purchases/${purchaseId}/payments/${paymentId}/upload-receipt`,
-                formData,
-                {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                }
+                formData
             );
 
             payment.value = response.data;
@@ -141,6 +165,7 @@ export function useCreditPurchases() {
         createPurchase,
         getPurchase,
         createPayment,
+        setPaymentMethod,
         uploadReceipt,
         getReceiptUrl,
     };

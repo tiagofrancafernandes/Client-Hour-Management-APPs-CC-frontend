@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { Icon } from '@iconify/vue';
-import type { WalletWithBalance, CreditPurchasePayment } from '@/types';
+import type { WalletWithBalance } from '@/types';
 import { useCreditPurchases } from '@/composables/useCreditPurchases';
 import { useToast } from '@/composables/useToast';
 
@@ -27,7 +27,16 @@ const currentStep = ref<1 | 2 | 3>(1);
 const selectedPackage = ref<string | null>(null);
 const customHours = ref<number | null>(null);
 
-// Step 2: Review
+// Step 3: Payment method
+const selectedPaymentMethod = ref<'pix_offline' | 'bank_transfer' | null>(null);
+const uploadReceiptNow = ref(false);
+const receiptFile = ref<File | null>(null);
+
+// Purchase tracking
+const createdPurchaseId = ref<number | null>(null);
+const createdPaymentId = ref<number | null>(null);
+
+// Computed values
 const totalHours = computed(() => {
     if (selectedPackage.value === 'custom') {
         return customHours.value || 0;
@@ -43,9 +52,17 @@ const totalHours = computed(() => {
 });
 
 const discountPercentage = computed(() => {
-    if (selectedPackage.value === '5h') return 0.1;
-    if (selectedPackage.value === '10h') return 0.15;
-    if (selectedPackage.value === '15h') return 0.2;
+    if (selectedPackage.value === '5h') {
+        return 0.1;
+    }
+
+    if (selectedPackage.value === '10h') {
+        return 0.15;
+    }
+
+    if (selectedPackage.value === '15h') {
+        return 0.2;
+    }
 
     if (selectedPackage.value === 'custom' && customHours.value && customHours.value > 15) {
         return 0.25;
@@ -70,32 +87,36 @@ const totalPrice = computed(() => {
     return basePrice.value - discountAmount.value;
 });
 
-// Step 3: Payment method
-const selectedPaymentMethod = ref<'pix_offline' | 'bank_transfer'>('bank_transfer');
-const receiptFile = ref<File | null>(null);
-
-// Purchase tracking
-const createdPurchaseId = ref<number | null>(null);
-const createdPaymentId = ref<number | null>(null);
-
-// Validation
 const isStep1Valid = computed(() => {
     if (selectedPackage.value === 'custom') {
-        return customHours.value && customHours.value > 0;
+        return customHours.value !== null && customHours.value > 0;
     }
 
     return selectedPackage.value !== null;
 });
 
+// Step 3 is always valid — payment method and receipt are both optional
 const isStep3Valid = computed(() => {
-    if (selectedPaymentMethod.value === 'pix_offline') {
-        return receiptFile.value !== null;
-    }
-
     return true;
 });
 
 const isSubmitting = computed(() => loading.value);
+
+const showReceiptUpload = computed(() => {
+    return selectedPaymentMethod.value !== null && uploadReceiptNow.value;
+});
+
+const expirationLabel = computed(() => {
+    if (selectedPaymentMethod.value === 'pix_offline') {
+        return 'Expires in 48 hours';
+    }
+
+    if (selectedPaymentMethod.value === 'bank_transfer') {
+        return 'Expires in 7 days';
+    }
+
+    return null;
+});
 
 // Watchers
 watch(
@@ -104,6 +125,14 @@ watch(
         if (!newShow) {
             resetForm();
         }
+    }
+);
+
+watch(
+    () => selectedPaymentMethod.value,
+    () => {
+        uploadReceiptNow.value = false;
+        receiptFile.value = null;
     }
 );
 
@@ -126,7 +155,8 @@ function resetForm(): void {
     currentStep.value = 1;
     selectedPackage.value = null;
     customHours.value = null;
-    selectedPaymentMethod.value = 'bank_transfer';
+    selectedPaymentMethod.value = null;
+    uploadReceiptNow.value = false;
     receiptFile.value = null;
     createdPurchaseId.value = null;
     createdPaymentId.value = null;
@@ -157,13 +187,8 @@ async function handleSubmit(): Promise<void> {
         return;
     }
 
-    if (!isStep3Valid.value) {
-        toast.error('Please upload a receipt for PIX Offline payment');
-        return;
-    }
-
     try {
-        // Step 1: Create purchase
+        // Create purchase
         const purchase = await createPurchase(props.wallet.id, totalHours.value, totalPrice.value);
 
         if (!purchase) {
@@ -173,7 +198,7 @@ async function handleSubmit(): Promise<void> {
 
         createdPurchaseId.value = purchase.id;
 
-        // Step 2: Create payment
+        // Create payment (method is optional)
         const payment = await createPayment(purchase.id, selectedPaymentMethod.value);
 
         if (!payment) {
@@ -183,8 +208,8 @@ async function handleSubmit(): Promise<void> {
 
         createdPaymentId.value = payment.id;
 
-        // Step 3: Upload receipt if PIX Offline
-        if (selectedPaymentMethod.value === 'pix_offline' && receiptFile.value) {
+        // Upload receipt if checkbox is checked and file is selected
+        if (uploadReceiptNow.value && receiptFile.value) {
             await uploadReceipt(purchase.id, payment.id, receiptFile.value);
         }
 
@@ -206,29 +231,37 @@ function handleFileSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = input.files;
 
-    if (files && files.length > 0) {
-        const file = files[0];
-
-        if (!file) {
-            toast.error('No file selected');
-            return;
-        }
-
-        // Validate file type
-        const validTypes = ['application/pdf', 'image/png', 'image/jpeg'];
-        if (!validTypes.includes(file.type)) {
-            toast.error('Invalid file type. Please upload PDF, PNG, or JPG');
-            return;
-        }
-
-        // Validate file size (5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error('File is too large. Maximum size is 5MB');
-            return;
-        }
-
-        receiptFile.value = file;
+    if (!files || files.length === 0) {
+        return;
     }
+
+    const file = files[0];
+
+    if (!file) {
+        toast.error('No file selected');
+        return;
+    }
+
+    const validTypes = ['application/pdf', 'image/png', 'image/jpeg'];
+
+    if (!validTypes.includes(file.type)) {
+        toast.error('Invalid file type. Please upload PDF, PNG, or JPG');
+        return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+        toast.error('File is too large. Maximum size is 5MB');
+        return;
+    }
+
+    receiptFile.value = file;
+}
+
+function formatCurrency(value: number): string {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: props.wallet?.currency_code || 'USD',
+    }).format(value);
 }
 </script>
 
@@ -314,11 +347,6 @@ function handleFileSelect(event: Event): void {
                                         {
                                             'border-green-600 bg-green-50': selectedPackage === pkg,
                                             'border-gray-200 bg-white hover:border-gray-300': selectedPackage !== pkg,
-                                            'shadow-sm shadow-green-700':
-                                                (pkg === '5h' && discountPercentage === 0.1) ||
-                                                (pkg === '10h' && discountPercentage === 0.15) ||
-                                                (pkg === '15h' && discountPercentage === 0.2) ||
-                                                false,
                                         },
                                     ]"
                                 >
@@ -330,10 +358,7 @@ function handleFileSelect(event: Event): void {
                                     </div>
                                     <div class="text-lg font-bold text-green-600 mt-3">
                                         {{
-                                            new Intl.NumberFormat('en-US', {
-                                                style: 'currency',
-                                                currency: wallet?.currency_code || 'USD',
-                                            }).format(
+                                            formatCurrency(
                                                 parseInt(pkg) *
                                                     hourlyRate *
                                                     (pkg === '5h' ? 0.9 : pkg === '10h' ? 0.85 : 0.8)
@@ -380,40 +405,19 @@ function handleFileSelect(event: Event): void {
 
                                 <div class="flex justify-between mb-2">
                                     <span>Base Price:</span>
-                                    <span class="font-semibold text-gray-900">
-                                        {{
-                                            new Intl.NumberFormat('en-US', {
-                                                style: 'currency',
-                                                currency: wallet?.currency_code || 'USD',
-                                            }).format(basePrice)
-                                        }}
-                                    </span>
+                                    <span class="font-semibold text-gray-900">{{ formatCurrency(basePrice) }}</span>
                                 </div>
 
                                 <div v-if="discountPercentage > 0" class="flex justify-between mb-2 text-green-600">
                                     <span>Discount ({{ Math.round(discountPercentage * 100) }}%):</span>
-                                    <span class="font-semibold">
-                                        -{{
-                                            new Intl.NumberFormat('en-US', {
-                                                style: 'currency',
-                                                currency: wallet?.currency_code || 'USD',
-                                            }).format(discountAmount)
-                                        }}
-                                    </span>
+                                    <span class="font-semibold">-{{ formatCurrency(discountAmount) }}</span>
                                 </div>
 
                                 <div
                                     class="border-t border-blue-200 pt-2 mt-2 flex justify-between text-green-600 font-bold"
                                 >
                                     <span>Total:</span>
-                                    <span>
-                                        {{
-                                            new Intl.NumberFormat('en-US', {
-                                                style: 'currency',
-                                                currency: wallet?.currency_code || 'USD',
-                                            }).format(totalPrice)
-                                        }}
-                                    </span>
+                                    <span>{{ formatCurrency(totalPrice) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -436,26 +440,12 @@ function handleFileSelect(event: Event): void {
 
                             <div class="flex justify-between items-center pb-3 border-b border-gray-200">
                                 <span class="text-gray-600">Hourly Rate:</span>
-                                <span class="font-semibold text-gray-900">
-                                    {{
-                                        new Intl.NumberFormat('en-US', {
-                                            style: 'currency',
-                                            currency: wallet?.currency_code || 'USD',
-                                        }).format(hourlyRate)
-                                    }}
-                                </span>
+                                <span class="font-semibold text-gray-900">{{ formatCurrency(hourlyRate) }}</span>
                             </div>
 
                             <div class="flex justify-between items-center pb-3 border-b border-gray-200">
                                 <span class="text-gray-600">Base Price:</span>
-                                <span class="font-semibold text-gray-900">
-                                    {{
-                                        new Intl.NumberFormat('en-US', {
-                                            style: 'currency',
-                                            currency: wallet?.currency_code || 'USD',
-                                        }).format(basePrice)
-                                    }}
-                                </span>
+                                <span class="font-semibold text-gray-900">{{ formatCurrency(basePrice) }}</span>
                             </div>
 
                             <div
@@ -463,35 +453,54 @@ function handleFileSelect(event: Event): void {
                                 class="flex justify-between items-center pb-3 border-b border-gray-200 text-green-600"
                             >
                                 <span>Discount ({{ Math.round(discountPercentage * 100) }}%):</span>
-                                <span class="font-semibold">
-                                    -{{
-                                        new Intl.NumberFormat('en-US', {
-                                            style: 'currency',
-                                            currency: wallet?.currency_code || 'USD',
-                                        }).format(discountAmount)
-                                    }}
-                                </span>
+                                <span class="font-semibold">-{{ formatCurrency(discountAmount) }}</span>
                             </div>
 
                             <div class="flex justify-between items-center pt-2 text-lg font-bold text-green-600">
                                 <span>Total to Pay:</span>
-                                <span>
-                                    {{
-                                        new Intl.NumberFormat('en-US', {
-                                            style: 'currency',
-                                            currency: wallet?.currency_code || 'USD',
-                                        }).format(totalPrice)
-                                    }}
-                                </span>
+                                <span>{{ formatCurrency(totalPrice) }}</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Step 3: Payment Method -->
                     <div v-if="currentStep === 3" class="space-y-4">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Select Payment Method</h3>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-1">Payment Method</h3>
+                            <p class="text-sm text-gray-500 mb-4">
+                                You can select a payment method now or choose it later from your payment history.
+                            </p>
+                        </div>
 
                         <div class="space-y-3">
+                            <!-- No Method Option -->
+                            <button
+                                @click="selectedPaymentMethod = null"
+                                :class="[
+                                    'w-full p-4 rounded-lg border-2 transition-all text-left',
+                                    {
+                                        'border-gray-500 bg-gray-50': selectedPaymentMethod === null,
+                                        'border-gray-200 bg-white hover:border-gray-300':
+                                            selectedPaymentMethod !== null,
+                                    },
+                                ]"
+                            >
+                                <div class="flex items-start">
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-gray-900">Choose later</div>
+                                        <p class="text-sm text-gray-500 mt-1">
+                                            Select payment method from your payment history.
+                                        </p>
+                                    </div>
+
+                                    <Icon
+                                        v-if="selectedPaymentMethod === null"
+                                        icon="mdi:check-circle"
+                                        class="w-5 h-5 text-gray-600 shrink-0 ml-2"
+                                    />
+                                </div>
+                            </button>
+
                             <!-- Bank Transfer -->
                             <button
                                 @click="selectedPaymentMethod = 'bank_transfer'"
@@ -508,13 +517,14 @@ function handleFileSelect(event: Event): void {
                                     <div class="flex-1">
                                         <div class="font-semibold text-gray-900">Bank Transfer</div>
                                         <p class="text-sm text-gray-600 mt-1">
-                                            Transfer via bank. Credits applied immediately after payment.
+                                            Transfer via bank. Awaiting admin approval.
                                         </p>
+                                        <p class="text-xs text-amber-600 mt-1">Expires in 7 days</p>
                                     </div>
 
                                     <Icon
-                                        icon="mdi:check-circle"
                                         v-if="selectedPaymentMethod === 'bank_transfer'"
+                                        icon="mdi:check-circle"
                                         class="w-5 h-5 text-green-600 shrink-0 ml-2"
                                     />
                                 </div>
@@ -526,7 +536,7 @@ function handleFileSelect(event: Event): void {
                                 :class="[
                                     'w-full p-4 rounded-lg border-2 transition-all text-left',
                                     {
-                                        'border-red-600 bg-red-50': selectedPaymentMethod === 'pix_offline',
+                                        'border-green-600 bg-green-50': selectedPaymentMethod === 'pix_offline',
                                         'border-gray-200 bg-white hover:border-gray-300':
                                             selectedPaymentMethod !== 'pix_offline',
                                     },
@@ -536,52 +546,69 @@ function handleFileSelect(event: Event): void {
                                     <div class="flex-1">
                                         <div class="font-semibold text-gray-900">PIX Offline</div>
                                         <p class="text-sm text-gray-600 mt-1">
-                                            Send PIX and upload receipt. Admin approval required.
+                                            Send PIX and attach receipt. Admin approval required.
                                         </p>
+                                        <p class="text-xs text-amber-600 mt-1">Expires in 48 hours</p>
                                     </div>
 
                                     <Icon
-                                        icon="mdi:check-circle"
                                         v-if="selectedPaymentMethod === 'pix_offline'"
+                                        icon="mdi:check-circle"
                                         class="w-5 h-5 text-green-600 shrink-0 ml-2"
                                     />
                                 </div>
                             </button>
 
-                            <!-- Receipt Upload for PIX -->
-                            <div
-                                v-if="selectedPaymentMethod === 'pix_offline'"
-                                class="border border-gray-200 rounded-lg p-4"
-                            >
-                                <label class="block text-sm font-medium text-gray-700 mb-3">
-                                    Upload Payment Receipt (PDF, PNG, or JPG)
-                                </label>
-
-                                <div
-                                    class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-red-300 hover:bg-red-50 transition-all"
-                                >
+                            <!-- Upload Receipt Now checkbox -->
+                            <div v-if="selectedPaymentMethod !== null" class="border border-gray-200 rounded-lg p-4">
+                                <label class="flex items-center gap-3 cursor-pointer">
                                     <input
-                                        type="file"
-                                        accept=".pdf,.png,.jpg,.jpeg"
-                                        @change="handleFileSelect"
-                                        class="hidden"
-                                        ref="fileInput"
+                                        type="checkbox"
+                                        v-model="uploadReceiptNow"
+                                        class="w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500"
                                     />
+                                    <span class="text-sm font-medium text-gray-700">Upload receipt now</span>
+                                </label>
+                                <p class="text-xs text-gray-500 mt-1 ml-7">
+                                    You can also upload it later from your payment history.
+                                </p>
 
-                                    <button type="button" @click="$refs.fileInput?.click()" class="w-full">
-                                        <Icon icon="mdi:cloud-upload" class="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                                <!-- Receipt Upload Area -->
+                                <div v-if="uploadReceiptNow" class="mt-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">
+                                        Payment Receipt (PDF, PNG, or JPG)
+                                    </label>
 
-                                        <div v-if="!receiptFile" class="text-gray-600">
-                                            <p class="font-medium">Click to upload or drag and drop</p>
-                                            <p class="text-xs text-gray-500 mt-1">PDF, PNG or JPG (max 5MB)</p>
-                                        </div>
+                                    <div
+                                        class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-green-300 hover:bg-green-50 transition-all"
+                                    >
+                                        <input
+                                            type="file"
+                                            accept=".pdf,.png,.jpg,.jpeg"
+                                            @change="handleFileSelect"
+                                            class="hidden"
+                                            ref="fileInput"
+                                        />
 
-                                        <div v-else class="text-green-600">
-                                            <Icon icon="mdi:check-circle" class="w-6 h-6 mx-auto mb-1" />
-                                            <p class="font-medium">{{ receiptFile.name }}</p>
-                                            <p class="text-xs text-green-500 mt-1">File selected</p>
-                                        </div>
-                                    </button>
+                                        <button
+                                            type="button"
+                                            @click="($refs.fileInput as HTMLInputElement)?.click()"
+                                            class="w-full"
+                                        >
+                                            <Icon icon="mdi:cloud-upload" class="w-8 h-8 text-gray-400 mx-auto mb-2" />
+
+                                            <div v-if="!receiptFile" class="text-gray-600">
+                                                <p class="font-medium">Click to upload or drag and drop</p>
+                                                <p class="text-xs text-gray-500 mt-1">PDF, PNG or JPG (max 5MB)</p>
+                                            </div>
+
+                                            <div v-else class="text-green-600">
+                                                <Icon icon="mdi:check-circle" class="w-6 h-6 mx-auto mb-1" />
+                                                <p class="font-medium">{{ receiptFile.name }}</p>
+                                                <p class="text-xs text-green-500 mt-1">File selected</p>
+                                            </div>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -614,7 +641,7 @@ function handleFileSelect(event: Event): void {
                             v-else
                             preset="primary"
                             @click="handleSubmit"
-                            :disabled="!isStep3Valid || isSubmitting"
+                            :disabled="isSubmitting"
                             :loading="isSubmitting"
                         >
                             Confirm Purchase
