@@ -129,7 +129,7 @@ function resourceIcon(group: string): string {
 </script>
 
 <template>
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <!-- Profile Header Card -->
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-6">
             <!-- Top banner -->
