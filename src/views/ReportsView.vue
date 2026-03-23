@@ -9,7 +9,6 @@ import { useAuth } from '@/composables/useAuth';
 import { useCustomerData } from '@/composables/useCustomerData';
 import api from '@/services/api';
 import type { ReportFilters } from '@/types';
-import CButton from '@/components/CButton.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -46,6 +45,20 @@ function getWalletLabel(wallet: any): string {
 
     return `${wallet.name} (${clientName})`;
 }
+
+const clientOptions = computed(() => {
+    return clients.value.map((c) => ({
+        value: c.id,
+        label: c.name,
+    }));
+});
+
+const walletOptions = computed(() => {
+    return filteredWallets.value.map((w) => ({
+        value: w.id,
+        label: getWalletLabel(w),
+    }));
+});
 
 function readFiltersFromUrl(): void {
     const query = route.query;
@@ -293,24 +306,27 @@ async function exportReport(format: 'pdf' | 'excel') {
                 <!-- Client selector - hidden for customers -->
                 <div v-if="auth.isCustomer.value">
                     <label class="mb-1 block text-sm font-medium text-gray-700">Cliente</label>
-                    <div class="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-gray-700">
+                    <div class="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
                         {{ clients.find((c) => c.id === filters.client_id)?.name || 'Carregando...' }}
                     </div>
                 </div>
 
-                <CSelect v-else label="Client" v-model.number="filters.client_id">
-                    <option :value="null">All Clients</option>
-                    <option v-for="client in clients" :key="client.id" :value="client.id">
-                        {{ client.name }}
-                    </option>
-                </CSelect>
+                <CTypeahead
+                    v-else
+                    label="Client"
+                    v-model="filters.client_id"
+                    :initialOptions="clientOptions"
+                    placeholder="All Clients"
+                    clearable
+                />
 
-                <CSelect label="Wallet" v-model.number="filters.wallet_id">
-                    <option :value="null">All Wallets</option>
-                    <option v-for="wallet in filteredWallets" :key="wallet.id" :value="wallet.id">
-                        {{ getWalletLabel(wallet) }}
-                    </option>
-                </CSelect>
+                <CTypeahead
+                    label="Wallet"
+                    v-model="filters.wallet_id"
+                    :initialOptions="walletOptions"
+                    placeholder="All Wallets"
+                    clearable
+                />
 
                 <CInput label="Date From" v-model="filters.date_from" type="date" />
 
