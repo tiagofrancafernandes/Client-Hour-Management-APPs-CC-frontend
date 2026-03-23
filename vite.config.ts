@@ -1,3 +1,4 @@
+import VueDevTools from 'vite-plugin-vue-devtools';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from '@tailwindcss/vite';
@@ -6,7 +7,14 @@ import { fileURLToPath, URL } from 'node:url';
 
 // https://vite.dev/config/
 export default defineConfig({
-    plugins: [vue(), tailwindcss()],
+    plugins: [
+        vue(),
+        tailwindcss(),
+        VueDevTools({
+            launchEditor: 'vscode',
+        }),
+        //
+    ],
     build: {
         outDir: process.env.BUILD_OUT_DIR || 'dist',
     },
@@ -33,14 +41,21 @@ export default defineConfig({
         },
     },
     server: {
-        host: '0.0.0.0',
-        // allowedHosts: true, // Any host
-        allowedHosts: [
-            'app.tiagoapps.com.br',
-            'app.local.tiagoapps.com.br',
-            'app.hml.tiagoapps.com.br',
-            // ... other hosts
-        ],
+        // host: '0.0.0.0',
+        host: true,
+        // allowedHosts: [
+        //     'app.tiagoapps.com.br',
+        //     'app.local.tiagoapps.com.br',
+        //     'app.hml.tiagoapps.com.br',
+        //     // ... other hosts
+        // ],
+        allowedHosts: true, // Any host
+        proxy: {
+            '/__open-in-editor': {
+                target: process.env.OPEN_IN_EDITOR_URL || 'http://host.docker.internal:3001',
+                changeOrigin: true,
+            },
+        },
         fs: {
             strict: false,
         },

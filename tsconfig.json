@@ -1,4 +1,8 @@
 {
+    "compilerOptions": {
+        "types": ["node"],
+        "lib": ["ES2023", "es6", "dom"]
+    },
     "files": [],
     "references": [
         {

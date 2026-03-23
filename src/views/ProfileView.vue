@@ -1,9 +1,28 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
 
 const router = useRouter();
-const { user, role } = useAuth();
+const { user, role, permissions } = useAuth();
+
+const groupPermissionsByResource = computed(() => {
+    return permissions.value.reduce((groups: Record<string, string[]>, permission: string) => {
+        const [group] = permission.split('.', 1);
+
+        if (!group) {
+            return groups;
+        }
+
+        if (!groups[group]) {
+            groups[group] = [];
+        }
+
+        groups[group].push(permission);
+
+        return groups;
+    }, {});
+});
 </script>
 
 <template>
@@ -31,6 +50,45 @@ const { user, role } = useAuth();
                             <span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
                                 {{ role || 'No role assigned' }}
                             </span>
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Permissions</label>
+                        <!-- {{ groupPermissionsByResource }} -->
+                        <div class="space-y-4 divide-gray-500/50 divide-y">
+                            <div v-for="(perms, group) in groupPermissionsByResource" :key="group" class="p-3">
+                                <!-- Group title -->
+                                <h3 class="mb-2 text-sm font-normal text-gray-600">
+                                    {{ group }}
+                                </h3>
+
+                                <!-- Pills -->
+                                <div class="flex flex-wrap gap-1">
+                                    <span
+                                        v-for="perm in perms"
+                                        :key="perm"
+                                        class="mr-2 mb-2 inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800"
+                                    >
+                                        {{ perm }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="mt-1" v-if="0">
+                            <template v-if="!(permissions || []).length">
+                                <span class="text-gray-500">No permissions assigned</span>
+                            </template>
+                            <template v-else>
+                                <span
+                                    v-for="(perm, index) in permissions"
+                                    :key="perm"
+                                    class="mr-2 mb-2 inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800"
+                                >
+                                    {{ perm }}
+                                </span>
+                            </template>
                         </p>
                     </div>
                 </div>

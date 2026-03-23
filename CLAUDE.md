@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Vue 3 SPA for client hour tracking with a ledger-based model.
 
 ### Tech Stack
+
 - **Framework**: Vue 3.5+ with Composition API
 - **Build Tool**: Vite 7
 - **Language**: TypeScript 5.9+
@@ -36,6 +37,7 @@ vue-tsc -b
 ```
 
 ### Docker Commands
+
 ```bash
 # From project root
 docker compose --env-file .env.docker exec frontend npm install
@@ -46,6 +48,7 @@ docker compose --env-file .env.docker exec frontend npx prettier --write src/
 ## Architecture
 
 ### Directory Structure
+
 ```
 src/
 ├── composables/       # Reusable composition functions
@@ -74,6 +77,7 @@ src/
 **Composition API**: All components use `<script setup lang="ts">`
 
 **Composables**: Data fetching and state management via composition functions
+
 ```typescript
 const { clients, loading, error, fetchClients } = useClients();
 ```
@@ -83,7 +87,9 @@ const { clients, loading, error, fetchClients } = useClients();
 **TypeScript**: Strict typing for all entities and API responses
 
 ### Path Aliases
+
 Configured in `vite.config.ts`:
+
 - `@` → `./src`
 - `@composables` → `./src/composables`
 - `@views` → `./src/views`
@@ -93,25 +99,29 @@ Configured in `vite.config.ts`:
 ## Vue.js Guidelines
 
 ### Conditional Classes
+
 **Always use object syntax** instead of ternary operators:
 
 ```vue
 <!-- ✅ Correct -->
-<div :class="{'bg-blue-600': isActive, 'bg-gray-200': !isActive}"></div>
+<div :class="{ 'bg-blue-600': isActive, 'bg-gray-200': !isActive }"></div>
 
 <!-- ❌ Wrong -->
 <div :class="isActive ? 'bg-blue-600' : 'bg-gray-200'"></div>
 ```
 
 ### Combining Static and Conditional Classes
+
 ```vue
-<div :class="[
-    'px-4 py-2 rounded-lg',
-    {
-        'bg-blue-600 text-white': isActive,
-        'bg-gray-200 text-gray-800': !isActive,
-    }
-]"></div>
+<div
+    :class="[
+        'px-4 py-2 rounded-lg',
+        {
+            'bg-blue-600 text-white': isActive,
+            'bg-gray-200 text-gray-800': !isActive,
+        },
+    ]"
+></div>
 ```
 
 ## TailwindCSS v4
@@ -139,6 +149,7 @@ Access in code: `import.meta.env.VITE_API_URL`
 ### Design Guidelines
 
 This file contains the complete design system extracted from the official mockups:
+
 - **Color palette**: Primary (#dc2626), secondary, backgrounds, text colors
 - **Typography**: Font families, sizes, weights
 - **Component styles**: Buttons, cards, inputs, tables, badges, etc.
@@ -161,45 +172,44 @@ toast.warning('warning!');
 ```
 
 ## Using buttons
+
 To use <button> preffer use global `CButton` component (`src/components/CButton.vue` not need import this) and use presets to style
 Example:
+
 ```vue
 <template>
-<CButton preset="outlined-black" class="inline-flex items-center">
-    Unlock
-</CButton>
+    <CButton preset="outlined-black" class="inline-flex items-center">Unlock</CButton>
 </template>
 ```
 
-## Using Custom Components (src/components/C*.vue file)
+## Using Custom Components (src/components/C\*.vue file)
 
 Example:
+
 ```vue
 <template>
-<!-- src/components/CButton.vue -->
- <CButton label="My Button label" />
+    <!-- src/components/CButton.vue -->
+    <CButton label="My Button label" />
 
-<!-- src/components/CDropZone.vue -->
- <CDropZone label="My DropZone label" />
+    <!-- src/components/CDropZone.vue -->
+    <CDropZone label="My DropZone label" />
 
-<!-- src/components/CInput.vue -->
- <CInput label="My Input label" />
+    <!-- src/components/CInput.vue -->
+    <CInput label="My Input label" />
 
-<!-- src/components/CSelect.vue -->
- <CSelect label="My Select label"  >
-
-    <option>Opção</option>
- </CSelect>
-<!-- src/components/CTextarea.vue -->
- <CTextarea label="My Textarea label" />
-
+    <!-- src/components/CSelect.vue -->
+    <CSelect label="My Select label">
+        <option>Opção</option>
+    </CSelect>
+    <!-- src/components/CTextarea.vue -->
+    <CTextarea label="My Textarea label" />
 </template>
 ```
-
 
 ### Using buttons with icons
 
 - Content inside
+
 ```vue
 <CButton class="inline-flex items-center gap-2">
     <Icon icon="material-symbols:lock-open-right-outline-rounded" />
@@ -208,6 +218,7 @@ Example:
 ```
 
 - Icon on left
+
 ```vue
 <CButton icon="mdi-light:home">
     Home
@@ -215,6 +226,7 @@ Example:
 ```
 
 - Icon on right
+
 ```vue
 <CButton right-icon="mdi-light:home">
     Home
@@ -222,6 +234,7 @@ Example:
 ```
 
 - Icon on both (right and left)
+
 ```vue
 <CButton icon="mdi-light:home" right-icon="mdi-light:home">
     Home
@@ -229,6 +242,7 @@ Example:
 ```
 
 - Icon and label via args
+
 ```vue
 <CButton icon="mdi-light:home" label="Home" />
 ```
@@ -236,26 +250,27 @@ Example:
 ### Key Design Principles
 
 1. **Color Usage**:
-   - Primary red (#dc2626) for actions, brand elements, and active states
-   - Neutral grays for text hierarchy and backgrounds
-   - White cards with subtle shadows for content containers
+    - Primary red (#dc2626) for actions, brand elements, and active states
+    - Neutral grays for text hierarchy and backgrounds
+    - White cards with subtle shadows for content containers
 
 2. **Component Consistency**:
-   - Rounded corners (0.5rem for most elements)
-   - Consistent padding (0.5rem - 1rem for interactive elements)
-   - Clear hover states for all interactive components
+    - Rounded corners (0.5rem for most elements)
+    - Consistent padding (0.5rem - 1rem for interactive elements)
+    - Clear hover states for all interactive components
 
 3. **Branding**:
-   - Logo format: Brand name with accent color (e.g., "MK" in black + "Pay" in red)
-   - Red badges for app/section identifiers
-   - Clean, modern aesthetic with generous whitespace
+    - Logo format: Brand name with accent color (e.g., "MK" in black + "Pay" in red)
+    - Red badges for app/section identifiers
+    - Clean, modern aesthetic with generous whitespace
 
 4. **Responsive Design**:
-   - Desktop: Expanded sidebar, full header
-   - Mobile: Bottom navigation, collapsed sidebar, compact header
-   - Breakpoints defined in design.json
+    - Desktop: Expanded sidebar, full header
+    - Mobile: Bottom navigation, collapsed sidebar, compact header
+    - Breakpoints defined in design.json
 
 **Always refer to `design/design.json` when:**
+
 - Creating new components
 - Styling existing components
 - Implementing buttons, cards, or forms

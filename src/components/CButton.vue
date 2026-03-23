@@ -32,8 +32,8 @@ const classes = computed(() => {
         'inline-flex items-center align-center',
         presets[props.preset] ?? presets.blue,
         {
-            'justify-center gap-5': !hasIcon,
-            'justify-between': hasIcon,
+            'justify-center': !hasIcon,
+            'justify-between gap-x-2': hasIcon,
             'flex-1': props.flex,
         },
     ];

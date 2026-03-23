@@ -5,12 +5,16 @@ import { useReports } from '@/composables/useReports';
 import { useClients } from '@/composables/useClients';
 import { useWallets } from '@/composables/useWallets';
 import { useTags } from '@/composables/useTags';
+import { useAuth } from '@/composables/useAuth';
+import { useCustomerData } from '@/composables/useCustomerData';
 import api from '@/services/api';
 import type { ReportFilters } from '@/types';
 import CButton from '@/components/CButton.vue';
 
 const route = useRoute();
 const router = useRouter();
+const auth = useAuth();
+const { myClient } = useCustomerData();
 
 const { summary, entries, groupedData, loading, error, pagination, fetchReport } = useReports();
 const { clients, fetchClients } = useClients();
@@ -126,6 +130,15 @@ watch(
 
 onMounted(async () => {
     await Promise.all([fetchClients(1, ''), fetchWallets(), fetchTags()]);
+
+    // For customers, pre-fill with their own client
+    if (auth.isCustomer.value) {
+        const customerId = auth.getCustomerId();
+
+        if (customerId) {
+            filters.value.client_id = customerId;
+        }
+    }
 
     readFiltersFromUrl();
 
@@ -277,7 +290,15 @@ async function exportReport(format: 'pdf' | 'excel') {
         <div class="mb-6 rounded-lg bg-white p-4 shadow">
             <h2 class="mb-4 text-lg font-semibold">Filters</h2>
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <CSelect label="Client" v-model.number="filters.client_id">
+                <!-- Client selector - hidden for customers -->
+                <div v-if="auth.isCustomer.value">
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Cliente</label>
+                    <div class="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-gray-700">
+                        {{ clients.find((c) => c.id === filters.client_id)?.name || 'Carregando...' }}
+                    </div>
+                </div>
+
+                <CSelect v-else label="Client" v-model.number="filters.client_id">
                     <option :value="null">All Clients</option>
                     <option v-for="client in clients" :key="client.id" :value="client.id">
                         {{ client.name }}
@@ -308,7 +329,12 @@ async function exportReport(format: 'pdf' | 'excel') {
                 </CSelect>
 
                 <div class="lg:col-span-2">
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Tags</label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">
+                        Tags
+                        <span class="text-xs text-gray-400 italic">
+                            (Tip: use shift mouse scroll to horizontal scroll)
+                        </span>
+                    </label>
                     <div
                         class="flex gap-2 overflow-x-auto whitespace-nowrap pb-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200"
                     >

@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
 
 const router = useRouter();
 const { login, loading, error } = useAuth();
+
+const isProd = import.meta.env.VITE_APP_ENV === 'production';
+const showDevHelpers = Boolean(import.meta.env.VITE_SHOW_DEV_HELPERS) && !isProd;
 
 const email = ref('');
 const password = ref('');
@@ -24,6 +27,33 @@ async function handleSubmit() {
         router.push(redirectTo);
     }
 }
+
+function fillUserCredentials(emailValue: string, passwordValue: string | null = null) {
+    email.value = emailValue;
+
+    password.value = passwordValue || 'password123';
+}
+
+const demoUsers = computed(() => [
+    {
+        name: 'Admin User',
+        email: 'admin@mail.com',
+        password: 'power@123',
+        role: 'admin',
+    },
+    {
+        name: 'Cliente 1 - Usuário',
+        email: 'customer1@test.com',
+        password: 'password',
+        role: 'customer',
+    },
+    {
+        name: 'Cliente 2 - Usuário',
+        email: 'customer2@test.com',
+        password: 'password',
+        role: 'customer',
+    },
+]);
 </script>
 
 <template>
@@ -75,6 +105,19 @@ async function handleSubmit() {
                         <span v-else>Sign in</span>
                     </button>
                 </form>
+
+                <div v-if="showDevHelpers" class="pt-8">
+                    <ul>
+                        <li v-for="user in demoUsers" :key="user.email" class="mb-2">
+                            <button
+                                @click="fillUserCredentials(user.email, user.password)"
+                                class="w-full rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                            >
+                                {{ user.name }}
+                            </button>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>

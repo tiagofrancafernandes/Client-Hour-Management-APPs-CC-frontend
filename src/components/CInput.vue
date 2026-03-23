@@ -8,11 +8,13 @@ const attrs = useAttrs();
 const props = defineProps({
     label: {
         type: String,
-        default: () => 'Select',
     },
     type: {
         type: String,
         default: () => 'text',
+    },
+    name: {
+        type: String,
     },
     required: {
         type: Boolean,
@@ -22,7 +24,19 @@ const props = defineProps({
         type: Boolean,
         default: () => false,
     },
+    class: {
+        type: [String, Object, Array],
+        default: () => null,
+    },
+    inputClasses: {
+        type: [String, Object, Array],
+        default: () => null,
+    },
     labelClasses: {
+        type: [String, Object, Array],
+        default: () => null,
+    },
+    containerClasses: {
         type: [String, Object, Array],
         default: () => null,
     },
@@ -35,9 +49,13 @@ const props = defineProps({
 const classes = computed(() => {
     const presets: any = selectPresets();
 
-    let _classes: any = [presets[props.preset] ?? presets.default];
+    let _classes: any = [props.class, props.inputClasses, presets[props.preset] ?? presets.default];
 
     return _classes;
+});
+
+const label = computed(() => {
+    return props?.label || props?.name;
 });
 
 const labelClasses = computed(() => {
@@ -52,21 +70,38 @@ const labelClasses = computed(() => {
     return _classes;
 });
 
+const containerClasses = computed(() => {
+    let containerClasses = props?.containerClasses || [];
+    containerClasses = typeof containerClasses === 'string' ? containerClasses.split(' ') : containerClasses;
+    let _classes: any[] = Array.isArray(containerClasses) ? containerClasses : [containerClasses];
+
+    let hasWidth = _classes.some((v) => typeof v === 'string' && v.startsWith('w-'));
+
+    if (!hasWidth) {
+        _classes.unshift('w-full');
+    }
+
+    return _classes;
+});
+
 const modelValue = defineModel<string | number | undefined>();
 </script>
 
 <template>
-    <div data-component-name="CInput">
-        <label :class="labelClasses">
-            <template v-if="props?.label === null">
-                <slot name="label" />
-            </template>
-            <template v-else>
-                {{ props?.label || '' }}
-            </template>
-        </label>
+    <div data-component-name="CInput" :class="containerClasses">
+        <template v-if="$slots.label || label">
+            <label :class="labelClasses">
+                <template v-if="label === null">
+                    <slot name="label" />
+                </template>
+                <template v-else>
+                    {{ label || '' }}
+                </template>
+            </label>
+        </template>
         <input
             v-model="modelValue"
+            :name="props.name"
             v-bind="{
                 ...attrs,
                 class: classes,

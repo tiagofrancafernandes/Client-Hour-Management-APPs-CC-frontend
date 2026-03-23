@@ -46,14 +46,45 @@
                             <CInput v-model="formData.reference_date" type="date" required :max="today" />
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Hours *</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
 
-                            <CInput v-model.number="formData.hours" type="number" step="0.01" required />
+                                <CInput v-model="formData.start_time" type="datetime-local" />
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Optional. If both times are provided, hours will be calculated.
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">End Time</label>
+
+                                <CInput v-model="formData.end_time" type="datetime-local" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Hours</label>
+
+                            <CInput v-model.number="formData.hours" type="number" step="0.01" />
 
                             <p class="mt-1 text-xs text-gray-500">
-                                Use positive values for credit and negative values for debit
+                                Optional if start/end times are provided. Otherwise required for credit/adjustment
+                                types.
                             </p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Input Type *</label>
+
+                                <CSelect v-model="formData.input_type" required>
+                                    <option value="debit">Debit (consume hours)</option>
+                                    <option value="credit">Credit (add hours)</option>
+                                    <option value="adjustment">Adjustment</option>
+                                </CSelect>
+                            </div>
                         </div>
 
                         <div>
@@ -142,9 +173,12 @@ const emit = defineEmits<{
 
 const formData: Ref<ImportRowForm> = ref({
     reference_date: '',
-    hours: 0,
+    start_time: null,
+    end_time: null,
+    hours: null,
     title: '',
     description: '',
+    input_type: 'debit',
     tags: [],
 });
 
@@ -163,17 +197,23 @@ watch(
             if (props.row) {
                 formData.value = {
                     reference_date: props.row.reference_date,
-                    hours: props.row.hours,
+                    start_time: props.row.start_time || null,
+                    end_time: props.row.end_time || null,
+                    hours: props.row.hours || null,
                     title: props.row.title,
                     description: props.row.description || '',
+                    input_type: props.row.input_type || 'debit',
                     tags: props.row.tags ? [...props.row.tags] : [],
                 };
             } else {
                 formData.value = {
                     reference_date: today.value ?? '',
-                    hours: 0,
+                    start_time: null,
+                    end_time: null,
+                    hours: null,
                     title: '',
                     description: '',
+                    input_type: 'debit',
                     tags: [],
                 };
             }

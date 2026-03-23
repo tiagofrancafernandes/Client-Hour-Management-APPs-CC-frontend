@@ -30,10 +30,7 @@ async function loadPendingPayments(): Promise<void> {
     purchases.value.forEach((purchase) => {
         if (purchase.payments) {
             purchase.payments.forEach((payment) => {
-                if (
-                    payment.payment_method === 'pix_offline' &&
-                    payment.payment_status === 'pending'
-                ) {
+                if (payment.payment_method === 'pix_offline' && payment.payment_status === 'pending') {
                     pending.push(payment);
                 }
             });
@@ -64,9 +61,10 @@ async function handleApprovalSubmit(): Promise<void> {
 
     try {
         // Call API endpoint based on action
-        const endpoint = approvalAction.value === 'approve'
-            ? `/payments/${selectedPayment.value.id}/approve`
-            : `/payments/${selectedPayment.value.id}/reject`;
+        const endpoint =
+            approvalAction.value === 'approve'
+                ? `/payments/${selectedPayment.value.id}/approve`
+                : `/payments/${selectedPayment.value.id}/reject`;
 
         const method = 'POST';
         const body = {
@@ -78,7 +76,7 @@ async function handleApprovalSubmit(): Promise<void> {
             method,
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
             body: JSON.stringify(body),
         });
@@ -87,9 +85,8 @@ async function handleApprovalSubmit(): Promise<void> {
             throw new Error('Failed to process approval');
         }
 
-        const message = approvalAction.value === 'approve'
-            ? 'Payment approved and credits applied!'
-            : 'Payment rejected';
+        const message =
+            approvalAction.value === 'approve' ? 'Payment approved and credits applied!' : 'Payment rejected';
 
         toast.success(message);
 
@@ -171,7 +168,10 @@ function getPaymentBadgeColor(status: string): string {
         </div>
 
         <!-- Empty State -->
-        <div v-else-if="pendingPayments.length === 0" class="rounded-lg border border-green-200 bg-green-50 p-12 text-center">
+        <div
+            v-else-if="pendingPayments.length === 0"
+            class="rounded-lg border border-green-200 bg-green-50 p-12 text-center"
+        >
             <Icon icon="mdi:check-circle" class="w-12 h-12 text-green-600 mx-auto mb-4" />
             <p class="text-green-900 font-semibold mb-2">No Pending Approvals</p>
             <p class="text-sm text-green-700">All PIX payments have been reviewed</p>
@@ -205,11 +205,13 @@ function getPaymentBadgeColor(status: string): string {
                             </div>
 
                             <p class="text-sm text-gray-600">
-                                <strong>Customer:</strong> {{ payment.creditPurchase.customer?.name }}
+                                <strong>Customer:</strong>
+                                {{ payment.creditPurchase.customer?.name }}
                             </p>
 
                             <p class="text-sm text-gray-600 mt-1">
-                                <strong>Submitted:</strong> {{ formatDate(payment.created_at) }}
+                                <strong>Submitted:</strong>
+                                {{ formatDate(payment.created_at) }}
                             </p>
                         </div>
 
@@ -238,9 +240,7 @@ function getPaymentBadgeColor(status: string): string {
 
                         <div>
                             <p class="text-gray-600 mb-1">Hours to Credit</p>
-                            <p class="font-semibold text-gray-900">
-                                {{ payment.creditPurchase.total_hours }}h
-                            </p>
+                            <p class="font-semibold text-gray-900">{{ payment.creditPurchase.total_hours }}h</p>
                         </div>
 
                         <div>
@@ -266,7 +266,10 @@ function getPaymentBadgeColor(status: string): string {
                     <!-- Receipt Link -->
                     <div v-if="payment.pix_receipt_path" class="border-t border-yellow-200 pt-4">
                         <button
-                            @click="selectedPayment = payment; handleDownloadReceipt()"
+                            @click="
+                                selectedPayment = payment;
+                                handleDownloadReceipt();
+                            "
                             class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
                         >
                             <Icon icon="mdi:file-pdf-box" class="w-4 h-4" />
@@ -276,11 +279,7 @@ function getPaymentBadgeColor(status: string): string {
 
                     <!-- Action Buttons -->
                     <div class="border-t border-yellow-200 pt-4 flex gap-2 justify-end">
-                        <CButton
-                            preset="danger"
-                            @click="openApprovalModal(payment, 'reject')"
-                            icon="mdi:close-circle"
-                        >
+                        <CButton preset="danger" @click="openApprovalModal(payment, 'reject')" icon="mdi:close-circle">
                             Reject
                         </CButton>
 
@@ -329,7 +328,12 @@ function getPaymentBadgeColor(status: string): string {
 
                         <p class="text-lg font-bold text-gray-900">
                             {{ selectedPayment.creditPurchase?.total_hours }}h for
-                            {{ formatCurrency(selectedPayment.creditPurchase?.total_price || 0, selectedPayment.creditPurchase?.currency_code) }}
+                            {{
+                                formatCurrency(
+                                    selectedPayment.creditPurchase?.total_price || 0,
+                                    selectedPayment.creditPurchase?.currency_code
+                                )
+                            }}
                         </p>
                     </div>
 
@@ -341,7 +345,11 @@ function getPaymentBadgeColor(status: string): string {
 
                         <textarea
                             v-model="approvalNotes"
-                            :placeholder="approvalAction === 'reject' ? 'Explain why this payment is being rejected...' : 'Add any notes...'"
+                            :placeholder="
+                                approvalAction === 'reject'
+                                    ? 'Explain why this payment is being rejected...'
+                                    : 'Add any notes...'
+                            "
                             rows="3"
                             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-600 focus:outline-none"
                         ></textarea>
@@ -350,11 +358,7 @@ function getPaymentBadgeColor(status: string): string {
 
                 <!-- Footer -->
                 <div class="bg-gray-50 px-6 py-4 flex gap-3 justify-end rounded-b-lg border-t border-gray-200">
-                    <CButton
-                        preset="outlined-black"
-                        @click="showApprovalModal = false"
-                        :disabled="isSubmitting"
-                    >
+                    <CButton preset="outlined-black" @click="showApprovalModal = false" :disabled="isSubmitting">
                         Cancel
                     </CButton>
 

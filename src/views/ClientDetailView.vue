@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useClients } from '@/composables/useClients';
 import { useWallets } from '@/composables/useWallets';
+import { useClientUsers } from '@/composables/useClientUsers';
 import { usePermissions } from '@/composables/usePermissions';
-import type { WalletWithBalance } from '@/types';
+import { useToast } from '@/composables/useToast';
+import type { User, WalletWithBalance, ClientUserForm, UpdateClientUserForm } from '@/types';
 
 const route = useRoute();
 const router = useRouter();
@@ -12,7 +14,16 @@ const clientId = Number(route.params.id);
 
 const { client, loading: clientLoading, error: clientError, fetchClient } = useClients();
 const { createWallet, updateWallet } = useWallets();
-const { canManageWallets } = usePermissions();
+const {
+    users: clientUsers,
+    loading: usersLoading,
+    fetchClientUsers,
+    createClientUser,
+    updateClientUser,
+    deleteClientUser,
+} = useClientUsers();
+const { canManageWallets, canManageClients } = usePermissions();
+const toast = useToast();
 
 const showCreateWalletModal = ref(false);
 const showEditWalletModal = ref(false);
@@ -21,8 +32,20 @@ const newWalletName = ref('');
 const newWalletDescription = ref('');
 const newWalletHourlyRate = ref<number | undefined>(undefined);
 
+const showCreateUserModal = ref(false);
+const showEditUserModal = ref(false);
+const editingUser = ref<User | null>(null);
+const userForm = ref<ClientUserForm>({
+    client_id: clientId,
+    name: '',
+    email: '',
+    password: '',
+    password_confirmation: '',
+});
+
 onMounted(() => {
     fetchClient(clientId);
+    fetchClientUsers(clientId);
 });
 
 async function handleCreateWallet() {
@@ -103,6 +126,75 @@ function getBalanceColor(balance: string): string {
 
     return 'text-gray-600';
 }
+
+const hasClientUser = computed(() => {
+    return clientUsers.value.length > 0;
+});
+
+async function handleCreateUser() {
+    if (!userForm.value.name || !userForm.value.email || !userForm.value.password) {
+        return;
+    }
+
+    try {
+        await createClientUser(clientId, userForm.value);
+
+        showCreateUserModal.value = false;
+
+        userForm.value = {
+            client_id: clientId,
+            name: '',
+            email: '',
+            password: '',
+            password_confirmation: '',
+        };
+
+        toast.success('Usuário criado com sucesso');
+    } catch {
+        toast.error('Erro ao criar usuário');
+    }
+}
+
+function handleEditUser(user: User) {
+    editingUser.value = { ...user };
+    showEditUserModal.value = true;
+}
+
+async function handleUpdateUser() {
+    if (!editingUser.value) {
+        return;
+    }
+
+    try {
+        const updateData: UpdateClientUserForm = {
+            name: editingUser.value.name,
+            email: editingUser.value.email,
+        };
+
+        await updateClientUser(clientId, editingUser.value.id, updateData);
+
+        showEditUserModal.value = false;
+        editingUser.value = null;
+
+        toast.success('Usuário atualizado com sucesso');
+    } catch {
+        toast.error('Erro ao atualizar usuário');
+    }
+}
+
+async function handleDeleteUser(userId: number) {
+    if (!confirm('Tem certeza que deseja deletar este usuário?')) {
+        return;
+    }
+
+    try {
+        await deleteClientUser(clientId, userId);
+
+        toast.success('Usuário deletado com sucesso');
+    } catch {
+        toast.error('Erro ao deletar usuário');
+    }
+}
 </script>
 
 <template>
@@ -177,6 +269,56 @@ function getBalanceColor(balance: string): string {
 
             <div v-if="!client.wallets?.length" class="py-8 text-center text-gray-500">
                 No wallets yet. Create one to start tracking hours.
+            </div>
+
+            <!-- Users Section -->
+            <div class="mt-8">
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-xl font-semibold text-gray-900">Usuários</h2>
+
+                    <CButton
+                        v-if="!hasClientUser && canManageClients"
+                        preset="primary"
+                        @click="showCreateUserModal = true"
+                        icon="mdi:account-plus"
+                    >
+                        Cadastrar Usuário
+                    </CButton>
+                </div>
+
+                <div v-if="usersLoading" class="py-8 text-center">
+                    <div
+                        class="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-red-600 mx-auto"
+                    ></div>
+                </div>
+
+                <div v-else-if="!hasClientUser" class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+                    <p class="text-gray-600">Nenhum usuário cadastrado para este cliente</p>
+                </div>
+
+                <div v-else class="space-y-3">
+                    <div
+                        v-for="user in clientUsers"
+                        :key="user.id"
+                        class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+                    >
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-gray-900">{{ user.name }}</h4>
+                                <p class="mt-1 text-sm text-gray-600">{{ user.email }}</p>
+                                <p v-if="user.role" class="mt-1 text-xs text-gray-500">Papel: {{ user.role }}</p>
+                            </div>
+
+                            <div v-if="canManageClients" class="flex gap-2">
+                                <CButton preset="gray" @click="handleEditUser(user)" icon="mdi:pencil">Editar</CButton>
+
+                                <CButton preset="danger" @click="handleDeleteUser(user.id)" icon="mdi:delete">
+                                    Deletar
+                                </CButton>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -263,6 +405,90 @@ function getBalanceColor(balance: string): string {
                         Cancel
                     </button>
                     <CButton @click="handleUpdateWallet">Update</CButton>
+                </div>
+            </div>
+
+            <!-- Create User Modal -->
+            <div v-if="showCreateUserModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                <div class="w-full max-w-md rounded-lg bg-white p-6">
+                    <h2 class="mb-4 text-lg font-semibold">Cadastrar Usuário</h2>
+
+                    <div class="space-y-4">
+                        <CInput v-model="userForm.name" label="Nome" type="text" required />
+
+                        <CInput v-model="userForm.email" label="Email" type="email" required />
+
+                        <CInput v-model="userForm.password" label="Senha" type="password" required />
+
+                        <CInput
+                            v-model="userForm.password_confirmation"
+                            label="Confirmar Senha"
+                            type="password"
+                            required
+                        />
+                    </div>
+
+                    <div class="mt-6 flex justify-end gap-2">
+                        <CButton preset="gray" @click="showCreateUserModal = false">Cancelar</CButton>
+
+                        <CButton
+                            preset="primary"
+                            @click="handleCreateUser"
+                            :disabled="!userForm.name || !userForm.email || !userForm.password"
+                        >
+                            Criar Usuário
+                        </CButton>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit User Modal -->
+            <div
+                v-if="showEditUserModal && editingUser"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            >
+                <div class="w-full max-w-md rounded-lg bg-white p-6">
+                    <h2 class="mb-4 text-lg font-semibold">Editar Usuário</h2>
+
+                    <div class="space-y-4">
+                        <CInput v-model="editingUser.name" label="Nome" type="text" required />
+
+                        <CInput v-model="editingUser.email" label="Email" type="email" required />
+
+                        <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+                            <p class="text-sm text-yellow-800">
+                                Deixe os campos de senha em branco se não quiser alterá-la
+                            </p>
+                        </div>
+
+                        <CInput
+                            v-model="editingUser.password"
+                            label="Nova Senha (opcional)"
+                            type="password"
+                            placeholder="Deixe em branco para não alterar"
+                        />
+
+                        <CInput
+                            v-if="editingUser.password"
+                            v-model="editingUser.password_confirmation"
+                            label="Confirmar Nova Senha"
+                            type="password"
+                        />
+                    </div>
+
+                    <div class="mt-6 flex justify-end gap-2">
+                        <CButton
+                            preset="gray"
+                            @click="
+                                showEditUserModal = false;
+                                editingUser = null;
+                            "
+                        >
+                            Cancelar
+                        </CButton>
+
+                        <CButton preset="primary" @click="handleUpdateUser">Salvar Alterações</CButton>
+                    </div>
                 </div>
             </div>
         </div>

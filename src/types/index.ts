@@ -1,3 +1,7 @@
+// export type {
+//     RequestInit,
+// } from 'undici-types'
+
 export interface Client {
     id: number;
     name: string;
@@ -5,6 +9,7 @@ export interface Client {
     customer_since?: string | null;
     total_balance?: string;
     wallets?: WalletWithBalance[];
+    users?: User[];
     created_at: string;
     updated_at: string;
 }
@@ -89,6 +94,9 @@ export interface User {
     email: string;
     customer_id?: number | null;
     client?: Client | null;
+    role?: string;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface AuthState {
@@ -257,4 +265,20 @@ export interface CreditPurchaseForm {
     wallet_id: number;
     total_hours: number;
     total_price: number;
+}
+
+export interface ClientUserForm {
+    client_id: number;
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+}
+
+export interface UpdateClientUserForm {
+    name?: string;
+    email?: string;
+    password?: string;
+    password_confirmation?: string;
+    client_id?: number | null;
 }

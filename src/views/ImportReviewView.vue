@@ -94,6 +94,7 @@
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hours</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tags</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -102,17 +103,39 @@
                         </thead>
 
                         <tbody class="divide-y divide-gray-200">
-                            <tr v-for="row in currentPlan.rows" :key="row.id" :class="{ 'bg-red-50': !row.is_valid }">
+                            <tr
+                                v-for="row in currentPlan.rows"
+                                :key="row.id"
+                                :class="{
+                                    'bg-red-50 border-l-4 border-red-500': !row.is_valid,
+                                    'border-l-4 border-transparent': row.is_valid,
+                                }"
+                            >
                                 <td class="px-4 py-3 text-sm text-gray-900">{{ row.row_number }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-900">{{ formatDate(row.reference_date) }}</td>
                                 <td class="px-4 py-3 text-sm">
                                     <span
                                         :class="{
-                                            'text-green-600 font-medium': row.hours > 0,
-                                            'text-red-600 font-medium': row.hours < 0,
+                                            'text-green-600 font-medium': (row.hours ?? 0) > 0,
+                                            'text-red-600 font-medium': (row.hours ?? 0) < 0,
+                                            'text-gray-400': !row.hours,
                                         }"
                                     >
-                                        {{ row.hours > 0 ? '+' : '' }}{{ row.hours }}h
+                                        {{ row.hours ? (row.hours > 0 ? '+' : '') + row.hours + 'h' : '-' }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-sm">
+                                    <span
+                                        :class="[
+                                            'px-2 py-1 rounded text-xs font-medium',
+                                            {
+                                                'bg-red-100 text-red-800': row.input_type === 'debit',
+                                                'bg-green-100 text-green-800': row.input_type === 'credit',
+                                                'bg-blue-100 text-blue-800': row.input_type === 'adjustment',
+                                            },
+                                        ]"
+                                    >
+                                        {{ row.input_type }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-900">

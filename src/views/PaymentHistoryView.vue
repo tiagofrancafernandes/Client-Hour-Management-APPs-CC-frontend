@@ -134,9 +134,7 @@ function formatDate(date: string): string {
         <div v-else-if="purchases.length === 0" class="rounded-lg border border-gray-200 bg-gray-50 p-12 text-center">
             <Icon icon="mdi:wallet-outline" class="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p class="text-gray-600 mb-4">No credit purchases yet</p>
-            <p class="text-sm text-gray-500">
-                Start buying credits from your wallet details page
-            </p>
+            <p class="text-sm text-gray-500">Start buying credits from your wallet details page</p>
         </div>
 
         <!-- Wallet Filter -->
@@ -211,7 +209,11 @@ function formatDate(date: string): string {
                     <div v-if="purchase.payments && purchase.payments.length > 0" class="px-6 py-4 space-y-3">
                         <h4 class="font-semibold text-gray-900 mb-3">Payment Details</h4>
 
-                        <div v-for="payment in purchase.payments" :key="payment.id" class="border border-gray-200 rounded-lg p-4">
+                        <div
+                            v-for="payment in purchase.payments"
+                            :key="payment.id"
+                            class="border border-gray-200 rounded-lg p-4"
+                        >
                             <div class="flex items-start justify-between mb-3">
                                 <div>
                                     <div class="flex items-center gap-2 mb-1">
@@ -220,13 +222,19 @@ function formatDate(date: string): string {
                                             class="w-5 h-5"
                                             :class="{
                                                 'text-yellow-600': payment.payment_status === 'pending',
-                                                'text-green-600': payment.payment_status === 'approved' || payment.payment_status === 'completed',
+                                                'text-green-600':
+                                                    payment.payment_status === 'approved' ||
+                                                    payment.payment_status === 'completed',
                                                 'text-red-600': payment.payment_status === 'rejected',
                                             }"
                                         />
 
                                         <span class="font-medium text-gray-900">
-                                            {{ payment.payment_method === 'pix_offline' ? 'PIX Offline' : 'Bank Transfer' }}
+                                            {{
+                                                payment.payment_method === 'pix_offline'
+                                                    ? 'PIX Offline'
+                                                    : 'Bank Transfer'
+                                            }}
                                         </span>
                                     </div>
 
@@ -275,7 +283,10 @@ function formatDate(date: string): string {
         </div>
 
         <!-- Empty Filtered State -->
-        <div v-else-if="selectedWalletId !== null" class="rounded-lg border border-gray-200 bg-gray-50 p-12 text-center">
+        <div
+            v-else-if="selectedWalletId !== null"
+            class="rounded-lg border border-gray-200 bg-gray-50 p-12 text-center"
+        >
             <Icon icon="mdi:magnify" class="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p class="text-gray-600">No purchases found for selected wallet</p>
         </div>

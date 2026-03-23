@@ -89,17 +89,17 @@ function goToClient(id: number) {
         </UIPageHeader>
 
         <div class="mb-6">
-            <div class="flex gap-2">
-                <input
+            <div class="flex gap-2 justify-between items-stretch align-middle">
+                <CInput
                     v-model="searchQuery"
                     type="text"
+                    preset="md"
                     placeholder="Search clients..."
-                    class="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
+                    container-classes=""
+                    inputClasses="rounded-lg bg-white border border-gray-300 px-4 focus:border-blue-500 focus:outline-none"
                     @keyup.enter="handleSearch"
                 />
-                <button class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200" @click="handleSearch">
-                    Search
-                </button>
+                <CButton class="px-6 py-2 min-w-1/12" @click="handleSearch">Search</CButton>
             </div>
         </div>
 

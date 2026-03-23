@@ -209,6 +209,11 @@ function handleFileSelect(event: Event): void {
     if (files && files.length > 0) {
         const file = files[0];
 
+        if (!file) {
+            toast.error('No file selected');
+            return;
+        }
+
         // Validate file type
         const validTypes = ['application/pdf', 'image/png', 'image/jpeg'];
         if (!validTypes.includes(file.type)) {
@@ -234,23 +239,20 @@ function handleFileSelect(event: Event): void {
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
             @click.self="handleClose"
         >
-            <div
-                class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all"
-                @click.stop
-            >
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all" @click.stop>
                 <!-- Header -->
-                <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4 flex items-center justify-between rounded-t-lg">
+                <div
+                    class="bg-linear-to-r from-green-600 to-green-700 px-6 py-4 flex items-center justify-between rounded-t-lg"
+                >
                     <div>
                         <h2 class="text-xl font-bold text-white">Buy Credits</h2>
-                        <p class="text-red-100 text-sm mt-1">
-                            Step {{ currentStep }} of 3
-                        </p>
+                        <p class="text-green-100 text-sm mt-1">Step {{ currentStep }} of 3</p>
                     </div>
 
                     <button
                         @click="handleClose"
                         :disabled="isSubmitting"
-                        class="text-white hover:text-red-100 disabled:opacity-50"
+                        class="text-white hover:text-green-100 disabled:opacity-50"
                     >
                         <Icon icon="mdi:close" class="w-6 h-6" />
                     </button>
@@ -259,11 +261,7 @@ function handleFileSelect(event: Event): void {
                 <!-- Steps Indicator -->
                 <div class="px-6 py-4 border-b border-gray-200">
                     <div class="flex items-center justify-between">
-                        <div
-                            v-for="step in [1, 2, 3]"
-                            :key="step"
-                            class="flex items-center flex-1"
-                        >
+                        <div v-for="step in [1, 2, 3]" :key="step" class="flex items-center flex-1">
                             <button
                                 @click="goToStep(step as 1 | 2 | 3)"
                                 :disabled="isSubmitting"
@@ -271,8 +269,8 @@ function handleFileSelect(event: Event): void {
                                     'flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm',
                                     'disabled:opacity-50 disabled:cursor-not-allowed',
                                     {
-                                        'bg-red-600 text-white': step === currentStep,
-                                        'bg-red-100 text-red-600': step < currentStep,
+                                        'bg-green-600 text-white': step === currentStep,
+                                        'bg-green-100 text-green-600': step < currentStep,
                                         'bg-gray-200 text-gray-400': step > currentStep,
                                     },
                                 ]"
@@ -288,7 +286,7 @@ function handleFileSelect(event: Event): void {
                                 :class="[
                                     'flex-1 h-1 mx-2',
                                     {
-                                        'bg-red-600': step < currentStep,
+                                        'bg-green-600': step < currentStep,
                                         'bg-gray-200': step >= currentStep,
                                     },
                                 ]"
@@ -307,28 +305,38 @@ function handleFileSelect(event: Event): void {
                                 <button
                                     v-for="pkg in ['5h', '10h', '15h']"
                                     :key="pkg"
-                                    @click="selectedPackage = pkg; customHours = null"
+                                    @click="
+                                        selectedPackage = pkg;
+                                        customHours = null;
+                                    "
                                     :class="[
                                         'p-4 rounded-lg border-2 transition-all',
                                         {
-                                            'border-red-600 bg-red-50': selectedPackage === pkg,
+                                            'border-green-600 bg-green-50': selectedPackage === pkg,
                                             'border-gray-200 bg-white hover:border-gray-300': selectedPackage !== pkg,
+                                            'shadow-sm shadow-green-700':
+                                                (pkg === '5h' && discountPercentage === 0.1) ||
+                                                (pkg === '10h' && discountPercentage === 0.15) ||
+                                                (pkg === '15h' && discountPercentage === 0.2) ||
+                                                false,
                                         },
                                     ]"
                                 >
                                     <div class="font-semibold text-gray-900">{{ pkg }}</div>
                                     <div class="text-sm text-gray-600 mt-2">
-                                        {{ discountPercentage === 0.1 && pkg === '5h' ? '10% discount' : '' }}
-                                        {{ discountPercentage === 0.15 && pkg === '10h' ? '15% discount' : '' }}
-                                        {{ discountPercentage === 0.2 && pkg === '15h' ? '20% discount' : '' }}
+                                        {{ pkg === '5h' ? '10% discount' : '' }}
+                                        {{ pkg === '10h' ? '15% discount' : '' }}
+                                        {{ pkg === '15h' ? '20% discount' : '' }}
                                     </div>
-                                    <div class="text-lg font-bold text-red-600 mt-3">
+                                    <div class="text-lg font-bold text-green-600 mt-3">
                                         {{
                                             new Intl.NumberFormat('en-US', {
                                                 style: 'currency',
                                                 currency: wallet?.currency_code || 'USD',
                                             }).format(
-                                                (parseInt(pkg) * hourlyRate) * (pkg === '5h' ? 0.9 : pkg === '10h' ? 0.85 : 0.8)
+                                                parseInt(pkg) *
+                                                    hourlyRate *
+                                                    (pkg === '5h' ? 0.9 : pkg === '10h' ? 0.85 : 0.8)
                                             )
                                         }}
                                     </div>
@@ -350,8 +358,12 @@ function handleFileSelect(event: Event): void {
                                         @focus="selectedPackage = 'custom'"
                                     />
 
-                                    <div class="flex items-center px-4 py-2 bg-gray-50 rounded-lg border border-gray-300 text-sm text-gray-600">
-                                        {{ customHours && customHours > 15 ? '25% discount' : 'No discount' }}
+                                    <div class="flex w-36 items-end px-0 py-0 pt-2">
+                                        <span
+                                            class="w-full min-h-10 text-center pt-2 bg-gray-100 rounded-lg border border-gray-300 text-sm text-gray-600"
+                                        >
+                                            {{ customHours && customHours > 15 ? '25% discount' : 'No discount' }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -389,7 +401,9 @@ function handleFileSelect(event: Event): void {
                                     </span>
                                 </div>
 
-                                <div class="border-t border-blue-200 pt-2 mt-2 flex justify-between text-red-600 font-bold">
+                                <div
+                                    class="border-t border-blue-200 pt-2 mt-2 flex justify-between text-green-600 font-bold"
+                                >
                                     <span>Total:</span>
                                     <span>
                                         {{
@@ -443,7 +457,10 @@ function handleFileSelect(event: Event): void {
                                 </span>
                             </div>
 
-                            <div v-if="discountPercentage > 0" class="flex justify-between items-center pb-3 border-b border-gray-200 text-green-600">
+                            <div
+                                v-if="discountPercentage > 0"
+                                class="flex justify-between items-center pb-3 border-b border-gray-200 text-green-600"
+                            >
                                 <span>Discount ({{ Math.round(discountPercentage * 100) }}%):</span>
                                 <span class="font-semibold">
                                     -{{
@@ -455,7 +472,7 @@ function handleFileSelect(event: Event): void {
                                 </span>
                             </div>
 
-                            <div class="flex justify-between items-center pt-2 text-lg font-bold text-red-600">
+                            <div class="flex justify-between items-center pt-2 text-lg font-bold text-green-600">
                                 <span>Total to Pay:</span>
                                 <span>
                                     {{
@@ -480,8 +497,9 @@ function handleFileSelect(event: Event): void {
                                 :class="[
                                     'w-full p-4 rounded-lg border-2 transition-all text-left',
                                     {
-                                        'border-red-600 bg-red-50': selectedPaymentMethod === 'bank_transfer',
-                                        'border-gray-200 bg-white hover:border-gray-300': selectedPaymentMethod !== 'bank_transfer',
+                                        'border-green-600 bg-green-50': selectedPaymentMethod === 'bank_transfer',
+                                        'border-gray-200 bg-white hover:border-gray-300':
+                                            selectedPaymentMethod !== 'bank_transfer',
                                     },
                                 ]"
                             >
@@ -496,7 +514,7 @@ function handleFileSelect(event: Event): void {
                                     <Icon
                                         icon="mdi:check-circle"
                                         v-if="selectedPaymentMethod === 'bank_transfer'"
-                                        class="w-5 h-5 text-red-600 flex-shrink-0 ml-2"
+                                        class="w-5 h-5 text-green-600 shrink-0 ml-2"
                                     />
                                 </div>
                             </button>
@@ -508,7 +526,8 @@ function handleFileSelect(event: Event): void {
                                     'w-full p-4 rounded-lg border-2 transition-all text-left',
                                     {
                                         'border-red-600 bg-red-50': selectedPaymentMethod === 'pix_offline',
-                                        'border-gray-200 bg-white hover:border-gray-300': selectedPaymentMethod !== 'pix_offline',
+                                        'border-gray-200 bg-white hover:border-gray-300':
+                                            selectedPaymentMethod !== 'pix_offline',
                                     },
                                 ]"
                             >
@@ -523,18 +542,23 @@ function handleFileSelect(event: Event): void {
                                     <Icon
                                         icon="mdi:check-circle"
                                         v-if="selectedPaymentMethod === 'pix_offline'"
-                                        class="w-5 h-5 text-red-600 flex-shrink-0 ml-2"
+                                        class="w-5 h-5 text-green-600 shrink-0 ml-2"
                                     />
                                 </div>
                             </button>
 
                             <!-- Receipt Upload for PIX -->
-                            <div v-if="selectedPaymentMethod === 'pix_offline'" class="border border-gray-200 rounded-lg p-4">
+                            <div
+                                v-if="selectedPaymentMethod === 'pix_offline'"
+                                class="border border-gray-200 rounded-lg p-4"
+                            >
                                 <label class="block text-sm font-medium text-gray-700 mb-3">
                                     Upload Payment Receipt (PDF, PNG, or JPG)
                                 </label>
 
-                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-red-300 hover:bg-red-50 transition-all">
+                                <div
+                                    class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-red-300 hover:bg-red-50 transition-all"
+                                >
                                     <input
                                         type="file"
                                         accept=".pdf,.png,.jpg,.jpeg"
@@ -543,15 +567,8 @@ function handleFileSelect(event: Event): void {
                                         ref="fileInput"
                                     />
 
-                                    <button
-                                        type="button"
-                                        @click="$refs.fileInput?.click()"
-                                        class="w-full"
-                                    >
-                                        <Icon
-                                            icon="mdi:cloud-upload"
-                                            class="w-8 h-8 text-gray-400 mx-auto mb-2"
-                                        />
+                                    <button type="button" @click="$refs.fileInput?.click()" class="w-full">
+                                        <Icon icon="mdi:cloud-upload" class="w-8 h-8 text-gray-400 mx-auto mb-2" />
 
                                         <div v-if="!receiptFile" class="text-gray-600">
                                             <p class="font-medium">Click to upload or drag and drop</p>
@@ -581,13 +598,7 @@ function handleFileSelect(event: Event): void {
                     </CButton>
 
                     <div class="flex gap-2">
-                        <CButton
-                            preset="outlined-black"
-                            @click="handleClose"
-                            :disabled="isSubmitting"
-                        >
-                            Cancel
-                        </CButton>
+                        <CButton preset="outlined-black" @click="handleClose" :disabled="isSubmitting">Cancel</CButton>
 
                         <CButton
                             v-if="currentStep < 3"

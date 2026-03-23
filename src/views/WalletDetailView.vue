@@ -200,7 +200,10 @@ function handleCreditPurchaseSuccess(): void {
                             Rate: {{ wallet.currency_code || 'USD' }} {{ wallet.hourly_rate_reference }}/h
                         </p>
                         <!-- Internal Note display (permission + toggle) - Hidden for customers -->
-                        <div v-if="!auth.isCustomer.value && hasInternalNotePermission() && wallet.internal_note" class="mt-4">
+                        <div
+                            v-if="!auth.isCustomer.value && hasInternalNotePermission() && wallet.internal_note"
+                            class="mt-4"
+                        >
                             <div class="flex items-center justify-between mb-2">
                                 <label class="text-sm font-semibold text-gray-700">Internal Note</label>
                                 <button
@@ -256,13 +259,22 @@ function handleCreditPurchaseSuccess(): void {
                     </div>
                     <div class="text-right">
                         <div class="mb-4 flex justify-end gap-2">
-                            <CButton v-if="canEditWallet" preset="gray" @click="showEditModal = true" icon="hugeicons:pencil-edit-01">Edit</CButton>
                             <CButton
-                                v-if="(wallet?.credit_purchase_allowed && canBuyCredits)"
+                                v-if="canEditWallet"
+                                preset="gray"
+                                @click="showEditModal = true"
+                                icon="hugeicons:pencil-edit-01"
+                            >
+                                Edit
+                            </CButton>
+                            <CButton
+                                v-if="wallet?.credit_purchase_allowed && canBuyCredits"
                                 preset="green"
                                 @click="showBuyCreditsModal = true"
                                 icon="hugeicons:add-money-circle"
-                            >Buy Credits</CButton>
+                            >
+                                Buy Credits
+                            </CButton>
                         </div>
                         <p class="text-sm text-gray-500">Current Balance</p>
                         <p class="text-3xl font-bold" :class="getBalanceColor(currentBalance)">
@@ -274,7 +286,9 @@ function handleCreditPurchaseSuccess(): void {
 
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="text-xl font-semibold text-gray-900">Ledger Entries</h2>
-                <CButton v-if="canAddEntry" @click="showEntryModal = true" icon="hugeicons:add-circle">Add Entry</CButton>
+                <CButton v-if="canAddEntry" @click="showEntryModal = true" icon="hugeicons:add-circle">
+                    Add Entry
+                </CButton>
             </div>
 
             <div class="overflow-hidden rounded-lg bg-white shadow">

@@ -63,6 +63,27 @@ export function usePermissions() {
         return auth.hasPermission('ledger.view_any');
     });
 
+    const isCustomer = computed(() => {
+        return auth.hasRole('customer') ? true : false;
+    });
+
+    const canBuyCredits = computed(() => {
+        if (auth.hasRole('customer')) {
+            return true;
+        }
+
+        return false;
+    });
+
+    // Credit Purchase permissions
+    const canViewPaymentHistory = computed(() => {
+        return auth.hasPermission('credit_purchase.view');
+    });
+
+    const canApprovePayments = computed(() => {
+        return auth.hasPermission('credit_purchase.approve');
+    });
+
     const canAddCredits = computed(() => {
         return auth.hasPermission('ledger.credit');
     });
@@ -167,6 +188,14 @@ export function usePermissions() {
         isSuperAdmin,
         isAdmin,
         isManager,
+
+        // Customer specific
+        canBuyCredits,
+        isCustomer,
+
+        // Credit Purchase
+        canViewPaymentHistory,
+        canApprovePayments,
 
         // Generic helpers
         hasPermission: auth.hasPermission,
