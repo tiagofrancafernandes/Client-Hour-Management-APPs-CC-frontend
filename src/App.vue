@@ -1,79 +1,45 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router';
-import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
+import { RouterView, useRoute } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
-import { usePermissions } from '@/composables/usePermissions';
 import { useTimerStore } from '@/stores/timer';
 import { useConfirm } from '@/composables/useConfirm';
 import TimerFloatingBalloon from '@/components/TimerFloatingBalloon.vue';
 import TimerActiveModal from '@/components/TimerActiveModal.vue';
 import ConfirmModal from '@/components/ConfirmModal.vue';
+import AdminLayout from '@/layouts/AdminLayout.vue';
+import CustomerLayout from '@/layouts/CustomerLayout.vue';
 
-const router = useRouter();
 const route = useRoute();
-const { user, isAuthenticated, logout, loading, isCustomer } = useAuth();
-const { canViewClients, canViewReports, canViewTags, canViewPaymentHistory, canApprovePayments } = usePermissions();
+const { isAuthenticated, isCustomer } = useAuth();
 const timerStore = useTimerStore();
-const eventTimerStore = ref(null);
 const { state: confirmState, handleConfirm, handleCancel } = useConfirm();
 
-const showUserMenu = ref(false);
 const showTimerModal = ref(false);
-const userMenuRef = ref<HTMLElement | null>(null);
-const canViewTimers = computed(() => {
-    return (
-        isAuthenticated.value &&
-        (usePermissions().hasPermission('timer.view') || usePermissions().hasPermission('timer.view_any'))
-    );
-});
+const eventTimerStore = ref<any>(null);
 
-const canViewImports = computed(() => {
-    return (
-        isAuthenticated.value &&
-        (usePermissions().hasPermission('import.view') || usePermissions().hasPermission('import.view_any'))
-    );
-});
-
-const showNavigation = computed(() => {
+const showLayout = computed(() => {
     return isAuthenticated.value && route.name !== 'login';
 });
 
-function toggleUserMenu() {
-    showUserMenu.value = !showUserMenu.value;
-}
+const showAdminLayout = computed(() => {
+    return showLayout.value && !isCustomer.value;
+});
 
-function closeUserMenu() {
-    showUserMenu.value = false;
-}
+const showCustomerLayout = computed(() => {
+    return showLayout.value && isCustomer.value;
+});
 
-function handleClickOutside(event: MouseEvent) {
-    if (userMenuRef.value && !userMenuRef.value.contains(event.target as Node)) {
-        closeUserMenu();
-    }
-}
-
-function goToProfile() {
-    closeUserMenu();
-    router.push({ name: 'profile' });
-}
-
-async function handleLogout() {
-    closeUserMenu();
-    await logout();
-    router.push({ name: 'login' });
-}
-
-function openTimerModal(eventData: any) {
-    console.log('eventData', eventData);
-    eventTimerStore.value = eventData?.timerStore || null;
+function openTimerModal(eventData: any): void {
+    eventTimerStore.value = eventData?.timerStore ?? null;
     showTimerModal.value = true;
 }
 
-function closeTimerModal() {
+function closeTimerModal(): void {
     showTimerModal.value = false;
 }
 
-// Inicializa o timer store quando o usuário faz login (inclusive login fresco após mount)
+// Initialize timer store on fresh login (after mount)
 watch(isAuthenticated, async (newValue, oldValue) => {
     if (newValue && !oldValue) {
         await timerStore.initialize();
@@ -85,192 +51,42 @@ watch(isAuthenticated, async (newValue, oldValue) => {
 });
 
 onMounted(async () => {
-    document.addEventListener('click', handleClickOutside);
-
     if (isAuthenticated.value) {
         await timerStore.initialize();
     }
 });
 
 onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside);
     timerStore.cleanup();
 });
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-100">
-        <div v-if="showNavigation" class="pt-12 w-full"></div>
-        <!-- TOP Navbar -->
-        <nav v-if="showNavigation" class="bg-white shadow fixed w-full top-0">
-            <div class="container mx-auto px-4">
-                <div class="flex h-16 items-center justify-between">
-                    <div class="flex items-center gap-8">
-                        <RouterLink to="/">
-                            <span class="text-xl font-bold text-gray-900">Hours Ledger</span>
-                        </RouterLink>
-
-                        <div class="flex gap-4">
-                            <!-- Customer Navigation -->
-                            <RouterLink
-                                v-if="isCustomer"
-                                to="/dashboard"
-                                class="text-gray-600 hover:text-gray-900"
-                                active-class="text-blue-600 font-medium"
-                            >
-                                Dashboard
-                            </RouterLink>
-
-                            <RouterLink
-                                v-if="isCustomer && canViewPaymentHistory"
-                                to="/payments/history"
-                                class="text-gray-600 hover:text-gray-900"
-                                active-class="text-blue-600 font-medium"
-                            >
-                                Payment History
-                            </RouterLink>
-
-                            <!-- Admin Navigation -->
-                            <RouterLink
-                                v-if="!isCustomer && canViewClients"
-                                to="/clients"
-                                class="text-gray-600 hover:text-gray-900"
-                                active-class="text-blue-600 font-medium"
-                            >
-                                Clients
-                            </RouterLink>
-
-                            <!-- Reports (available to both) -->
-                            <RouterLink
-                                v-if="canViewReports"
-                                to="/reports"
-                                class="text-gray-600 hover:text-gray-900"
-                                active-class="text-blue-600 font-medium"
-                            >
-                                Reports
-                            </RouterLink>
-
-                            <RouterLink
-                                v-if="!isCustomer && canApprovePayments"
-                                to="/payments/approvals"
-                                class="text-gray-600 hover:text-gray-900"
-                                active-class="text-blue-600 font-medium"
-                            >
-                                Payment Approvals
-                            </RouterLink>
-
-                            <!-- Admin-only features -->
-                            <RouterLink
-                                v-if="!isCustomer && canViewTags"
-                                to="/tags"
-                                class="text-gray-600 hover:text-gray-900"
-                                active-class="text-blue-600 font-medium"
-                            >
-                                Tags
-                            </RouterLink>
-
-                            <RouterLink
-                                v-if="!isCustomer && canViewTimers"
-                                to="/timers"
-                                class="text-gray-600 hover:text-gray-900"
-                                active-class="text-blue-600 font-medium"
-                            >
-                                Timers
-                            </RouterLink>
-
-                            <RouterLink
-                                v-if="!isCustomer && canViewImports"
-                                to="/imports"
-                                class="text-gray-600 hover:text-gray-900"
-                                active-class="text-blue-600 font-medium"
-                            >
-                                Imports
-                            </RouterLink>
-                        </div>
-                    </div>
-
-                    <div ref="userMenuRef" class="relative">
-                        <button
-                            class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            @click="toggleUserMenu"
-                        >
-                            <span>{{ user?.name }}</span>
-                            <svg
-                                class="h-4 w-4 transition-transform"
-                                :class="{ 'rotate-180': showUserMenu }"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M19 9l-7 7-7-7"
-                                />
-                            </svg>
-                        </button>
-
-                        <div
-                            v-if="showUserMenu"
-                            class="absolute right-0 mt-2 w-48 rounded-lg bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5"
-                        >
-                            <button
-                                class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                                @click="goToProfile"
-                            >
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                    />
-                                </svg>
-                                Profile
-                            </button>
-                            <button
-                                :disabled="loading"
-                                class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-                                @click="handleLogout"
-                            >
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                                    />
-                                </svg>
-                                Logout
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </nav>
-
-        <main>
+    <div>
+        <!-- Admin Layout (sidebar + header) -->
+        <AdminLayout v-if="showAdminLayout">
             <RouterView />
-        </main>
+        </AdminLayout>
 
-        <!-- Timer Floating Balloon -->
+        <!-- Customer Layout (top nav) -->
+        <CustomerLayout v-else-if="showCustomerLayout">
+            <RouterView />
+        </CustomerLayout>
+
+        <!-- Auth / public routes (no layout) -->
+        <RouterView v-else />
+
+        <!-- Global Overlays -->
+
         <TimerFloatingBalloon v-if="isAuthenticated" :timerStore="timerStore" @open-modal="openTimerModal" />
 
-        <!-- Timer Active Modal -->
         <TimerActiveModal
-            av-if="isAuthenticated"
             v-if="showTimerModal"
-            v-bind="{
-                isAuthenticated: 'aa=' + isAuthenticated,
-                showTimerModal: 'aa=' + showTimerModal,
-            }"
             :show="true"
-            :timerStore="eventTimerStore || timerStore"
+            :timerStore="eventTimerStore ?? timerStore"
             @close="closeTimerModal"
         />
 
-        <!-- Global Confirm Modal -->
         <ConfirmModal
             v-model:is-open="confirmState.isOpen"
             :title="confirmState.title"
