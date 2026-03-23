@@ -73,10 +73,10 @@ export interface ConfirmModalProps {
 }
 
 const props = withDefaults(defineProps<ConfirmModalProps>(), {
-    title: 'Confirmar ação',
-    message: 'Tem certeza que deseja continuar?',
-    confirmText: 'Confirmar',
-    cancelText: 'Cancelar',
+    title: 'Confirm action',
+    message: 'Are you sure you want to continue?',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
     variant: 'info',
 });
 

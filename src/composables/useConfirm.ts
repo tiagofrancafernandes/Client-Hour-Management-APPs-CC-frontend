@@ -21,8 +21,8 @@ const state: Ref<ConfirmState> = ref({
     isOpen: false,
     title: '',
     message: '',
-    confirmText: 'Confirmar',
-    cancelText: 'Cancelar',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
     variant: 'info',
 });
 
@@ -34,19 +34,19 @@ export function useConfirm() {
             if (typeof options === 'string') {
                 state.value = {
                     isOpen: true,
-                    title: 'Confirmar ação',
+                    title: 'Confirm action',
                     message: options,
-                    confirmText: 'Confirmar',
-                    cancelText: 'Cancelar',
+                    confirmText: 'Confirm',
+                    cancelText: 'Cancel',
                     variant: 'info',
                 };
             } else {
                 state.value = {
                     isOpen: true,
-                    title: options.title || 'Confirmar ação',
-                    message: options.message || 'Tem certeza que deseja continuar?',
-                    confirmText: options.confirmText || 'Confirmar',
-                    cancelText: options.cancelText || 'Cancelar',
+                    title: options.title || 'Confirm action',
+                    message: options.message || 'Are you sure you want to continue?',
+                    confirmText: options.confirmText || 'Confirm',
+                    cancelText: options.cancelText || 'Cancel',
                     variant: options.variant || 'info',
                 };
             }

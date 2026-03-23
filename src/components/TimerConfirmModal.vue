@@ -63,7 +63,7 @@ async function handleConfirm(): Promise<void> {
         emit('confirmed');
         emit('close');
     } catch {
-        // erro já salvo em timerStore.error, exibido no template
+        // error already saved in timerStore.error, displayed in template
     } finally {
         loading.value = false;
     }

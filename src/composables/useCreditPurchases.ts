@@ -18,7 +18,7 @@ export function useCreditPurchases() {
             const response = await api.get<{ data: CreditPurchase[] }>('/credit-purchases', { params });
             purchases.value = response.data;
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'Erro ao buscar compras de crédito';
+            error.value = e instanceof Error ? e.message : 'Failed to fetch credit purchases';
         } finally {
             loading.value = false;
         }
@@ -40,7 +40,7 @@ export function useCreditPurchases() {
 
             return response.data;
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'Erro ao criar compra de crédito';
+            error.value = e instanceof Error ? e.message : 'Failed to create credit purchase';
             throw e;
         } finally {
             loading.value = false;
@@ -56,7 +56,7 @@ export function useCreditPurchases() {
             purchase.value = response;
             return response;
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'Erro ao buscar compra de crédito';
+            error.value = e instanceof Error ? e.message : 'Failed to fetch credit purchase';
             throw e;
         } finally {
             loading.value = false;
@@ -79,7 +79,7 @@ export function useCreditPurchases() {
 
             return response.data;
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'Erro ao criar pagamento';
+            error.value = e instanceof Error ? e.message : 'Failed to create payment';
             throw e;
         } finally {
             loading.value = false;
@@ -108,7 +108,7 @@ export function useCreditPurchases() {
 
             return response.data;
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'Erro ao fazer upload do recibo';
+            error.value = e instanceof Error ? e.message : 'Failed to upload receipt';
             throw e;
         } finally {
             loading.value = false;
@@ -124,7 +124,7 @@ export function useCreditPurchases() {
 
             return response.url;
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'Erro ao obter URL do recibo';
+            error.value = e instanceof Error ? e.message : 'Failed to get receipt URL';
             throw e;
         } finally {
             loading.value = false;

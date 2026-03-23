@@ -118,7 +118,7 @@ async function request<T>(
     };
 
     if (bodyIsFormData) {
-        // headers['Content-Type'] = 'multipart/form-data'; // (Isso quebra o request porque o boundary não é enviado.)
+        // headers['Content-Type'] = 'multipart/form-data'; // (This breaks the request because the boundary is not sent.)
 
         let _headersToDelete = ['Content-Type', 'content-type'];
 

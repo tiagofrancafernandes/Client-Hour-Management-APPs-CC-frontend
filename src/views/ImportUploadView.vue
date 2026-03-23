@@ -32,7 +32,7 @@
                                 @change="(ev: any) => console.log('changed', ev)"
                             />
 
-                            <!-- o item abaixo será substituído pelo CDropZone  -->
+                            <!-- the item below will be replaced by CDropZone -->
                             <div
                                 v-if="false"
                                 class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer"
@@ -52,10 +52,8 @@
 
                                 <div v-if="!selectedFile">
                                     <Icon icon="mdi:file-upload-outline" class="w-12 h-12 mx-auto text-gray-400 mb-2" />
-                                    <p class="text-sm text-gray-600">
-                                        Arraste e solte um arquivo aqui ou clique para selecionar
-                                    </p>
-                                    <p class="text-xs text-gray-500 mt-1">CSV ou XLSX (máx. 10MB)</p>
+                                    <p class="text-sm text-gray-600">Drag and drop a file here or click to select</p>
+                                    <p class="text-xs text-gray-500 mt-1">CSV or XLSX (max. 10MB)</p>
                                 </div>
 
                                 <div v-else class="flex items-center justify-center gap-2">

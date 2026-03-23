@@ -305,9 +305,9 @@ async function exportReport(format: 'pdf' | 'excel') {
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <!-- Client selector - hidden for customers -->
                 <div v-if="auth.isCustomer.value">
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Cliente</label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Client</label>
                     <div class="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                        {{ clients.find((c) => c.id === filters.client_id)?.name || 'Carregando...' }}
+                        {{ clients.find((c) => c.id === filters.client_id)?.name || 'Loading...' }}
                     </div>
                 </div>
 

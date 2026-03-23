@@ -15,7 +15,7 @@ onMounted(async () => {
         await fetchMyClient();
         await fetchMyWallets();
     } catch (e) {
-        toast.error('Erro ao carregar dados do cliente');
+        toast.error('Failed to load client data');
     }
 });
 
@@ -40,7 +40,7 @@ function formatMonthYear(dateString: string | null | undefined): string {
 
     const date = new Date(dateString);
 
-    return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
 function getClientSinceDate(): string {
@@ -55,9 +55,9 @@ function getClientSinceDate(): string {
 <template>
     <div class="container mx-auto px-4 py-8">
         <!-- Header -->
-        <UIPageHeader title="Meu Dashboard" description="Visualize seus dados de carteira e relatórios.">
+        <UIPageHeader title="My Dashboard" description="View your wallet data and reports.">
             <template v-slot:actions>
-                <CButton preset="primary" @click="goToReports" icon="mdi:chart-line">Relatórios</CButton>
+                <CButton preset="primary" @click="goToReports" icon="mdi:chart-line">Reports</CButton>
             </template>
         </UIPageHeader>
 
@@ -79,12 +79,12 @@ function getClientSinceDate(): string {
 
                 <div class="space-y-2 text-gray-700">
                     <p v-if="myClient.notes">
-                        <strong>Notas:</strong>
+                        <strong>Notes:</strong>
                         {{ myClient.notes }}
                     </p>
 
                     <p>
-                        <strong>Cliente desde:</strong>
+                        <strong>Client since:</strong>
                         {{ getClientSinceDate() }}
                     </p>
                 </div>
@@ -93,19 +93,19 @@ function getClientSinceDate(): string {
             <!-- Wallets Summary Section -->
             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                    <p class="text-sm text-gray-600">Total de Carteiras</p>
+                    <p class="text-sm text-gray-600">Total Wallets</p>
                     <p class="mt-2 text-3xl font-bold text-gray-900">{{ myWalletsSummary.totalWallets }}</p>
                 </div>
 
                 <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                    <p class="text-sm text-gray-600">Saldo Total</p>
+                    <p class="text-sm text-gray-600">Total Balance</p>
                     <p class="mt-2 text-3xl font-bold text-gray-900">
                         {{ formatBalance(myWalletsSummary.totalBalance) }}h
                     </p>
                 </div>
 
                 <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                    <p class="text-sm text-gray-600">Média por Carteira</p>
+                    <p class="text-sm text-gray-600">Average per Wallet</p>
                     <p class="mt-2 text-3xl font-bold text-gray-900">
                         {{
                             formatBalance(
@@ -120,10 +120,10 @@ function getClientSinceDate(): string {
 
             <!-- Wallets List Section -->
             <div class="space-y-4">
-                <h3 class="text-xl font-bold text-gray-900">Minhas Carteiras</h3>
+                <h3 class="text-xl font-bold text-gray-900">My Wallets</h3>
 
                 <div v-if="myWallets.length === 0" class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-                    <p class="text-gray-600">Nenhuma carteira disponível</p>
+                    <p class="text-gray-600">No wallets available</p>
                 </div>
 
                 <div v-else class="space-y-3">
@@ -142,7 +142,7 @@ function getClientSinceDate(): string {
                                 </p>
 
                                 <div v-if="wallet.hourly_rate_reference" class="mt-2 text-xs text-gray-500">
-                                    Taxa: R$ {{ parseFloat(wallet.hourly_rate_reference).toFixed(2) }}/hora
+                                    Rate: ${{ parseFloat(wallet.hourly_rate_reference).toFixed(2) }}/h
                                 </div>
                             </div>
 
@@ -159,7 +159,7 @@ function getClientSinceDate(): string {
                                     {{ formatBalance(wallet.balance) }}h
                                 </p>
 
-                                <p class="mt-1 text-xs text-gray-500">Saldo</p>
+                                <p class="mt-1 text-xs text-gray-500">Balance</p>
                             </div>
                         </div>
                     </div>

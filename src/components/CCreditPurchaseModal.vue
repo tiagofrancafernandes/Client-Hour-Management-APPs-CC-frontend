@@ -349,16 +349,17 @@ function handleFileSelect(event: Event): void {
                                     Or enter custom hours
                                 </label>
 
-                                <div class="flex gap-2">
+                                <div class="flex gap-2 justify-between items-center">
                                     <CInput
                                         v-model.number="customHours"
                                         type="number"
                                         placeholder="Enter hours"
                                         min="1"
+                                        container-classes=""
                                         @focus="selectedPackage = 'custom'"
                                     />
 
-                                    <div class="flex w-36 items-end px-0 py-0 pt-2">
+                                    <div class="flex w-36 items-center px-0 py-1">
                                         <span
                                             class="w-full min-h-10 text-center pt-2 bg-gray-100 rounded-lg border border-gray-300 text-sm text-gray-600"
                                         >

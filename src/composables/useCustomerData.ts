@@ -32,7 +32,7 @@ export function useCustomerData() {
         const customerId = auth.getCustomerId();
 
         if (!customerId) {
-            error.value = 'Cliente não encontrado';
+            error.value = 'Client not found';
 
             return;
         }
@@ -43,7 +43,7 @@ export function useCustomerData() {
         try {
             myClient.value = await api.get<Client>(`/clients/${customerId}`);
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'Erro ao buscar dados do cliente';
+            error.value = e instanceof Error ? e.message : 'Failed to fetch client data';
         } finally {
             loading.value = false;
         }
@@ -53,7 +53,7 @@ export function useCustomerData() {
         const customerId = auth.getCustomerId();
 
         if (!customerId) {
-            error.value = 'Cliente não encontrado';
+            error.value = 'Client not found';
 
             return;
         }
@@ -68,7 +68,7 @@ export function useCustomerData() {
                 myWallets.value = response.wallets;
             }
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'Erro ao buscar carteiras';
+            error.value = e instanceof Error ? e.message : 'Failed to fetch wallets';
         } finally {
             loading.value = false;
         }

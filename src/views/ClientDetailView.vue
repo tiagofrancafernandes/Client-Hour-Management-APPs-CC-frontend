@@ -149,9 +149,9 @@ async function handleCreateUser() {
             password_confirmation: '',
         };
 
-        toast.success('Usuário criado com sucesso');
+        toast.success('User created successfully');
     } catch {
-        toast.error('Erro ao criar usuário');
+        toast.error('Failed to create user');
     }
 }
 
@@ -176,23 +176,23 @@ async function handleUpdateUser() {
         showEditUserModal.value = false;
         editingUser.value = null;
 
-        toast.success('Usuário atualizado com sucesso');
+        toast.success('User updated successfully');
     } catch {
-        toast.error('Erro ao atualizar usuário');
+        toast.error('Failed to update user');
     }
 }
 
 async function handleDeleteUser(userId: number) {
-    if (!confirm('Tem certeza que deseja deletar este usuário?')) {
+    if (!confirm('Are you sure you want to delete this user?')) {
         return;
     }
 
     try {
         await deleteClientUser(clientId, userId);
 
-        toast.success('Usuário deletado com sucesso');
+        toast.success('User deleted successfully');
     } catch {
-        toast.error('Erro ao deletar usuário');
+        toast.error('Failed to delete user');
     }
 }
 </script>
@@ -277,7 +277,7 @@ async function handleDeleteUser(userId: number) {
             <!-- Users Section -->
             <div class="mt-8">
                 <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-xl font-semibold text-gray-900">Usuários</h2>
+                    <h2 class="text-xl font-semibold text-gray-900">Users</h2>
 
                     <CButton
                         v-if="!hasClientUser && canManageClients"
@@ -285,7 +285,7 @@ async function handleDeleteUser(userId: number) {
                         @click="showCreateUserModal = true"
                         icon="mdi:account-plus"
                     >
-                        Cadastrar Usuário
+                        Add User
                     </CButton>
                 </div>
 
@@ -296,7 +296,7 @@ async function handleDeleteUser(userId: number) {
                 </div>
 
                 <div v-else-if="!hasClientUser" class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-                    <p class="text-gray-600">Nenhum usuário cadastrado para este cliente</p>
+                    <p class="text-gray-600">No users registered for this client</p>
                 </div>
 
                 <div v-else class="space-y-3">
@@ -309,14 +309,14 @@ async function handleDeleteUser(userId: number) {
                             <div class="flex-1">
                                 <h4 class="font-semibold text-gray-900">{{ user.name }}</h4>
                                 <p class="mt-1 text-sm text-gray-600">{{ user.email }}</p>
-                                <p v-if="user.role" class="mt-1 text-xs text-gray-500">Papel: {{ user.role }}</p>
+                                <p v-if="user.role" class="mt-1 text-xs text-gray-500">Role: {{ user.role }}</p>
                             </div>
 
                             <div v-if="canManageClients" class="flex gap-2">
-                                <CButton preset="gray" @click="handleEditUser(user)" icon="mdi:pencil">Editar</CButton>
+                                <CButton preset="gray" @click="handleEditUser(user)" icon="mdi:pencil">Edit</CButton>
 
                                 <CButton preset="danger" @click="handleDeleteUser(user.id)" icon="mdi:delete">
-                                    Deletar
+                                    Delete
                                 </CButton>
                             </div>
                         </div>
@@ -414,32 +414,32 @@ async function handleDeleteUser(userId: number) {
             <!-- Create User Modal -->
             <div v-if="showCreateUserModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                 <div class="w-full max-w-md rounded-lg bg-white p-6">
-                    <h2 class="mb-4 text-lg font-semibold">Cadastrar Usuário</h2>
+                    <h2 class="mb-4 text-lg font-semibold">Add User</h2>
 
                     <div class="space-y-4">
-                        <CInput v-model="userForm.name" label="Nome" type="text" required />
+                        <CInput v-model="userForm.name" label="Name" type="text" required />
 
                         <CInput v-model="userForm.email" label="Email" type="email" required />
 
-                        <CInput v-model="userForm.password" label="Senha" type="password" required />
+                        <CInput v-model="userForm.password" label="Password" type="password" required />
 
                         <CInput
                             v-model="userForm.password_confirmation"
-                            label="Confirmar Senha"
+                            label="Confirm Password"
                             type="password"
                             required
                         />
                     </div>
 
                     <div class="mt-6 flex justify-end gap-2">
-                        <CButton preset="gray" @click="showCreateUserModal = false">Cancelar</CButton>
+                        <CButton preset="gray" @click="showCreateUserModal = false">Cancel</CButton>
 
                         <CButton
                             preset="primary"
                             @click="handleCreateUser"
                             :disabled="!userForm.name || !userForm.email || !userForm.password"
                         >
-                            Criar Usuário
+                            Create User
                         </CButton>
                     </div>
                 </div>
@@ -451,30 +451,30 @@ async function handleDeleteUser(userId: number) {
                 class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
             >
                 <div class="w-full max-w-md rounded-lg bg-white p-6">
-                    <h2 class="mb-4 text-lg font-semibold">Editar Usuário</h2>
+                    <h2 class="mb-4 text-lg font-semibold">Edit User</h2>
 
                     <div class="space-y-4">
-                        <CInput v-model="editingUser.name" label="Nome" type="text" required />
+                        <CInput v-model="editingUser.name" label="Name" type="text" required />
 
                         <CInput v-model="editingUser.email" label="Email" type="email" required />
 
                         <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
                             <p class="text-sm text-yellow-800">
-                                Deixe os campos de senha em branco se não quiser alterá-la
+                                Leave the password fields blank if you don't want to change it
                             </p>
                         </div>
 
                         <CInput
                             v-model="editingUser.password"
-                            label="Nova Senha (opcional)"
+                            label="New Password (optional)"
                             type="password"
-                            placeholder="Deixe em branco para não alterar"
+                            placeholder="Leave blank to keep current password"
                         />
 
                         <CInput
                             v-if="editingUser.password"
                             v-model="editingUser.password_confirmation"
-                            label="Confirmar Nova Senha"
+                            label="Confirm New Password"
                             type="password"
                         />
                     </div>
@@ -487,10 +487,10 @@ async function handleDeleteUser(userId: number) {
                                 editingUser = null;
                             "
                         >
-                            Cancelar
+                            Cancel
                         </CButton>
 
-                        <CButton preset="primary" @click="handleUpdateUser">Salvar Alterações</CButton>
+                        <CButton preset="primary" @click="handleUpdateUser">Save Changes</CButton>
                     </div>
                 </div>
             </div>

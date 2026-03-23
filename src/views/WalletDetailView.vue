@@ -70,7 +70,7 @@ onMounted(async () => {
         // Verify ownership for customers
         if (auth.isCustomer.value && wallet.value) {
             if (!auth.canAccessWallet(wallet.value)) {
-                toast.error('Você não tem acesso a esta carteira');
+                toast.error('You do not have access to this wallet');
                 router.push({ name: 'customer-dashboard' });
 
                 return;
@@ -79,7 +79,7 @@ onMounted(async () => {
 
         await Promise.all([fetchWalletEntries(walletId), fetchTags()]);
     } catch (e) {
-        toast.error('Erro ao carregar a carteira');
+        toast.error('Failed to load wallet');
     }
 });
 
