@@ -5,16 +5,16 @@
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
             @click.self="handleCancel"
         >
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all" @click.stop>
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md transform transition-all" @click.stop>
                 <div class="p-6">
                     <div class="flex items-start gap-4">
                         <div
                             :class="[
-                                'flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center',
+                                'flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center',
                                 {
                                     'bg-red-100': variant === 'danger',
-                                    'bg-yellow-100': variant === 'warning',
-                                    'bg-blue-100': variant === 'info',
+                                    'bg-amber-100': variant === 'warning',
+                                    'bg-sky-100': variant === 'info',
                                     'bg-green-100': variant === 'success',
                                 },
                             ]"
@@ -22,11 +22,11 @@
                             <Icon
                                 :icon="icon"
                                 :class="[
-                                    'w-6 h-6',
+                                    'w-5 h-5',
                                     {
                                         'text-red-600': variant === 'danger',
-                                        'text-yellow-600': variant === 'warning',
-                                        'text-blue-600': variant === 'info',
+                                        'text-amber-600': variant === 'warning',
+                                        'text-sky-600': variant === 'info',
                                         'text-green-600': variant === 'success',
                                     },
                                 ]"
@@ -45,7 +45,7 @@
                     </div>
                 </div>
 
-                <div class="bg-gray-50 px-6 py-4 flex gap-3 justify-end rounded-b-lg">
+                <div class="bg-gray-50 px-6 py-4 flex gap-3 justify-end rounded-b-2xl border-t border-gray-100">
                     <CButton preset="outlined-black" @click="handleCancel">
                         {{ cancelText }}
                     </CButton>

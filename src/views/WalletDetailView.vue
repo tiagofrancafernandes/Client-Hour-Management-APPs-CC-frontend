@@ -179,7 +179,12 @@ function handleCreditPurchaseSuccess(): void {
 
 <template>
     <div class="container mx-auto px-4 py-8">
-        <button class="mb-4 text-blue-600 hover:text-blue-800" @click="router.back()">← Back</button>
+        <button
+            class="mb-4 inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            @click="router.back()"
+        >
+            ← Back
+        </button>
 
         <div v-if="walletError" class="mb-4 rounded-lg bg-red-100 p-4 text-red-700">
             {{ walletError }}
@@ -291,7 +296,7 @@ function handleCreditPurchaseSuccess(): void {
                 </CButton>
             </div>
 
-            <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -344,26 +349,20 @@ function handleCreditPurchaseSuccess(): void {
 
             <div v-if="!entries.length" class="py-8 text-center text-gray-500">No entries yet.</div>
 
-            <div v-if="pagination.lastPage > 1" class="mt-4 flex justify-center gap-2">
+            <div v-if="pagination.lastPage > 1" class="mt-4 flex items-center justify-center gap-2">
                 <button
                     :disabled="pagination.currentPage === 1"
-                    class="rounded px-3 py-1 disabled:opacity-50"
-                    :class="{
-                        'bg-gray-200': pagination.currentPage === 1,
-                        'bg-blue-600 text-white': pagination.currentPage !== 1,
-                    }"
+                    class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     @click="fetchWalletEntries(walletId, pagination.currentPage - 1)"
                 >
                     Previous
                 </button>
-                <span class="px-3 py-1">Page {{ pagination.currentPage }} of {{ pagination.lastPage }}</span>
+                <span class="text-sm text-gray-500">
+                    Page {{ pagination.currentPage }} of {{ pagination.lastPage }}
+                </span>
                 <button
                     :disabled="pagination.currentPage === pagination.lastPage"
-                    class="rounded px-3 py-1 disabled:opacity-50"
-                    :class="{
-                        'bg-gray-200': pagination.currentPage === pagination.lastPage,
-                        'bg-blue-600 text-white': pagination.currentPage !== pagination.lastPage,
-                    }"
+                    class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     @click="fetchWalletEntries(walletId, pagination.currentPage + 1)"
                 >
                     Next
@@ -396,7 +395,7 @@ function handleCreditPurchaseSuccess(): void {
                     <label class="mb-1 block text-sm font-medium text-gray-700">Type</label>
                     <select
                         v-model="entryForm.type"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                     >
                         <option v-if="canAddDebits" value="debit">Debit (consume hours)</option>
                         <option v-if="canAddCredits" value="credit">Credit (add hours)</option>
@@ -411,7 +410,7 @@ function handleCreditPurchaseSuccess(): void {
                         type="number"
                         step="0.25"
                         min="0"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                     />
                 </div>
 
@@ -420,7 +419,7 @@ function handleCreditPurchaseSuccess(): void {
                     <input
                         v-model="entryForm.title"
                         type="text"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                     />
                 </div>
 
@@ -429,7 +428,7 @@ function handleCreditPurchaseSuccess(): void {
                     <textarea
                         v-model="entryForm.description"
                         rows="2"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                     ></textarea>
                 </div>
 
@@ -438,7 +437,7 @@ function handleCreditPurchaseSuccess(): void {
                     <input
                         v-model="entryForm.reference_date"
                         type="date"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                     />
                 </div>
 
@@ -456,7 +455,7 @@ function handleCreditPurchaseSuccess(): void {
                     </button>
                     <button
                         :disabled="entryLoading"
-                        class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+                        class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
                         @click="handleCreateEntry"
                     >
                         {{ entryLoading ? 'Saving...' : 'Save' }}

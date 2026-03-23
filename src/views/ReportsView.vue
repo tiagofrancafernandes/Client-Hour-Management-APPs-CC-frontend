@@ -343,8 +343,8 @@ async function exportReport(format: 'pdf' | 'excel') {
                             :key="tag.id"
                             class="flex cursor-pointer items-center gap-1 rounded-full border px-2 py-1 text-sm select-none"
                             :class="{
-                                'border-blue-500 bg-blue-50': filters.tags?.includes(tag.id),
-                                'border-gray-300': !filters.tags?.includes(tag.id),
+                                'border-red-500 bg-red-50 text-red-700': filters.tags?.includes(tag.id),
+                                'border-gray-300 text-gray-600': !filters.tags?.includes(tag.id),
                             }"
                         >
                             <input v-model="filters.tags" type="checkbox" :value="tag.id" class="hidden" />
@@ -356,7 +356,7 @@ async function exportReport(format: 'pdf' | 'excel') {
 
             <div class="mt-4 flex flex-wrap items-center gap-2">
                 <div class="flex gap-2">
-                    <CButton preset="blue" @click="handleFilter">Apply Filters</CButton>
+                    <CButton preset="primary-md" @click="handleFilter">Apply Filters</CButton>
                     <CButton preset="outlined-black" @click="clearFilters">Clear</CButton>
                 </div>
 
@@ -405,8 +405,8 @@ async function exportReport(format: 'pdf' | 'excel') {
         <div v-if="loading" class="py-8 text-center">Loading...</div>
 
         <!-- Initial Message -->
-        <div v-else-if="!hasAppliedFilters" class="rounded-lg bg-blue-50 border border-blue-200 p-8 text-center">
-            <svg class="mx-auto h-16 w-16 text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div v-else-if="!hasAppliedFilters" class="rounded-xl bg-gray-50 border border-gray-200 p-8 text-center">
+            <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -421,28 +421,31 @@ async function exportReport(format: 'pdf' | 'excel') {
         <template v-else>
             <!-- Summary -->
             <div v-if="summary" class="mb-6 grid gap-4 md:grid-cols-4">
-                <div class="rounded-lg bg-white p-4 shadow">
+                <div class="rounded-xl bg-white border border-gray-200 p-4 shadow-sm">
                     <p class="text-sm text-gray-500">Total Credits</p>
                     <p class="text-2xl font-bold text-green-600">+{{ summary.total_credits }}h</p>
                 </div>
-                <div class="rounded-lg bg-white p-4 shadow">
+                <div class="rounded-xl bg-white border border-gray-200 p-4 shadow-sm">
                     <p class="text-sm text-gray-500">Total Debits</p>
                     <p class="text-2xl font-bold text-red-600">{{ summary.total_debits }}h</p>
                 </div>
-                <div class="rounded-lg bg-white p-4 shadow">
+                <div class="rounded-xl bg-white border border-gray-200 p-4 shadow-sm">
                     <p class="text-sm text-gray-500">Net Balance</p>
                     <p class="text-2xl font-bold" :class="getHoursColor(summary.net_balance)">
                         {{ formatHours(summary.net_balance) }}
                     </p>
                 </div>
-                <div class="rounded-lg bg-white p-4 shadow">
+                <div class="rounded-xl bg-white border border-gray-200 p-4 shadow-sm">
                     <p class="text-sm text-gray-500">Total Entries</p>
                     <p class="text-2xl font-bold text-gray-900">{{ summary.entry_count }}</p>
                 </div>
             </div>
 
             <!-- Grouped Data -->
-            <div v-if="groupedData.length > 0" class="overflow-hidden rounded-lg bg-white shadow">
+            <div
+                v-if="groupedData.length > 0"
+                class="overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm"
+            >
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -489,7 +492,10 @@ async function exportReport(format: 'pdf' | 'excel') {
             </div>
 
             <!-- Entries Table -->
-            <div v-else-if="entries.length > 0" class="overflow-hidden rounded-lg bg-white shadow">
+            <div
+                v-else-if="entries.length > 0"
+                class="overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm"
+            >
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -545,28 +551,15 @@ async function exportReport(format: 'pdf' | 'excel') {
                     </tbody>
                 </table>
 
-                <div v-if="pagination.lastPage > 1" class="flex justify-center gap-2 border-t p-4">
-                    <CButton
-                        preset="none-sm"
-                        :disabled="pagination.currentPage === 1"
-                        class="rounded px-3 py-1 disabled:opacity-50"
-                        :class="{
-                            'bg-gray-200': pagination.currentPage === 1,
-                            'bg-blue-600 text-white': pagination.currentPage !== 1,
-                        }"
-                    >
-                        Previous
-                    </CButton>
-                    <span class="px-3 py-1">Page {{ pagination.currentPage }} of {{ pagination.lastPage }}</span>
-                    <CButton
-                        preset="none-sm"
-                        :disabled="pagination.currentPage === pagination.lastPage"
-                        class="rounded px-3 py-1 disabled:opacity-50"
-                        :class="{
-                            'bg-gray-200': pagination.currentPage === pagination.lastPage,
-                            'bg-blue-600 text-white': pagination.currentPage !== pagination.lastPage,
-                        }"
-                    >
+                <div
+                    v-if="pagination.lastPage > 1"
+                    class="flex items-center justify-center gap-2 border-t border-gray-100 p-4"
+                >
+                    <CButton preset="lightgray-sm" :disabled="pagination.currentPage === 1">Previous</CButton>
+                    <span class="text-sm text-gray-500">
+                        Page {{ pagination.currentPage }} of {{ pagination.lastPage }}
+                    </span>
+                    <CButton preset="lightgray-sm" :disabled="pagination.currentPage === pagination.lastPage">
                         Next
                     </CButton>
                 </div>

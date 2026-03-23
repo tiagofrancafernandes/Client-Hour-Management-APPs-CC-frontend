@@ -199,7 +199,10 @@ async function handleDeleteUser(userId: number) {
 
 <template>
     <div class="container mx-auto px-4 py-8">
-        <button class="mb-4 text-blue-600 hover:text-blue-800" @click="router.push({ name: 'clients' })">
+        <button
+            class="mb-4 inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            @click="router.push({ name: 'clients' })"
+        >
             ← Back to Clients
         </button>
 
@@ -258,7 +261,7 @@ async function handleDeleteUser(userId: number) {
                         </div>
                         <button
                             v-if="canManageWallets"
-                            class="ml-auto text-sm text-blue-600 hover:text-blue-800"
+                            class="ml-auto inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
                             @click="handleEditWallet(wallet, $event)"
                         >
                             Edit
@@ -331,7 +334,7 @@ async function handleDeleteUser(userId: number) {
                     <input
                         v-model="newWalletName"
                         type="text"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                     />
                 </div>
                 <div class="mb-4">
@@ -339,7 +342,7 @@ async function handleDeleteUser(userId: number) {
                     <textarea
                         v-model="newWalletDescription"
                         rows="2"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                     ></textarea>
                 </div>
                 <div class="mb-4">
@@ -349,7 +352,7 @@ async function handleDeleteUser(userId: number) {
                         type="number"
                         step="0.01"
                         min="0"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                     />
                 </div>
                 <div class="flex justify-end gap-2">
@@ -376,7 +379,7 @@ async function handleDeleteUser(userId: number) {
                     <input
                         v-model="editingWallet.name"
                         type="text"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                     />
                 </div>
                 <div class="mb-4">
@@ -384,7 +387,7 @@ async function handleDeleteUser(userId: number) {
                     <textarea
                         v-model="editingWallet.description"
                         rows="2"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                     ></textarea>
                 </div>
                 <div class="mb-4">
@@ -394,7 +397,7 @@ async function handleDeleteUser(userId: number) {
                         type="number"
                         step="0.01"
                         min="0"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                     />
                 </div>
                 <div class="flex justify-end gap-2">

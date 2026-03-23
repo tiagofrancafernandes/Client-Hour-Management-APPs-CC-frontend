@@ -95,7 +95,7 @@ async function handleDelete(id: number) {
                     <input
                         v-model="newTagName"
                         type="text"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                         @keyup.enter="handleCreate"
                     />
                 </div>
