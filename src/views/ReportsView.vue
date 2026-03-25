@@ -13,7 +13,7 @@ import type { ReportFilters } from '@/types';
 const route = useRoute();
 const router = useRouter();
 const auth = useAuth();
-const { myClient } = useCustomerData();
+const { myClient, fetchMyClient } = useCustomerData();
 
 const { summary, entries, groupedData, loading, error, pagination, fetchReport } = useReports();
 const { clients, fetchClients } = useClients();
@@ -142,15 +142,16 @@ watch(
 );
 
 onMounted(async () => {
-    await Promise.all([fetchClients(1, ''), fetchWallets(), fetchTags()]);
-
-    // For customers, pre-fill with their own client
     if (auth.isCustomer.value) {
         const customerId = auth.getCustomerId();
+
+        await Promise.all([fetchMyClient(), fetchWallets(), fetchTags()]);
 
         if (customerId) {
             filters.value.client_id = customerId;
         }
+    } else {
+        await Promise.all([fetchClients(1, ''), fetchWallets(), fetchTags()]);
     }
 
     readFiltersFromUrl();
@@ -201,8 +202,10 @@ async function handleFilter() {
 }
 
 function clearFilters() {
+    const customerClientId = auth.isCustomer.value ? auth.getCustomerId() : null;
+
     filters.value = {
-        client_id: null,
+        client_id: customerClientId,
         wallet_id: null,
         date_from: '',
         date_to: '',
@@ -303,11 +306,11 @@ async function exportReport(format: 'pdf' | 'excel') {
         <div class="mb-6 rounded-lg bg-white p-4 shadow">
             <h2 class="mb-4 text-lg font-semibold">Filters</h2>
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <!-- Client selector - hidden for customers -->
-                <div v-if="auth.isCustomer.value">
+                <!-- Client selector - readonly for customers -->
+                <div v-if="auth.isCustomer.value" class="hidden">
                     <label class="mb-1 block text-sm font-medium text-gray-700">Client</label>
                     <div class="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                        {{ clients.find((c) => c.id === filters.client_id)?.name || 'Loading...' }}
+                        {{ myClient?.name || '...' }}
                     </div>
                 </div>
 

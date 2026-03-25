@@ -35,12 +35,21 @@ export const useTimerStore = defineStore('timer', () => {
         }
     }
 
-    async function fetchTimers(status?: string): Promise<void> {
+    async function fetchTimers(status?: string, listAll?: boolean): Promise<void> {
         loading.value = true;
         error.value = null;
 
         try {
-            const params = status ? { status } : {};
+            const params: Record<string, unknown> = {};
+
+            if (status) {
+                params.status = status;
+            }
+
+            if (listAll) {
+                params.list_all = true;
+            }
+
             const response = await api.get<PaginatedResponse<Timer>>('/timers', params);
 
             timers.value = response.data;

@@ -88,6 +88,12 @@ export interface LedgerEntryForm {
     tags?: number[];
 }
 
+export interface Role {
+    id: string | number;
+    name: string;
+    notes: string;
+}
+
 export interface User {
     id: number;
     name: string;
@@ -95,6 +101,7 @@ export interface User {
     customer_id?: number | null;
     client?: Client | null;
     role?: string;
+    roles?: Role[];
     created_at?: string;
     updated_at?: string;
 }
@@ -151,6 +158,7 @@ export interface Timer {
     formatted_duration: string;
     total_hours: number;
     cycles: TimerCycle[];
+    user?: User;
     wallet?: Wallet;
     tags?: Tag[];
     ledger_entry?: LedgerEntry;
@@ -232,10 +240,23 @@ export interface ImportRowForm {
     tags?: string[];
 }
 
+export interface PaymentMethod {
+    key: string;
+    name: string;
+    label: string;
+    is_active: boolean;
+    is_offline: boolean;
+    currency: string | null;
+    value: unknown;
+    expires_time: string | number | null;
+    accepts_discount: boolean;
+    allowed_users: string[];
+}
+
 export interface CreditPurchasePayment {
     id: number;
     credit_purchase_id: number;
-    payment_method: 'pix_offline' | 'bank_transfer' | null;
+    payment_method: PaymentMethod | null;
     payment_status: 'pending' | 'approved' | 'rejected' | 'completed';
     pix_receipt_path?: string | null;
     receipt_approved_by?: number | null;

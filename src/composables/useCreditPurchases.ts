@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import api from '@/services/api';
-import type { CreditPurchase, CreditPurchasePayment } from '@/types';
+import type { CreditPurchase, CreditPurchasePayment, PaginatedResponse } from '@/types';
 
 export function useCreditPurchases() {
     const purchases = ref<CreditPurchase[]>([]);
@@ -9,13 +9,12 @@ export function useCreditPurchases() {
     const loading = ref(false);
     const error = ref<string | null>(null);
 
-    async function fetchPurchases(walletId?: number) {
+    async function fetchPurchases(params: Record<string, unknown> = {}) {
         loading.value = true;
         error.value = null;
 
         try {
-            const params = walletId ? { wallet_id: walletId } : {};
-            const response = await api.get<{ data: CreditPurchase[] }>('/credit-purchases', { params });
+            const response = await api.get<PaginatedResponse<CreditPurchase>>('/credit-purchases', params);
             purchases.value = response.data;
         } catch (e) {
             error.value = e instanceof Error ? e.message : 'Failed to fetch credit purchases';
@@ -139,16 +138,50 @@ export function useCreditPurchases() {
         }
     }
 
-    async function getReceiptUrl(paymentId: number) {
+    async function approvePayment(paymentId: number, notes?: string): Promise<CreditPurchasePayment> {
         loading.value = true;
         error.value = null;
 
         try {
-            const response = await api.get<{ url: string }>(`/payments/${paymentId}/receipt-url`);
+            const response = await api.post<{ data: CreditPurchasePayment }>(`/payments/${paymentId}/approve`, {
+                notes: notes || null,
+            });
 
-            return response.url;
+            return response.data;
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'Failed to get receipt URL';
+            error.value = e instanceof Error ? e.message : 'Failed to approve payment';
+            throw e;
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function rejectPayment(paymentId: number, notes: string): Promise<CreditPurchasePayment> {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.post<{ data: CreditPurchasePayment }>(`/payments/${paymentId}/reject`, {
+                notes,
+            });
+
+            return response.data;
+        } catch (e) {
+            error.value = e instanceof Error ? e.message : 'Failed to reject payment';
+            throw e;
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function downloadReceipt(paymentId: number): Promise<void> {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            await api.download(`/payments/${paymentId}/receipt-download`);
+        } catch (e) {
+            error.value = e instanceof Error ? e.message : 'Failed to download receipt';
             throw e;
         } finally {
             loading.value = false;
@@ -167,6 +200,8 @@ export function useCreditPurchases() {
         createPayment,
         setPaymentMethod,
         uploadReceipt,
-        getReceiptUrl,
+        downloadReceipt,
+        approvePayment,
+        rejectPayment,
     };
 }

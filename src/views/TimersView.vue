@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, onUnmounted } from 'vue';
+import { ref, onMounted, computed, onUnmounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useTimerStore } from '@/stores/timer';
 import { useAuthStore } from '@/stores/auth';
@@ -18,10 +18,16 @@ const showStartModal = ref(false);
 const showConfirmModal = ref(false);
 const selectedTimer = ref<Timer | null>(null);
 const filterStatus = ref<string>('all');
+const listAll = ref(false);
 
 const canCreateTimer = computed(() => authStore.can('timer.create'));
 const canConfirmTimer = computed(() => authStore.can('timer.confirm'));
 const canDeleteTimer = computed(() => authStore.can('timer.delete'));
+const canViewAnyTimer = computed(() => authStore.can('timer.view_any'));
+
+function isOwnTimer(timer: Timer): boolean {
+    return timer.user_id === authStore.user?.id;
+}
 
 const filteredTimers = computed(() => {
     if (filterStatus.value === 'all') {
@@ -145,8 +151,12 @@ function handleTimerConfirmed(): void {
 }
 
 async function loadTimers(): Promise<void> {
-    await timerStore.fetchTimers();
+    await timerStore.fetchTimers(undefined, listAll.value);
 }
+
+watch(listAll, () => {
+    loadTimers();
+});
 
 function formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -194,9 +204,45 @@ onUnmounted(() => {
         <!-- Header -->
         <UIPageHeader title="Timers" description="Track and manage your time entries.">
             <template v-slot:actions>
-                <CButton v-if="canCreateTimer" preset="primary" @click="showStartModal = true" icon="mdi:timer-plus">
-                    Start Timer
-                </CButton>
+                <div class="flex items-center gap-4">
+                    <!-- List All toggle — admin only -->
+                    <label v-if="canViewAnyTimer" class="flex cursor-pointer items-center gap-2 select-none">
+                        <span class="text-sm text-gray-600">List all users</span>
+
+                        <button
+                            type="button"
+                            role="switch"
+                            :aria-checked="listAll"
+                            :class="[
+                                'relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200',
+                                {
+                                    'bg-red-600': listAll,
+                                    'bg-gray-200': !listAll,
+                                },
+                            ]"
+                            @click="listAll = !listAll"
+                        >
+                            <span
+                                :class="[
+                                    'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200',
+                                    {
+                                        'translate-x-5': listAll,
+                                        'translate-x-0': !listAll,
+                                    },
+                                ]"
+                            />
+                        </button>
+                    </label>
+
+                    <CButton
+                        v-if="canCreateTimer"
+                        preset="primary"
+                        icon="mdi:timer-plus"
+                        @click="showStartModal = true"
+                    >
+                        Start Timer
+                    </CButton>
+                </div>
             </template>
         </UIPageHeader>
 
@@ -333,6 +379,11 @@ onUnmounted(() => {
                                 <p class="text-sm text-gray-600">
                                     {{ timer.wallet?.client?.name }} - {{ timer.wallet?.name }}
                                 </p>
+                                <p v-if="timer.user" class="mt-1 text-xs text-gray-500">
+                                    <span class="font-medium">User:</span>
+                                    {{ timer.user.name }}
+                                    <span v-if="isOwnTimer(timer)" class="ml-1 text-green-600">(you)</span>
+                                </p>
                                 <p v-if="timer.description" class="text-sm text-gray-700 mt-2">
                                     {{ timer.description }}
                                 </p>
@@ -371,32 +422,40 @@ onUnmounted(() => {
 
                         <!-- Actions -->
                         <div class="flex flex-col gap-2 ml-4">
-                            <!-- Running timer actions -->
-                            <div v-if="timer.status === 'running'" class="flex gap-2">
-                                <CButton preset="yellow-sm" @click="handlePauseTimer(timer)">Pause</CButton>
-                                <CButton preset="orange-sm" @click="handleStopTimer(timer)">Stop</CButton>
-                                <CButton preset="red-sm" @click="handleCancelTimer(timer)">Cancel</CButton>
-                            </div>
+                            <!-- Own timer actions only -->
+                            <template v-if="isOwnTimer(timer)">
+                                <!-- Running timer actions -->
+                                <div v-if="timer.status === 'running'" class="flex gap-2">
+                                    <CButton preset="yellow-sm" @click="handlePauseTimer(timer)">Pause</CButton>
+                                    <CButton preset="orange-sm" @click="handleStopTimer(timer)">Stop</CButton>
+                                    <CButton preset="red-sm" @click="handleCancelTimer(timer)">Cancel</CButton>
+                                </div>
 
-                            <!-- Paused timer actions -->
-                            <div v-if="timer.status === 'paused'" class="flex gap-2">
-                                <CButton preset="green-sm" @click="handleResumeTimer(timer)">Resume</CButton>
-                                <CButton preset="orange-sm" @click="handleStopTimer(timer)">Stop</CButton>
-                                <CButton preset="red-sm" @click="handleCancelTimer(timer)">Cancel</CButton>
-                            </div>
+                                <!-- Paused timer actions -->
+                                <div v-if="timer.status === 'paused'" class="flex gap-2">
+                                    <CButton preset="green-sm" @click="handleResumeTimer(timer)">Resume</CButton>
+                                    <CButton preset="orange-sm" @click="handleStopTimer(timer)">Stop</CButton>
+                                    <CButton preset="red-sm" @click="handleCancelTimer(timer)">Cancel</CButton>
+                                </div>
 
-                            <!-- Stopped timer actions -->
-                            <div v-if="timer.status === 'stopped' && canConfirmTimer" class="flex gap-2">
-                                <CButton preset="green-sm" @click="handleConfirmTimer(timer)">Confirm</CButton>
-                                <CButton preset="red-sm" @click="handleCancelTimer(timer)">Cancel</CButton>
-                            </div>
+                                <!-- Stopped timer actions -->
+                                <div v-if="timer.status === 'stopped' && canConfirmTimer" class="flex gap-2">
+                                    <CButton preset="green-sm" @click="handleConfirmTimer(timer)">Confirm</CButton>
+                                    <CButton preset="red-sm" @click="handleCancelTimer(timer)">Cancel</CButton>
+                                </div>
 
-                            <!-- Confirmed/Cancelled timer actions -->
-                            <div
-                                v-if="(timer.status === 'confirmed' || timer.status === 'cancelled') && canDeleteTimer"
-                            >
-                                <CButton preset="red-sm" @click="handleDeleteTimer(timer)">Delete</CButton>
-                            </div>
+                                <!-- Confirmed/Cancelled timer actions -->
+                                <div
+                                    v-if="
+                                        (timer.status === 'confirmed' || timer.status === 'cancelled') && canDeleteTimer
+                                    "
+                                >
+                                    <CButton preset="red-sm" @click="handleDeleteTimer(timer)">Delete</CButton>
+                                </div>
+                            </template>
+
+                            <!-- View-only indicator for other users' timers -->
+                            <span v-else class="text-xs text-gray-400 italic">View only</span>
                         </div>
                     </div>
                 </div>

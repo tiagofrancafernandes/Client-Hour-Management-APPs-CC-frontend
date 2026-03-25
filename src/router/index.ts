@@ -161,6 +161,16 @@ const router = createRouter({
                 permissions: ['credit_purchase.approve'],
             },
         },
+        {
+            path: '/admin/users',
+            name: 'admin-users',
+            component: () => import('@/views/AdminUsersView.vue'),
+            meta: {
+                title: 'User Management',
+                requiresAuth: true,
+                permissions: ['user.view_any'],
+            },
+        },
     ],
 });
 
