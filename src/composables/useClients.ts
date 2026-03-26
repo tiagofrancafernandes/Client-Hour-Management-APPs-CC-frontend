@@ -39,6 +39,18 @@ export function useClients() {
         }
     }
 
+    async function searchClients(search: string): Promise<Client[]> {
+        try {
+            const params = new URLSearchParams({ search, per_page: '10' });
+
+            const response = await api.get<PaginatedResponse<Client>>(`/clients?${params}`);
+
+            return response.data;
+        } catch (e) {
+            throw e;
+        }
+    }
+
     async function fetchClient(id: number) {
         loading.value = true;
         error.value = null;
@@ -122,6 +134,7 @@ export function useClients() {
         error,
         pagination,
         fetchClients,
+        searchClients,
         fetchClient,
         createClient,
         updateClient,

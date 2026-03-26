@@ -8,6 +8,60 @@ export function useClientUsers() {
     const loading = ref(false);
     const error = ref<string | null>(null);
 
+    async function attachUser(clientId: number, userId: number, role?: 'admin' | 'member'): Promise<User> {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const payload: Record<string, unknown> = { user_id: userId };
+
+            if (role) {
+                payload.role = role;
+            }
+
+            const response = await api.post<{ user: User }>(`/clients/${clientId}/users/attach`, payload);
+
+            users.value.push(response.user);
+
+            return response.user;
+        } catch (e) {
+            error.value = e instanceof Error ? e.message : 'Failed to attach user';
+
+            throw e;
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function setClientAdmin(clientId: number, userId: number): Promise<User> {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.put<{ user: User }>(`/clients/${clientId}/users/${userId}/set-admin`, {});
+
+            users.value.forEach((u) => {
+                if (u.client_role === 'admin') {
+                    u.client_role = 'member';
+                }
+            });
+
+            const index = users.value.findIndex((u) => u.id === userId);
+
+            if (index !== -1) {
+                users.value[index] = response.user;
+            }
+
+            return response.user;
+        } catch (e) {
+            error.value = e instanceof Error ? e.message : 'Failed to set admin';
+
+            throw e;
+        } finally {
+            loading.value = false;
+        }
+    }
+
     async function fetchClientUsers(clientId: number) {
         loading.value = true;
         error.value = null;
@@ -87,6 +141,8 @@ export function useClientUsers() {
         error,
         fetchClientUsers,
         createClientUser,
+        attachUser,
+        setClientAdmin,
         updateClientUser,
         deleteClientUser,
     };

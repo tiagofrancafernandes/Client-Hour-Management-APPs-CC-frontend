@@ -140,6 +140,50 @@ export function useUsers() {
         }
     }
 
+    async function attachUserToClient(clientId: number, userId: number, role?: 'admin' | 'member'): Promise<User> {
+        try {
+            const payload: Record<string, unknown> = { user_id: userId };
+
+            if (role) {
+                payload.role = role;
+            }
+
+            const response = await api.post<{ user: User }>(`/clients/${clientId}/users/attach`, payload);
+
+            const index = users.value.findIndex((u) => u.id === userId);
+
+            if (index !== -1) {
+                users.value[index] = response.user;
+            }
+
+            return response.user;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async function setUserClientAdmin(clientId: number, userId: number): Promise<User> {
+        try {
+            const response = await api.put<{ user: User }>(`/clients/${clientId}/users/${userId}/set-admin`, {});
+
+            users.value.forEach((u) => {
+                if (u.customer_id === clientId && u.client_role === 'admin') {
+                    u.client_role = 'member';
+                }
+            });
+
+            const index = users.value.findIndex((u) => u.id === userId);
+
+            if (index !== -1) {
+                users.value[index] = response.user;
+            }
+
+            return response.user;
+        } catch (e) {
+            throw e;
+        }
+    }
+
     return {
         users,
         loading,
@@ -152,5 +196,7 @@ export function useUsers() {
         updateUserRole,
         updateUserPermissions,
         fetchOptions,
+        attachUserToClient,
+        setUserClientAdmin,
     };
 }

@@ -2,8 +2,9 @@
 import { onMounted, ref, computed, watch } from 'vue';
 import { Icon } from '@iconify/vue';
 import { useUsers } from '@/composables/useUsers';
+import { useClients } from '@/composables/useClients';
 import { useToast } from '@/composables/useToast';
-import type { User } from '@/types';
+import type { User, Client } from '@/types';
 import type { UserDetail, UserOptions } from '@/composables/useUsers';
 
 const toast = useToast();
@@ -17,7 +18,10 @@ const {
     updateUserRole,
     updateUserPermissions,
     fetchOptions,
+    attachUserToClient,
+    setUserClientAdmin,
 } = useUsers();
+const { searchClients } = useClients();
 
 // ─── Pagination & Search ─────────────────────────────────────────────────────
 
@@ -57,7 +61,7 @@ const permissionGroups = computed(() => {
     const groups: Record<string, string[]> = {};
 
     options.value.permissions.forEach((perm) => {
-        const [namespace] = perm.split('.');
+        const namespace = perm.split('.')[0] ?? perm;
 
         if (!groups[namespace]) {
             groups[namespace] = [];
@@ -71,7 +75,7 @@ const permissionGroups = computed(() => {
 
 // ─── Modal State ─────────────────────────────────────────────────────────────
 
-type ModalTab = 'info' | 'role' | 'permissions';
+type ModalTab = 'info' | 'role' | 'permissions' | 'client';
 
 const showModal = ref(false);
 const activeTab = ref<ModalTab>('info');
@@ -133,7 +137,7 @@ function getUserRole(user: User): string {
     const roles = (user as any).roles as Array<{ name: string }> | undefined;
 
     if (roles && roles.length > 0) {
-        return roles[0].name;
+        return roles[0]?.name ?? '-';
     }
 
     return user.role ?? '-';
@@ -308,11 +312,128 @@ async function handleSavePermissions(): Promise<void> {
     }
 }
 
+// ─── Edit Modal: Client Tab ───────────────────────────────────────────────────
+
+const editClientSearch = ref('');
+const editClientResults = ref<Client[]>([]);
+const editClientSearchLoading = ref(false);
+const editClientSelected = ref<Client | null>(null);
+const editClientRole = ref<'admin' | 'member'>('member');
+const editClientActionLoading = ref(false);
+
+function onEditClientSearchInput(): void {
+    runClientSearch(editClientSearch.value, editClientResults, editClientSearchLoading);
+}
+
+function selectEditClient(client: Client): void {
+    editClientSelected.value = client;
+    editClientSearch.value = client.name;
+    editClientResults.value = [];
+}
+
+async function handleAssignClient(): Promise<void> {
+    if (!selectedUserDetail.value || !editClientSelected.value) {
+        return;
+    }
+
+    editClientActionLoading.value = true;
+
+    try {
+        const updated = await attachUserToClient(
+            editClientSelected.value.id,
+            selectedUserDetail.value.user.id,
+            editClientRole.value
+        );
+
+        selectedUserDetail.value.user = updated;
+
+        const userInList = users.value.find((u) => u.id === updated.id);
+
+        if (userInList) {
+            userInList.customer_id = updated.customer_id;
+            userInList.client_role = updated.client_role;
+            (userInList as any).client = (updated as any).client;
+        }
+
+        editClientSearch.value = '';
+        editClientResults.value = [];
+        editClientSelected.value = null;
+
+        toast.success('Client assigned successfully');
+    } catch (e: any) {
+        const msg = e?.response?.data?.message;
+
+        toast.error(msg ?? 'Failed to assign client');
+    } finally {
+        editClientActionLoading.value = false;
+    }
+}
+
+async function handleSetAdminInEdit(): Promise<void> {
+    if (!selectedUserDetail.value?.user.customer_id) {
+        return;
+    }
+
+    editClientActionLoading.value = true;
+
+    try {
+        const updated = await setUserClientAdmin(
+            selectedUserDetail.value.user.customer_id,
+            selectedUserDetail.value.user.id
+        );
+
+        selectedUserDetail.value.user = updated;
+
+        toast.success('Set as client admin successfully');
+    } catch {
+        toast.error('Failed to set as admin');
+    } finally {
+        editClientActionLoading.value = false;
+    }
+}
+
+// ─── Client Search (shared typeahead state) ───────────────────────────────────
+
+const clientSearchTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+
+async function runClientSearch(
+    query: string,
+    resultRef: { value: Client[] },
+    loadingRef: { value: boolean }
+): Promise<void> {
+    if (clientSearchTimer.value) {
+        clearTimeout(clientSearchTimer.value);
+    }
+
+    if (!query.trim()) {
+        resultRef.value = [];
+
+        return;
+    }
+
+    clientSearchTimer.value = setTimeout(async () => {
+        loadingRef.value = true;
+
+        try {
+            resultRef.value = await searchClients(query.trim());
+        } catch {
+            // ignore
+        } finally {
+            loadingRef.value = false;
+        }
+    }, 350);
+}
+
 // ─── Create User Modal ────────────────────────────────────────────────────────
 
 const showCreateModal = ref(false);
 const createLoading = ref(false);
 const createErrors = ref<Record<string, string>>({});
+
+const createClientSearch = ref('');
+const createClientResults = ref<Client[]>([]);
+const createClientSearchLoading = ref(false);
+const createClientSelected = ref<Client | null>(null);
 
 const createForm = ref({
     name: '',
@@ -321,6 +442,7 @@ const createForm = ref({
     password_confirmation: '',
     role: 'customer',
     customer_id: null as number | null,
+    client_role: 'member' as 'admin' | 'member',
 });
 
 function resetCreateForm(): void {
@@ -331,9 +453,30 @@ function resetCreateForm(): void {
         password_confirmation: '',
         role: 'customer',
         customer_id: null,
+        client_role: 'member',
     };
 
+    createClientSearch.value = '';
+    createClientResults.value = [];
+    createClientSelected.value = null;
     createErrors.value = {};
+}
+
+function onCreateClientSearchInput(): void {
+    runClientSearch(createClientSearch.value, createClientResults, createClientSearchLoading);
+}
+
+function selectCreateClient(client: Client): void {
+    createClientSelected.value = client;
+    createForm.value.customer_id = client.id;
+    createClientSearch.value = client.name;
+    createClientResults.value = [];
+}
+
+function clearCreateClient(): void {
+    createClientSelected.value = null;
+    createForm.value.customer_id = null;
+    createClientSearch.value = '';
 }
 
 async function handleCreateUser(): Promise<void> {
@@ -373,6 +516,7 @@ async function handleCreateUser(): Promise<void> {
             password_confirmation: createForm.value.password_confirmation,
             role: createForm.value.role,
             customer_id: createForm.value.customer_id,
+            client_role: createForm.value.customer_id ? createForm.value.client_role : undefined,
         });
 
         showCreateModal.value = false;
@@ -489,8 +633,27 @@ onMounted(async () => {
                         </td>
 
                         <!-- Client -->
-                        <td class="px-5 py-3.5 text-gray-600">
-                            {{ user.client?.name ?? '-' }}
+                        <td class="px-5 py-3.5">
+                            <div v-if="user.client?.name" class="flex items-center gap-1.5">
+                                <span class="text-gray-700">{{ user.client.name }}</span>
+
+                                <span
+                                    v-if="user.client_role === 'admin'"
+                                    class="inline-flex items-center gap-0.5 rounded-full bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-700"
+                                >
+                                    <Icon icon="mdi:crown" class="text-[10px]" />
+                                    Admin
+                                </span>
+
+                                <span
+                                    v-else-if="user.client_role === 'member'"
+                                    class="rounded-full bg-gray-100 px-1.5 py-0.5 text-xs font-semibold text-gray-500"
+                                >
+                                    Member
+                                </span>
+                            </div>
+
+                            <span v-else class="text-gray-400">—</span>
                         </td>
 
                         <!-- Date -->
@@ -576,7 +739,7 @@ onMounted(async () => {
                 <!-- Tabs -->
                 <div class="flex shrink-0 border-b border-gray-200">
                     <button
-                        v-for="tab in ['info', 'role', 'permissions'] as const"
+                        v-for="tab in ['info', 'role', 'client', 'permissions'] as const"
                         :key="tab"
                         type="button"
                         :class="[
@@ -590,6 +753,7 @@ onMounted(async () => {
                     >
                         <span v-if="tab === 'info'">Basic Info</span>
                         <span v-else-if="tab === 'role'">Role</span>
+                        <span v-else-if="tab === 'client'">Client</span>
                         <span v-else>Extra Permissions</span>
                     </button>
                 </div>
@@ -694,6 +858,187 @@ onMounted(async () => {
                             <CButton preset="primary" :disabled="modalLoading" icon="mdi:check" @click="handleSaveRole">
                                 {{ modalLoading ? 'Saving...' : 'Save Role' }}
                             </CButton>
+                        </div>
+                    </div>
+
+                    <!-- ── Client ── -->
+                    <div v-else-if="activeTab === 'client'" class="space-y-5">
+                        <!-- Current client info -->
+                        <div v-if="selectedUserDetail?.user.customer_id">
+                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                                <p class="mb-1 text-xs font-medium uppercase tracking-wide text-gray-400">
+                                    Current client
+                                </p>
+
+                                <div class="flex items-center justify-between gap-3">
+                                    <div>
+                                        <p class="font-semibold text-gray-900">
+                                            {{
+                                                selectedUserDetail.user.client?.name ??
+                                                'Client #' + selectedUserDetail.user.customer_id
+                                            }}
+                                        </p>
+
+                                        <div class="mt-1 flex items-center gap-2">
+                                            <span
+                                                v-if="selectedUserDetail.user.client_role === 'admin'"
+                                                class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700"
+                                            >
+                                                <Icon icon="mdi:crown" class="text-xs" />
+                                                Admin
+                                            </span>
+
+                                            <span
+                                                v-else
+                                                class="inline-flex items-center rounded-full bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-600"
+                                            >
+                                                Member
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <CButton
+                                        v-if="selectedUserDetail.user.client_role !== 'admin'"
+                                        preset="outlined-black"
+                                        icon="mdi:crown-outline"
+                                        class="shrink-0 text-xs"
+                                        :disabled="editClientActionLoading"
+                                        @click="handleSetAdminInEdit"
+                                    >
+                                        {{ editClientActionLoading ? 'Updating...' : 'Set as Admin' }}
+                                    </CButton>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- No client assigned -->
+                        <div v-else>
+                            <div
+                                class="mb-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-center"
+                            >
+                                <Icon icon="mdi:account-off-outline" class="mx-auto mb-1 text-2xl text-gray-400" />
+                                <p class="text-sm text-gray-500">No client assigned to this user</p>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="mb-1 block text-sm font-medium text-gray-700">Assign to client</label>
+
+                                    <div class="relative">
+                                        <input
+                                            v-model="editClientSearch"
+                                            type="text"
+                                            placeholder="Search client by name..."
+                                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                                            @input="onEditClientSearchInput"
+                                        />
+
+                                        <div
+                                            v-if="editClientSearchLoading"
+                                            class="absolute top-1/2 right-3 -translate-y-1/2"
+                                        >
+                                            <div
+                                                class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"
+                                            ></div>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        v-if="editClientResults.length > 0"
+                                        class="mt-1 max-h-40 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+                                    >
+                                        <button
+                                            v-for="c in editClientResults"
+                                            :key="c.id"
+                                            type="button"
+                                            class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition hover:bg-gray-50"
+                                            @click="selectEditClient(c)"
+                                        >
+                                            <Icon icon="mdi:domain" class="shrink-0 text-gray-400" />
+                                            <span class="font-medium text-gray-900">{{ c.name }}</span>
+                                        </button>
+                                    </div>
+
+                                    <div
+                                        v-if="editClientSelected"
+                                        class="mt-2 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2"
+                                    >
+                                        <Icon icon="mdi:domain" class="shrink-0 text-red-600" />
+                                        <span class="flex-1 text-sm font-medium text-gray-900">
+                                            {{ editClientSelected.name }}
+                                        </span>
+
+                                        <button
+                                            type="button"
+                                            class="text-gray-400 hover:text-gray-600"
+                                            @click="
+                                                editClientSelected = null;
+                                                editClientSearch = '';
+                                            "
+                                        >
+                                            <Icon icon="mdi:close" class="text-sm" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Client role selector -->
+                                <div v-if="editClientSelected">
+                                    <label class="mb-2 block text-sm font-medium text-gray-700">Client Role</label>
+
+                                    <div class="flex gap-3">
+                                        <label
+                                            v-for="roleOpt in ['admin', 'member'] as const"
+                                            :key="roleOpt"
+                                            class="flex flex-1 cursor-pointer items-center gap-2 rounded-lg border p-3 transition"
+                                            :class="[
+                                                {
+                                                    'border-red-500 bg-red-50': editClientRole === roleOpt,
+                                                    'border-gray-200 hover:border-gray-300 hover:bg-gray-50':
+                                                        editClientRole !== roleOpt,
+                                                },
+                                            ]"
+                                            @click="editClientRole = roleOpt"
+                                        >
+                                            <div
+                                                :class="[
+                                                    'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2',
+                                                    {
+                                                        'border-red-600 bg-red-600': editClientRole === roleOpt,
+                                                        'border-gray-300': editClientRole !== roleOpt,
+                                                    },
+                                                ]"
+                                            >
+                                                <div
+                                                    v-if="editClientRole === roleOpt"
+                                                    class="h-1.5 w-1.5 rounded-full bg-white"
+                                                ></div>
+                                            </div>
+
+                                            <div>
+                                                <span class="flex items-center gap-1 text-sm font-medium text-gray-800">
+                                                    <Icon
+                                                        v-if="roleOpt === 'admin'"
+                                                        icon="mdi:crown"
+                                                        class="text-red-600"
+                                                    />
+                                                    {{ roleOpt === 'admin' ? 'Admin' : 'Member' }}
+                                                </span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div v-if="editClientSelected" class="flex justify-end pt-1">
+                                    <CButton
+                                        preset="primary"
+                                        icon="mdi:account-arrow-right"
+                                        :disabled="editClientActionLoading"
+                                        @click="handleAssignClient"
+                                    >
+                                        {{ editClientActionLoading ? 'Assigning...' : 'Assign Client' }}
+                                    </CButton>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1014,6 +1359,101 @@ onMounted(async () => {
                                     </span>
                                 </label>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Client (optional) -->
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-gray-700">
+                            Client
+                            <span class="text-xs font-normal text-gray-400">(optional)</span>
+                        </label>
+
+                        <div class="relative">
+                            <input
+                                v-model="createClientSearch"
+                                type="text"
+                                placeholder="Search client by name..."
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                                @input="onCreateClientSearchInput"
+                            />
+
+                            <div v-if="createClientSearchLoading" class="absolute top-1/2 right-3 -translate-y-1/2">
+                                <div
+                                    class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"
+                                ></div>
+                            </div>
+                        </div>
+
+                        <div
+                            v-if="createClientResults.length > 0"
+                            class="mt-1 max-h-40 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+                        >
+                            <button
+                                v-for="c in createClientResults"
+                                :key="c.id"
+                                type="button"
+                                class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition hover:bg-gray-50"
+                                @click="selectCreateClient(c)"
+                            >
+                                <Icon icon="mdi:domain" class="shrink-0 text-gray-400" />
+                                <span class="font-medium text-gray-900">{{ c.name }}</span>
+                            </button>
+                        </div>
+
+                        <div
+                            v-if="createClientSelected"
+                            class="mt-2 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2"
+                        >
+                            <Icon icon="mdi:domain" class="shrink-0 text-red-600" />
+                            <span class="flex-1 text-sm font-medium text-gray-900">
+                                {{ createClientSelected.name }}
+                            </span>
+
+                            <button type="button" class="text-gray-400 hover:text-gray-600" @click="clearCreateClient">
+                                <Icon icon="mdi:close" class="text-sm" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Client Role (visible only when a client is selected) -->
+                    <div v-if="createClientSelected">
+                        <label class="mb-2 block text-sm font-medium text-gray-700">Client Role</label>
+
+                        <div class="flex gap-3">
+                            <label
+                                v-for="roleOpt in ['admin', 'member'] as const"
+                                :key="roleOpt"
+                                class="flex flex-1 cursor-pointer items-center gap-2 rounded-lg border p-3 transition"
+                                :class="[
+                                    {
+                                        'border-red-500 bg-red-50': createForm.client_role === roleOpt,
+                                        'border-gray-200 hover:border-gray-300 hover:bg-gray-50':
+                                            createForm.client_role !== roleOpt,
+                                    },
+                                ]"
+                                @click="createForm.client_role = roleOpt"
+                            >
+                                <div
+                                    :class="[
+                                        'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2',
+                                        {
+                                            'border-red-600 bg-red-600': createForm.client_role === roleOpt,
+                                            'border-gray-300': createForm.client_role !== roleOpt,
+                                        },
+                                    ]"
+                                >
+                                    <div
+                                        v-if="createForm.client_role === roleOpt"
+                                        class="h-1.5 w-1.5 rounded-full bg-white"
+                                    ></div>
+                                </div>
+
+                                <span class="flex items-center gap-1 text-sm font-medium text-gray-800">
+                                    <Icon v-if="roleOpt === 'admin'" icon="mdi:crown" class="text-red-600" />
+                                    {{ roleOpt === 'admin' ? 'Admin' : 'Member' }}
+                                </span>
+                            </label>
                         </div>
                     </div>
 

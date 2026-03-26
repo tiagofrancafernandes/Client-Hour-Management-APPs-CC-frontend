@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { Icon } from '@iconify/vue';
 import { useClients } from '@/composables/useClients';
 import { useWallets } from '@/composables/useWallets';
 import { useClientUsers } from '@/composables/useClientUsers';
+import { useUsers } from '@/composables/useUsers';
 import { usePermissions } from '@/composables/usePermissions';
 import { useToast } from '@/composables/useToast';
 import type { User, WalletWithBalance, ClientUserForm, UpdateClientUserForm } from '@/types';
@@ -19,9 +21,12 @@ const {
     loading: usersLoading,
     fetchClientUsers,
     createClientUser,
+    attachUser,
+    setClientAdmin,
     updateClientUser,
     deleteClientUser,
 } = useClientUsers();
+const { searchUsers } = useUsers();
 const { canManageWallets, canManageClients } = usePermissions();
 const toast = useToast();
 
@@ -127,9 +132,101 @@ function getBalanceColor(balance: string): string {
     return 'text-gray-600';
 }
 
-const hasClientUser = computed(() => {
+const hasClientUsers = computed(() => {
     return clientUsers.value.length > 0;
 });
+
+// ─── Attach Existing User Modal ───────────────────────────────────────────────
+
+const showAttachModal = ref(false);
+const attachSearch = ref('');
+const attachResults = ref<User[]>([]);
+const attachSearchLoading = ref(false);
+const attachSelected = ref<User | null>(null);
+const attachRole = ref<'admin' | 'member'>('member');
+const attachLoading = ref(false);
+const attachSearchTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+
+function openAttachModal(): void {
+    showAttachModal.value = true;
+    attachSearch.value = '';
+    attachResults.value = [];
+    attachSelected.value = null;
+    attachRole.value = 'member';
+}
+
+function closeAttachModal(): void {
+    showAttachModal.value = false;
+    attachSearch.value = '';
+    attachResults.value = [];
+    attachSelected.value = null;
+}
+
+async function onAttachSearchInput(): Promise<void> {
+    if (attachSearchTimer.value) {
+        clearTimeout(attachSearchTimer.value);
+    }
+
+    if (!attachSearch.value.trim()) {
+        attachResults.value = [];
+
+        return;
+    }
+
+    attachSearchTimer.value = setTimeout(async () => {
+        attachSearchLoading.value = true;
+
+        try {
+            attachResults.value = await searchUsers(attachSearch.value.trim());
+        } catch {
+            // ignore
+        } finally {
+            attachSearchLoading.value = false;
+        }
+    }, 350);
+}
+
+function selectAttachUser(user: User): void {
+    attachSelected.value = user;
+    attachSearch.value = user.name;
+    attachResults.value = [];
+}
+
+async function handleAttachUser(): Promise<void> {
+    if (!attachSelected.value) {
+        return;
+    }
+
+    const hasAdmin = clientUsers.value.some((u) => u.client_role === 'admin');
+    const role = hasAdmin ? attachRole.value : 'admin';
+
+    attachLoading.value = true;
+
+    try {
+        await attachUser(clientId, attachSelected.value.id, role);
+
+        closeAttachModal();
+        toast.success('User linked successfully');
+    } catch (e: any) {
+        const msg = e?.response?.data?.message;
+
+        toast.error(msg ?? 'Failed to link user');
+    } finally {
+        attachLoading.value = false;
+    }
+}
+
+// ─── Set Client Admin ─────────────────────────────────────────────────────────
+
+async function handleSetAdmin(userId: number): Promise<void> {
+    try {
+        await setClientAdmin(clientId, userId);
+
+        toast.success('Admin updated successfully');
+    } catch {
+        toast.error('Failed to update admin');
+    }
+}
 
 async function handleCreateUser() {
     if (!userForm.value.name || !userForm.value.email || !userForm.value.password) {
@@ -279,14 +376,15 @@ async function handleDeleteUser(userId: number) {
                 <div class="mb-4 flex items-center justify-between">
                     <h2 class="text-xl font-semibold text-gray-900">Users</h2>
 
-                    <CButton
-                        v-if="!hasClientUser && canManageClients"
-                        preset="primary"
-                        @click="showCreateUserModal = true"
-                        icon="mdi:account-plus"
-                    >
-                        Add User
-                    </CButton>
+                    <div v-if="canManageClients" class="flex gap-2">
+                        <CButton preset="outlined-black" icon="mdi:account-arrow-right" @click="openAttachModal">
+                            Attach Existing
+                        </CButton>
+
+                        <CButton preset="primary" icon="mdi:account-plus" @click="showCreateUserModal = true">
+                            New User
+                        </CButton>
+                    </div>
                 </div>
 
                 <div v-if="usersLoading" class="py-8 text-center">
@@ -295,7 +393,8 @@ async function handleDeleteUser(userId: number) {
                     ></div>
                 </div>
 
-                <div v-else-if="!hasClientUser" class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+                <div v-else-if="!hasClientUsers" class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+                    <Icon icon="mdi:account-group-outline" class="mx-auto mb-2 text-4xl text-gray-400" />
                     <p class="text-gray-600">No users registered for this client</p>
                 </div>
 
@@ -305,17 +404,59 @@ async function handleDeleteUser(userId: number) {
                         :key="user.id"
                         class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
                     >
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <h4 class="font-semibold text-gray-900">{{ user.name }}</h4>
-                                <p class="mt-1 text-sm text-gray-600">{{ user.email }}</p>
-                                <p v-if="user.role" class="mt-1 text-xs text-gray-500">Role: {{ user.role }}</p>
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                                <div
+                                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-100 text-sm font-bold text-red-700"
+                                >
+                                    {{ user.name.charAt(0).toUpperCase() }}
+                                </div>
+
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h4 class="font-semibold text-gray-900">{{ user.name }}</h4>
+
+                                        <span
+                                            v-if="user.client_role === 'admin'"
+                                            class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700"
+                                        >
+                                            <Icon icon="mdi:crown" class="text-xs" />
+                                            Admin
+                                        </span>
+
+                                        <span
+                                            v-else-if="user.client_role === 'member'"
+                                            class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600"
+                                        >
+                                            Member
+                                        </span>
+                                    </div>
+
+                                    <p class="mt-0.5 text-sm text-gray-500">{{ user.email }}</p>
+                                </div>
                             </div>
 
-                            <div v-if="canManageClients" class="flex gap-2">
-                                <CButton preset="gray" @click="handleEditUser(user)" icon="mdi:pencil">Edit</CButton>
+                            <div v-if="canManageClients" class="flex shrink-0 gap-2">
+                                <CButton
+                                    v-if="user.client_role !== 'admin'"
+                                    preset="outlined-black"
+                                    icon="mdi:crown-outline"
+                                    class="text-xs"
+                                    @click="handleSetAdmin(user.id)"
+                                >
+                                    Set Admin
+                                </CButton>
 
-                                <CButton preset="danger" @click="handleDeleteUser(user.id)" icon="mdi:delete">
+                                <CButton preset="gray" icon="mdi:pencil" class="text-xs" @click="handleEditUser(user)">
+                                    Edit
+                                </CButton>
+
+                                <CButton
+                                    preset="danger"
+                                    icon="mdi:delete"
+                                    class="text-xs"
+                                    @click="handleDeleteUser(user.id)"
+                                >
                                     Delete
                                 </CButton>
                             </div>
@@ -324,6 +465,212 @@ async function handleDeleteUser(userId: number) {
                 </div>
             </div>
         </div>
+
+        <!-- Attach Existing User Modal -->
+        <Teleport to="body">
+            <div
+                v-if="showAttachModal"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                @click.self="closeAttachModal"
+            >
+                <div class="flex w-full max-w-md flex-col rounded-xl bg-white shadow-xl">
+                    <!-- Header -->
+                    <div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-red-100">
+                                <Icon icon="mdi:account-arrow-right" class="text-lg text-red-700" />
+                            </div>
+
+                            <h2 class="text-base font-semibold text-gray-900">Attach Existing User</h2>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+                            @click="closeAttachModal"
+                        >
+                            <Icon icon="mdi:close" class="text-lg" />
+                        </button>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="p-6 space-y-4">
+                        <!-- Search -->
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-gray-700">
+                                Search user
+                                <span class="text-red-500">*</span>
+                            </label>
+
+                            <div class="relative">
+                                <input
+                                    v-model="attachSearch"
+                                    type="text"
+                                    placeholder="Type name or email..."
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                                    @input="onAttachSearchInput"
+                                />
+
+                                <div v-if="attachSearchLoading" class="absolute top-1/2 right-3 -translate-y-1/2">
+                                    <div
+                                        class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"
+                                    ></div>
+                                </div>
+                            </div>
+
+                            <!-- Results dropdown -->
+                            <div
+                                v-if="attachResults.length > 0"
+                                class="mt-1 max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+                            >
+                                <button
+                                    v-for="result in attachResults"
+                                    :key="result.id"
+                                    type="button"
+                                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition hover:bg-gray-50"
+                                    @click="selectAttachUser(result)"
+                                >
+                                    <div
+                                        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-100 text-xs font-bold text-red-700"
+                                    >
+                                        {{ result.name.charAt(0).toUpperCase() }}
+                                    </div>
+
+                                    <div>
+                                        <p class="font-medium text-gray-900">{{ result.name }}</p>
+                                        <p class="text-xs text-gray-500">{{ result.email }}</p>
+                                    </div>
+
+                                    <span
+                                        v-if="result.customer_id"
+                                        class="ml-auto shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700"
+                                    >
+                                        Already assigned
+                                    </span>
+                                </button>
+                            </div>
+
+                            <!-- Selected user chip -->
+                            <div
+                                v-if="attachSelected"
+                                class="mt-2 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2"
+                            >
+                                <Icon icon="mdi:account-check" class="shrink-0 text-red-600" />
+
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate">{{ attachSelected.name }}</p>
+                                    <p class="text-xs text-gray-500 truncate">{{ attachSelected.email }}</p>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    class="shrink-0 text-gray-400 hover:text-gray-600"
+                                    @click="
+                                        attachSelected = null;
+                                        attachSearch = '';
+                                    "
+                                >
+                                    <Icon icon="mdi:close" class="text-sm" />
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Role selector (only when there's already an admin) -->
+                        <div v-if="clientUsers.some((u) => u.client_role === 'admin')">
+                            <label class="mb-2 block text-sm font-medium text-gray-700">Client Role</label>
+
+                            <div class="flex gap-3">
+                                <label
+                                    class="flex flex-1 cursor-pointer items-center gap-2 rounded-lg border p-3 transition"
+                                    :class="[
+                                        {
+                                            'border-red-500 bg-red-50': attachRole === 'admin',
+                                            'border-gray-200 hover:border-gray-300 hover:bg-gray-50':
+                                                attachRole !== 'admin',
+                                        },
+                                    ]"
+                                    @click="attachRole = 'admin'"
+                                >
+                                    <div
+                                        :class="[
+                                            'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2',
+                                            {
+                                                'border-red-600 bg-red-600': attachRole === 'admin',
+                                                'border-gray-300': attachRole !== 'admin',
+                                            },
+                                        ]"
+                                    >
+                                        <div
+                                            v-if="attachRole === 'admin'"
+                                            class="h-1.5 w-1.5 rounded-full bg-white"
+                                        ></div>
+                                    </div>
+
+                                    <div>
+                                        <span class="flex items-center gap-1 text-sm font-medium text-gray-800">
+                                            <Icon icon="mdi:crown" class="text-red-600" />
+                                            Admin
+                                        </span>
+
+                                        <p class="text-xs text-gray-500">Replaces current admin</p>
+                                    </div>
+                                </label>
+
+                                <label
+                                    class="flex flex-1 cursor-pointer items-center gap-2 rounded-lg border p-3 transition"
+                                    :class="[
+                                        {
+                                            'border-red-500 bg-red-50': attachRole === 'member',
+                                            'border-gray-200 hover:border-gray-300 hover:bg-gray-50':
+                                                attachRole !== 'member',
+                                        },
+                                    ]"
+                                    @click="attachRole = 'member'"
+                                >
+                                    <div
+                                        :class="[
+                                            'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2',
+                                            {
+                                                'border-red-600 bg-red-600': attachRole === 'member',
+                                                'border-gray-300': attachRole !== 'member',
+                                            },
+                                        ]"
+                                    >
+                                        <div
+                                            v-if="attachRole === 'member'"
+                                            class="h-1.5 w-1.5 rounded-full bg-white"
+                                        ></div>
+                                    </div>
+
+                                    <span class="text-sm font-medium text-gray-800">Member</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div v-else class="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700">
+                            <Icon icon="mdi:information-outline" class="mr-1 inline" />
+                            This will be the first user, so they'll be set as
+                            <strong>Admin</strong>
+                            automatically.
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="flex justify-end gap-2 pt-2">
+                            <CButton preset="outlined-black" type="button" @click="closeAttachModal">Cancel</CButton>
+
+                            <CButton
+                                preset="primary"
+                                icon="mdi:account-arrow-right"
+                                :disabled="!attachSelected || attachLoading"
+                                @click="handleAttachUser"
+                            >
+                                {{ attachLoading ? 'Linking...' : 'Link User' }}
+                            </CButton>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
 
         <!-- Create Wallet Modal -->
         <div v-if="showCreateWalletModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
