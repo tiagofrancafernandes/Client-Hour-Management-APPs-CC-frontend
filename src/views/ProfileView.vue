@@ -133,7 +133,7 @@ function resourceIcon(group: string): string {
         <!-- Profile Header Card -->
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-6">
             <!-- Top banner -->
-            <div class="h-24 bg-linear-to-r from-gray-900 to-gray-700 relative">
+            <div class="h-8 bg-linear-to-r from-gray-900 to-gray-700 relative">
                 <div class="absolute inset-0 opacity-10">
                     <div class="absolute top-4 left-8 w-16 h-16 rounded-full border-2 border-white/30"></div>
                     <div class="absolute top-2 right-16 w-8 h-8 rounded-full border-2 border-white/20"></div>
@@ -142,7 +142,7 @@ function resourceIcon(group: string): string {
             </div>
 
             <!-- Avatar + info row -->
-            <div class="px-6 pb-6">
+            <div class="px-6 pb-6 pt-14">
                 <div class="flex items-end justify-between -mt-10 mb-4">
                     <!-- Avatar -->
                     <div

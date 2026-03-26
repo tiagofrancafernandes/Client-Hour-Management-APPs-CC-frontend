@@ -99,6 +99,7 @@ export interface User {
     name: string;
     email: string;
     customer_id?: number | null;
+    client_role?: 'admin' | 'member' | null;
     client?: Client | null;
     role?: string;
     roles?: Role[];
@@ -295,6 +296,16 @@ export interface ClientUserForm {
     email: string;
     password: string;
     password_confirmation: string;
+}
+
+export interface CreateUserForm {
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+    role: string;
+    customer_id?: number | null;
+    client_role?: 'admin' | 'member' | null;
 }
 
 export interface UpdateClientUserForm {

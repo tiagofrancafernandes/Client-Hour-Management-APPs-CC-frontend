@@ -320,7 +320,7 @@ function getPaymentBadgeColor(status: string): string {
                 </div>
 
                 <!-- Content -->
-                <div class="px-6 py-6 space-y-4">
+                <div class="px-4 py-4 space-y-4">
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <p class="text-sm text-gray-600 mb-2">
                             {{ selectedPayment.creditPurchase?.customer?.name }}

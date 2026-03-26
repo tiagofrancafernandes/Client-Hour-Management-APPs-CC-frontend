@@ -329,7 +329,7 @@ function formatCurrency(value: number): string {
                 </div>
 
                 <!-- Content -->
-                <div class="px-6 py-6 max-h-[60vh] overflow-y-auto">
+                <div class="px-4 py-4 max-h-[60vh] overflow-y-auto">
                     <!-- Step 1: Package Selection -->
                     <div v-if="currentStep === 1" class="space-y-4">
                         <div class="space-y-3">

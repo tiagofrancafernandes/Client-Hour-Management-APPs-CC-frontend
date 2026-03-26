@@ -388,65 +388,67 @@ function handleCreditPurchaseSuccess(): void {
 
         <!-- Add Entry Modal -->
         <div v-if="showEntryModal" class="fixed inset-0 flex items-center justify-center bg-black/50">
-            <div class="w-full max-w-md rounded-lg bg-white p-6">
+            <div class="w-full max-w-md rounded-lg bg-white p-4">
                 <h2 class="mb-4 text-lg font-semibold">Add Ledger Entry</h2>
 
-                <div class="mb-4">
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Type</label>
-                    <select
-                        v-model="entryForm.type"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                    >
-                        <option v-if="canAddDebits" value="debit">Debit (consume hours)</option>
-                        <option v-if="canAddCredits" value="credit">Credit (add hours)</option>
-                        <option v-if="canAddAdjustments" value="adjustment">Adjustment</option>
-                    </select>
+                <div class="max-h-[60vh] overflow-y-auto">
+                    <div class="mb-4">
+                        <label class="mb-1 block text-sm font-medium text-gray-700">Type</label>
+                        <select
+                            v-model="entryForm.type"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                        >
+                            <option v-if="canAddDebits" value="debit">Debit (consume hours)</option>
+                            <option v-if="canAddCredits" value="credit">Credit (add hours)</option>
+                            <option v-if="canAddAdjustments" value="adjustment">Adjustment</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="mb-1 block text-sm font-medium text-gray-700">Hours</label>
+                        <input
+                            v-model.number="entryForm.hours"
+                            type="number"
+                            step="0.25"
+                            min="0"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                        />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="mb-1 block text-sm font-medium text-gray-700">Title</label>
+                        <input
+                            v-model="entryForm.title"
+                            type="text"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                        />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="mb-1 block text-sm font-medium text-gray-700">Description</label>
+                        <textarea
+                            v-model="entryForm.description"
+                            rows="2"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                        ></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="mb-1 block text-sm font-medium text-gray-700">Reference Date</label>
+                        <input
+                            v-model="entryForm.reference_date"
+                            type="date"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                        />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="mb-1 block text-sm font-medium text-gray-700">Tags</label>
+                        <TagInput v-model="entryForm.tags" placeholder="Add tags..." :allow-create="true" />
+                    </div>
                 </div>
 
-                <div class="mb-4">
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Hours</label>
-                    <input
-                        v-model.number="entryForm.hours"
-                        type="number"
-                        step="0.25"
-                        min="0"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                    />
-                </div>
-
-                <div class="mb-4">
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Title</label>
-                    <input
-                        v-model="entryForm.title"
-                        type="text"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                    />
-                </div>
-
-                <div class="mb-4">
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Description</label>
-                    <textarea
-                        v-model="entryForm.description"
-                        rows="2"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                    ></textarea>
-                </div>
-
-                <div class="mb-4">
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Reference Date</label>
-                    <input
-                        v-model="entryForm.reference_date"
-                        type="date"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                    />
-                </div>
-
-                <div class="mb-4">
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Tags</label>
-                    <TagInput v-model="entryForm.tags" placeholder="Add tags..." :allow-create="true" />
-                </div>
-
-                <div class="flex justify-end gap-2">
+                <div class="flex justify-end gap-2 pt-2">
                     <button
                         class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
                         @click="showEntryModal = false"

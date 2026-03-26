@@ -90,9 +90,28 @@ const navItems = computed((): NavItem[] => {
             show: permissions.canApprovePayments.value,
             children: [
                 {
+                    label: 'Payment history',
+                    to: '/payments/history',
+                    icon: 'heroicons:credit-card',
+                },
+                {
                     label: 'Approvals',
                     to: '/payments/approvals',
                     icon: 'heroicons:check-badge',
+                },
+            ],
+        },
+        {
+            key: 'admin',
+            label: 'Admin',
+            icon: 'heroicons:cog-6-tooth',
+            basePath: '/admin',
+            show: permissions.hasPermission('user.view_any'),
+            children: [
+                {
+                    label: 'Users',
+                    to: '/admin/users',
+                    icon: 'heroicons:users',
                 },
             ],
         },

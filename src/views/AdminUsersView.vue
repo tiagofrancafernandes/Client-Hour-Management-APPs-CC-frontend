@@ -7,8 +7,17 @@ import type { User } from '@/types';
 import type { UserDetail, UserOptions } from '@/composables/useUsers';
 
 const toast = useToast();
-const { users, loading, fetchUsers, fetchUser, updateUser, updateUserRole, updateUserPermissions, fetchOptions } =
-    useUsers();
+const {
+    users,
+    loading,
+    fetchUsers,
+    fetchUser,
+    createUser,
+    updateUser,
+    updateUserRole,
+    updateUserPermissions,
+    fetchOptions,
+} = useUsers();
 
 // ─── Pagination & Search ─────────────────────────────────────────────────────
 
@@ -299,6 +308,91 @@ async function handleSavePermissions(): Promise<void> {
     }
 }
 
+// ─── Create User Modal ────────────────────────────────────────────────────────
+
+const showCreateModal = ref(false);
+const createLoading = ref(false);
+const createErrors = ref<Record<string, string>>({});
+
+const createForm = ref({
+    name: '',
+    email: '',
+    password: '',
+    password_confirmation: '',
+    role: 'customer',
+    customer_id: null as number | null,
+});
+
+function resetCreateForm(): void {
+    createForm.value = {
+        name: '',
+        email: '',
+        password: '',
+        password_confirmation: '',
+        role: 'customer',
+        customer_id: null,
+    };
+
+    createErrors.value = {};
+}
+
+async function handleCreateUser(): Promise<void> {
+    createErrors.value = {};
+
+    if (!createForm.value.name.trim()) {
+        createErrors.value.name = 'Name is required';
+
+        return;
+    }
+
+    if (!createForm.value.email.trim()) {
+        createErrors.value.email = 'Email is required';
+
+        return;
+    }
+
+    if (!createForm.value.password) {
+        createErrors.value.password = 'Password is required';
+
+        return;
+    }
+
+    if (createForm.value.password !== createForm.value.password_confirmation) {
+        createErrors.value.password_confirmation = 'Passwords do not match';
+
+        return;
+    }
+
+    createLoading.value = true;
+
+    try {
+        await createUser({
+            name: createForm.value.name.trim(),
+            email: createForm.value.email.trim(),
+            password: createForm.value.password,
+            password_confirmation: createForm.value.password_confirmation,
+            role: createForm.value.role,
+            customer_id: createForm.value.customer_id,
+        });
+
+        showCreateModal.value = false;
+        resetCreateForm();
+        toast.success('User created successfully');
+    } catch (e: any) {
+        const errors = e?.response?.data?.errors;
+
+        if (errors) {
+            Object.keys(errors).forEach((field) => {
+                createErrors.value[field] = errors[field][0];
+            });
+        } else {
+            toast.error('Failed to create user');
+        }
+    } finally {
+        createLoading.value = false;
+    }
+}
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 onMounted(async () => {
@@ -316,6 +410,8 @@ onMounted(async () => {
         <!-- Header -->
         <UIPageHeader title="Users" description="Manage system users, roles, and permissions.">
             <template v-slot:actions>
+                <CButton preset="primary" icon="mdi:account-plus" @click="showCreateModal = true">New User</CButton>
+
                 <div class="relative">
                     <Icon icon="mdi:magnify" class="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
 
@@ -753,6 +849,194 @@ onMounted(async () => {
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </Teleport>
+
+    <!-- Create User Modal -->
+    <Teleport to="body">
+        <div
+            v-if="showCreateModal"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            @click.self="
+                () => {
+                    showCreateModal = false;
+                    resetCreateForm();
+                }
+            "
+        >
+            <div class="flex w-full max-w-lg flex-col rounded-xl bg-white shadow-xl">
+                <!-- Header -->
+                <div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-red-100">
+                            <Icon icon="mdi:account-plus" class="text-lg text-red-700" />
+                        </div>
+
+                        <h2 class="text-base font-semibold text-gray-900">Create User</h2>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+                        @click="
+                            () => {
+                                showCreateModal = false;
+                                resetCreateForm();
+                            }
+                        "
+                    >
+                        <Icon icon="mdi:close" class="text-lg" />
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <form class="overflow-y-auto p-6 max-h-[70vh]" @submit.prevent="handleCreateUser">
+                    <div class="space-y-4">
+                        <!-- Name -->
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-gray-700">
+                                Name
+                                <span class="text-red-500">*</span>
+                            </label>
+
+                            <CInput
+                                v-model="createForm.name"
+                                placeholder="Full name"
+                                :class="{ 'border-red-500': createErrors.name }"
+                            />
+
+                            <p v-if="createErrors.name" class="mt-1 text-xs text-red-600">
+                                {{ createErrors.name }}
+                            </p>
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-gray-700">
+                                Email
+                                <span class="text-red-500">*</span>
+                            </label>
+
+                            <CInput
+                                v-model="createForm.email"
+                                type="email"
+                                placeholder="user@example.com"
+                                :class="{ 'border-red-500': createErrors.email }"
+                            />
+
+                            <p v-if="createErrors.email" class="mt-1 text-xs text-red-600">
+                                {{ createErrors.email }}
+                            </p>
+                        </div>
+
+                        <!-- Password -->
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-gray-700">
+                                Password
+                                <span class="text-red-500">*</span>
+                            </label>
+
+                            <CInput
+                                v-model="createForm.password"
+                                type="password"
+                                placeholder="Min. 8 characters"
+                                :class="{ 'border-red-500': createErrors.password }"
+                            />
+
+                            <p v-if="createErrors.password" class="mt-1 text-xs text-red-600">
+                                {{ createErrors.password }}
+                            </p>
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-gray-700">
+                                Confirm Password
+                                <span class="text-red-500">*</span>
+                            </label>
+
+                            <CInput
+                                v-model="createForm.password_confirmation"
+                                type="password"
+                                placeholder="Repeat password"
+                                :class="{ 'border-red-500': createErrors.password_confirmation }"
+                            />
+
+                            <p v-if="createErrors.password_confirmation" class="mt-1 text-xs text-red-600">
+                                {{ createErrors.password_confirmation }}
+                            </p>
+                        </div>
+
+                        <!-- Role -->
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-700">
+                                Role
+                                <span class="text-red-500">*</span>
+                            </label>
+
+                            <div class="space-y-2">
+                                <label
+                                    v-for="role in options.roles"
+                                    :key="role"
+                                    class="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition"
+                                    :class="[
+                                        {
+                                            'border-red-500 bg-red-50': createForm.role === role,
+                                            'border-gray-200 hover:border-gray-300 hover:bg-gray-50':
+                                                createForm.role !== role,
+                                        },
+                                    ]"
+                                    @click="createForm.role = role"
+                                >
+                                    <div
+                                        :class="[
+                                            'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2',
+                                            {
+                                                'border-red-600 bg-red-600': createForm.role === role,
+                                                'border-gray-300': createForm.role !== role,
+                                            },
+                                        ]"
+                                    >
+                                        <div
+                                            v-if="createForm.role === role"
+                                            class="h-1.5 w-1.5 rounded-full bg-white"
+                                        ></div>
+                                    </div>
+
+                                    <span
+                                        :class="[
+                                            'inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                                            getRoleColor(role),
+                                        ]"
+                                    >
+                                        {{ getRoleLabel(role) }}
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="mt-6 flex justify-end gap-2">
+                        <CButton
+                            type="button"
+                            preset="outlined-black"
+                            @click="
+                                () => {
+                                    showCreateModal = false;
+                                    resetCreateForm();
+                                }
+                            "
+                        >
+                            Cancel
+                        </CButton>
+
+                        <CButton type="submit" preset="primary" :disabled="createLoading" icon="mdi:account-plus">
+                            {{ createLoading ? 'Creating...' : 'Create User' }}
+                        </CButton>
+                    </div>
+                </form>
             </div>
         </div>
     </Teleport>
