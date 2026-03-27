@@ -128,30 +128,65 @@
 
                     <div>
                         <h3 class="font-medium text-gray-900 mb-2">2. Fill in the Data</h3>
-                        <p>Complete the file with your data. Required fields:</p>
+                        <p>Complete the file with your data. All required fields must be present:</p>
 
-                        <ul class="list-disc list-inside mt-2 space-y-1">
-                            <li>
-                                <strong>reference_date</strong>
-                                : Reference date (YYYY-MM-DD)
-                            </li>
-                            <li>
-                                <strong>hours</strong>
-                                : Hours (positive = credit, negative = debit)
-                            </li>
-                            <li>
-                                <strong>title</strong>
-                                : Record title
-                            </li>
-                        </ul>
+                        <div class="mt-3 space-y-3">
+                            <div>
+                                <p class="font-medium text-gray-800 mb-2">Required Fields:</p>
+                                <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                    <li>
+                                        <strong>reference_date</strong>
+                                        : Date in YYYY-MM-DD format
+                                    </li>
+                                    <li>
+                                        <strong>title</strong>
+                                        : Record title (max 255 characters)
+                                    </li>
+                                </ul>
+                            </div>
 
-                        <p class="mt-2">
-                            Optional fields:
-                            <strong>description</strong>
-                            ,
-                            <strong>tags</strong>
-                            (separated by comma)
-                        </p>
+                            <div>
+                                <p class="font-medium text-gray-800 mb-2">Time Entry (choose ONE option):</p>
+                                <div class="space-y-2 text-gray-600 ml-4 border-l-2 border-gray-200 pl-3">
+                                    <p>
+                                        <strong>Option A - Direct Hours:</strong>
+                                        <strong>hours</strong>
+                                        (numeric value, positive = credit, negative = debit)
+                                    </p>
+                                    <p class="text-sm italic">Example: 5.5 or -2.25</p>
+                                </div>
+                                <div class="space-y-2 text-gray-600 ml-4 border-l-2 border-gray-200 pl-3 mt-2">
+                                    <p>
+                                        <strong>Option B - Time Range:</strong>
+                                        <strong>start_time</strong>
+                                        and
+                                        <strong>end_time</strong>
+                                        (format: YYYY-MM-DD HH:MM:SS). Hours will be calculated automatically.
+                                    </p>
+                                    <p class="text-sm italic">
+                                        Example: start_time: 2026-03-27 08:00:00, end_time: 2026-03-27 10:30:00
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <p class="font-medium text-gray-800 mb-2">Optional Fields:</p>
+                                <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                    <li>
+                                        <strong>input_type</strong>
+                                        : Type of entry (debit, credit, or adjustment; defaults to debit)
+                                    </li>
+                                    <li>
+                                        <strong>description</strong>
+                                        : Additional details about the entry
+                                    </li>
+                                    <li>
+                                        <strong>tags</strong>
+                                        : Categories (comma-separated values)
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
 
                     <div>
