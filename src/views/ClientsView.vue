@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed, watch } from 'vue';
 import { Icon } from '@iconify/vue';
 import { useClients } from '@/composables/useClients';
 import { useClientUsers } from '@/composables/useClientUsers';
@@ -24,17 +24,45 @@ const {
 const { searchUsers } = useUsers();
 const { canManageClients } = usePermissions();
 
-// ─── List State ───────────────────────────────────────────────────────────────
+// ─── Filters ────────────────────────────────────────────────────────────────
 
-const searchQuery = ref('');
+const showFilters = ref(true);
+
+const filters = ref({
+    search: '',
+});
+
+// ─── Debounced filter watch ────────────────────────────────────────────────
+
+let filterDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+watch(
+    filters,
+    () => {
+        if (filterDebounceTimer !== null) {
+            clearTimeout(filterDebounceTimer);
+        }
+
+        filterDebounceTimer = setTimeout(async () => {
+            await fetchClients(1, filters.value.search);
+        }, 400);
+    },
+    { deep: true }
+);
+
+const activeFiltersCount = computed(() => {
+    let count = 0;
+
+    if (filters.value.search) count++;
+
+    return count;
+});
+
+// ─── List State ────────────────────────────────────────────────────────────
 
 onMounted(() => {
     fetchClients();
 });
-
-function handleSearch(): void {
-    fetchClients(1, searchQuery.value);
-}
 
 function goToClient(id: number): void {
     router.push({ name: 'client-detail', params: { id } });
@@ -262,36 +290,60 @@ async function handleRemoveClientUser(userId: number): Promise<void> {
 
 <template>
     <div class="container mx-auto px-4 py-8">
-        <!-- Header -->
-        <UIPageHeader title="Clients" description="Manage your clients.">
-            <template #actions>
-                <CButton v-if="canManageClients" preset="primary-md" icon="mdi:plus" @click="showCreateModal = true">
+        <!-- Page header with filter toggle -->
+        <div class="mb-6 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Clients</h1>
+                <p class="text-sm text-gray-500 mt-1">Manage your clients.</p>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button
+                    @click="showFilters = !showFilters"
+                    :class="[
+                        'inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors',
+                        {
+                            'bg-red-50 border-red-200 text-red-700': activeFiltersCount > 0,
+                            'bg-white border-gray-300 text-gray-700 hover:bg-gray-50': activeFiltersCount === 0,
+                        },
+                    ]"
+                >
+                    <Icon icon="mdi:filter-outline" class="w-4 h-4" />
+                    Filters
+                    <span
+                        v-if="activeFiltersCount > 0"
+                        class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-xs font-bold"
+                    >
+                        {{ activeFiltersCount }}
+                    </span>
+                </button>
+
+                <CButton v-if="canManageClients" preset="primary" icon="mdi:plus" @click="showCreateModal = true">
                     New Client
                 </CButton>
-            </template>
-        </UIPageHeader>
-
-        <!-- Search bar -->
-        <div class="mb-5 flex gap-2">
-            <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Search clients..."
-                class="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors"
-                @keyup.enter="handleSearch"
-            />
-            <CButton preset="lightgray-md" @click="handleSearch">
-                <Icon icon="heroicons:magnifying-glass" class="w-4 h-4" />
-            </CButton>
+            </div>
         </div>
 
         <!-- Error -->
-        <div
-            v-if="error"
-            class="mb-4 flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 p-3.5 text-sm text-red-700"
-        >
-            <Icon icon="heroicons:exclamation-circle" class="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <div v-if="error" class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
             {{ error }}
+        </div>
+
+        <!-- Filter panel -->
+        <div v-if="showFilters" class="mb-5 rounded-xl border border-gray-200 bg-white shadow-sm p-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Search -->
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Search</label>
+                    <input
+                        v-model="filters.search"
+                        type="text"
+                        placeholder="Search by name or notes..."
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
+                    <p class="mt-1 text-xs text-gray-500">Searches across client name and notes</p>
+                </div>
+            </div>
         </div>
 
         <!-- Loading -->
