@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useTimerStore } from '@/stores/timer';
 import { api } from '@/services/api';
+import { useClients } from '@/composables/useClients';
+import { useWallets } from '@/composables/useWallets';
 import type { WalletWithBalance, Tag } from '@/types';
+import type { TypeaheadOption } from '@/components/CTypeahead.vue';
 import TagInput from '@/components/TagInput.vue';
 
 const props = defineProps<{
@@ -15,11 +18,15 @@ const emit = defineEmits<{
 }>();
 
 const timerStore = useTimerStore();
+const { clients, fetchClients } = useClients();
+const { wallets: walletsComposable, fetchWallets } = useWallets();
 
 const wallets = ref<WalletWithBalance[]>([]);
 const tags = ref<Tag[]>([]);
 const loading = ref(false);
 const loadingWallets = ref(false);
+
+const selectedClientId = ref<number | null>(null);
 
 const form = ref({
     wallet_id: null as number | null,
@@ -41,6 +48,40 @@ const selectedWallet = computed(() => {
 const canSubmit = computed(() => {
     return form.value.wallet_id !== null && !loading.value;
 });
+
+const clientOptions = computed<TypeaheadOption[]>(() => {
+    return clients.value.map((client) => ({
+        value: client.id,
+        label: `${client.name}${client.notes ? ` - ${client.notes}` : ''}`,
+    }));
+});
+
+const filteredWallets = computed(() => {
+    if (!selectedClientId.value) {
+        return wallets.value;
+    }
+
+    return wallets.value.filter((wallet) => wallet.client_id === selectedClientId.value);
+});
+
+const walletOptions = computed<TypeaheadOption[]>(() => {
+    return filteredWallets.value.map((w) => ({
+        value: w.id,
+        label: w.name,
+    }));
+});
+
+async function refreshClientOptions({ searchTerm }: { searchTerm: string }): Promise<TypeaheadOption[]> {
+    await fetchClients(1, searchTerm || '');
+
+    return clientOptions.value;
+}
+
+async function refreshWalletOptions({ searchTerm }: { searchTerm: string }): Promise<TypeaheadOption[]> {
+    await fetchWallets(selectedClientId.value || undefined, 1);
+
+    return walletOptions.value;
+}
 
 async function loadWallets(): Promise<void> {
     loadingWallets.value = true;
@@ -109,9 +150,15 @@ function handleClose(): void {
     }
 }
 
-onMounted(() => {
+onMounted(async () => {
     loadWallets();
     loadTags();
+    await Promise.all([fetchClients(1, ''), fetchWallets()]);
+});
+
+watch(selectedClientId, () => {
+    form.value.wallet_id = null;
+    void refreshWalletOptions({ searchTerm: '' });
 });
 </script>
 
@@ -139,33 +186,30 @@ onMounted(() => {
 
             <!-- Body -->
             <form class="p-6 space-y-4" @submit.prevent="handleSubmit">
+                <!-- Client Selection -->
+                <CTypeahead
+                    v-model="selectedClientId"
+                    label="Client"
+                    placeholder="Search by name or notes"
+                    clearable
+                    :initial-options="clientOptions"
+                    :refresh-options="refreshClientOptions"
+                    empty-text="No clients found"
+                    loading-text="Loading clients..."
+                />
+
                 <!-- Wallet Selection -->
-                <div>
-                    <label for="wallet" class="block text-sm font-medium text-gray-700 mb-1">
-                        Wallet
-                        <span class="text-red-600">*</span>
-                    </label>
-                    <select
-                        id="wallet"
-                        v-model="form.wallet_id"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent"
-                        :disabled="loadingWallets || loading"
-                        required
-                    >
-                        <option :value="null">
-                            {{ loadingWallets ? 'Loading...' : 'Select a wallet' }}
-                        </option>
-                        <option
-                            v-if="Object.keys(wallets || {}).length"
-                            v-for="wallet in wallets"
-                            :key="wallet?.id"
-                            :value="wallet?.id"
-                        >
-                            {{ wallet?.client?.name }} - {{ wallet?.name }}
-                            <template v-if="wallet?.balance !== undefined">({{ wallet?.balance }}h)</template>
-                        </option>
-                    </select>
-                </div>
+                <CTypeahead
+                    v-model="form.wallet_id"
+                    label="Wallet"
+                    placeholder="Choose wallet"
+                    clearable
+                    :initial-options="walletOptions"
+                    :refresh-options="refreshWalletOptions"
+                    empty-text="No wallets found"
+                    loading-text="Loading wallets..."
+                    required
+                />
 
                 <!-- Title -->
                 <div>
