@@ -136,6 +136,50 @@ function closeEntryModal(): void {
     entryFormMinutes.value = 0;
 }
 
+function isManualEntryQueryActive(value: unknown): boolean {
+    if (value === undefined || value === null) {
+        return false;
+    }
+
+    if (Array.isArray(value)) {
+        return value.some((item) => isManualEntryQueryActive(item));
+    }
+
+    const normalized = String(value).toLowerCase().trim();
+
+    return ['1', 'true', 'manual'].includes(normalized);
+}
+
+function clearManualEntryQuery(): void {
+    if (!route.query.manual_entry) {
+        return;
+    }
+
+    const updatedQuery = { ...route.query };
+    delete updatedQuery.manual_entry;
+
+    void router.replace({ query: updatedQuery });
+}
+
+watch(
+    () => route.query.manual_entry,
+    (value) => {
+        if (!isManualEntryQueryActive(value)) {
+            return;
+        }
+
+        if (!canAddEntry.value) {
+            toast.error('Você não tem permissão para adicionar entradas manualmente.');
+            clearManualEntryQuery();
+            return;
+        }
+
+        openEntryModal();
+        clearManualEntryQuery();
+    },
+    { immediate: true }
+);
+
 function formatBalance(balance: string): string {
     const num = parseFloat(balance);
 
@@ -190,6 +234,76 @@ function handleCreditPurchaseSuccess(): void {
     fetchWallet(walletId);
     fetchWalletEntries(walletId);
     toast.success('Credit purchase created successfully!');
+}
+
+function onValueFormHours(event: Event) {
+    if (!event?.target) {
+        return;
+    }
+
+    let max = Number((event?.target as any)?.getAttribute('max')) || null;
+    /** @ts-ignore */
+    let value = (event?.target || null as any)?.value || 0;
+
+    console.log('onValueFormHours', value);
+
+    value = typeof value === 'string' ? value.replace(/\D/g, '') : '';
+
+    if (!value || value === '') {
+        console.log('onValueFormHours if', value);
+        entryFormHours.value = 0;
+        /** @ts-ignore */
+        event.target.value = entryFormHours.value;
+        return;
+    }
+
+    value = parseInt(value, 10);
+
+    if (!max || max <= 0) {
+        entryFormHours.value = value;
+        /** @ts-ignore */
+        event.target.value = entryFormHours.value;
+        return;
+    }
+
+    entryFormHours.value = value >= max ? max : value;
+    /** @ts-ignore */
+    event.target.value = entryFormHours.value;
+}
+
+function onValueFormMinutes(event: Event) {
+    if (!event?.target) {
+        return;
+    }
+
+    let max = Number((event?.target as any)?.getAttribute('max')) || null;
+    /** @ts-ignore */
+    let value = (event?.target || null as any)?.value || 0;
+
+    console.log('onValueFormMinutes', value);
+
+    value = typeof value === 'string' ? value.replace(/\D/g, '') : '';
+
+    if (!value || value === '') {
+        console.log('onValueFormMinutes if', value);
+        entryFormMinutes.value = 0;
+        /** @ts-ignore */
+        event.target.value = entryFormMinutes.value;
+        return;
+    }
+
+    value = parseInt(value, 10);
+
+    if (!max || max <= 0) {
+        entryFormMinutes.value = value;
+        /** @ts-ignore */
+        event.target.value = entryFormMinutes.value;
+        return;
+    }
+
+    entryFormMinutes.value = value >= max ? max : value;
+    /** @ts-ignore */
+    event.target.value = entryFormMinutes.value;
 }
 </script>
 
@@ -307,9 +421,7 @@ function handleCreditPurchaseSuccess(): void {
 
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="text-xl font-semibold text-gray-900">Ledger Entries</h2>
-                <CButton v-if="canAddEntry" @click="openEntryModal" icon="hugeicons:add-circle">
-                    Add Entry
-                </CButton>
+                <CButton v-if="canAddEntry" @click="openEntryModal" icon="hugeicons:add-circle">Add Entry</CButton>
             </div>
 
             <div class="overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm">
@@ -404,10 +516,10 @@ function handleCreditPurchaseSuccess(): void {
 
         <!-- Add Entry Modal -->
         <div v-if="showEntryModal" class="fixed inset-0 flex items-center justify-center bg-black/50">
-            <div class="w-full max-w-md rounded-lg bg-white p-4">
+            <div class="w-full max-w-md rounded-lg bg-white p-2">
                 <h2 class="mb-4 text-lg font-semibold">Add Ledger Entry</h2>
 
-                <div class="max-h-[60vh] overflow-y-auto">
+                <div class="max-h-[60vh] overflow-y-auto px-2 rounded">
                     <div class="mb-4">
                         <label class="mb-1 block text-sm font-medium text-gray-700">Type</label>
                         <select
@@ -426,7 +538,10 @@ function handleCreditPurchaseSuccess(): void {
                             <div class="flex-1">
                                 <label class="mb-1 block text-xs text-gray-600">Hours</label>
                                 <input
-                                    v-model.number="entryFormHours"
+                                    :value="entryFormHours"
+                                    @blur="onValueFormHours"
+                                    @keypress="onValueFormHours"
+                                    @input="onValueFormHours"
                                     type="number"
                                     min="0"
                                     class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
@@ -436,10 +551,14 @@ function handleCreditPurchaseSuccess(): void {
                             <div class="flex-1">
                                 <label class="mb-1 block text-xs text-gray-600">Minutes</label>
                                 <input
-                                    v-model.number="entryFormMinutes"
+                                    :value="entryFormMinutes"
+                                    @blur="onValueFormMinutes"
+                                    @keypress="onValueFormMinutes"
+                                    @input="onValueFormMinutes"
                                     type="number"
                                     min="0"
                                     max="59"
+                                    step="5"
                                     class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                                     placeholder="0"
                                 />
@@ -474,7 +593,7 @@ function handleCreditPurchaseSuccess(): void {
                         />
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-4 overflow-visible">
                         <label class="mb-1 block text-sm font-medium text-gray-700">Tags</label>
                         <TagInput v-model="entryForm.tags" placeholder="Add tags..." :allow-create="true" />
                     </div>

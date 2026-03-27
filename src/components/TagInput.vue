@@ -28,6 +28,7 @@ const inputValue = ref('');
 const showDropdown = ref(false);
 const isCreating = ref(false);
 const inputRef = ref<HTMLInputElement | null>(null);
+const dropdownContainer = ref<HTMLDivElement | null>(null);
 
 const allKnownTags = computed((): Tag[] => {
     const map = new Map<number, Tag>();
@@ -183,8 +184,24 @@ async function handleKeydown(event: KeyboardEvent): Promise<void> {
     }
 }
 
+function calculateInputBounding(): void {
+    const input = inputRef.value;
+    const dropdown = dropdownContainer.value;
+
+    if (!input || !dropdown) {
+        return;
+    }
+
+    const rect = input.getBoundingClientRect();
+
+    dropdown.style.top = `${rect.bottom}px`
+    dropdown.style.left = `${rect.left}px`
+    dropdown.style.width = `${rect.width}px`
+}
+
 function handleFocus(): void {
     showDropdown.value = true;
+    calculateInputBounding();
 }
 
 function handleBlur(): void {
@@ -195,6 +212,7 @@ function handleBlur(): void {
 
 function focusInput(): void {
     inputRef.value?.focus();
+    calculateInputBounding();
 }
 
 onMounted(async () => {
@@ -212,12 +230,12 @@ onMounted(async () => {
             <!-- Selected tags row (horizontal scroll) -->
             <div
                 v-if="selectedTagObjects.length > 0"
-                class="flex gap-1.5 overflow-x-auto px-3 pt-2.5 pb-1 scrollbar-thin"
+                class="flex gap-1.5 overflow-x-auto px-3 pt-2.5 pb-2.5 scrollbar-thin border-b border-red-400"
             >
                 <span
                     v-for="tag in selectedTagObjects"
                     :key="tag.id"
-                    class="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700"
+                    class="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-100 px-2.5 py-2 text-xs font-medium text-red-700"
                 >
                     {{ tag.name }}
                     <button
@@ -257,9 +275,11 @@ onMounted(async () => {
         </div>
 
         <!-- Dropdown -->
+        <Transition name="scale-fade">
         <div
-            v-if="showDropdown && (filteredTags.length > 0 || (allowCreate && inputValue.trim() && !exactMatchExists))"
-            class="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+            v-show="showDropdown && (filteredTags.length > 0 || (allowCreate && inputValue.trim() && !exactMatchExists))"
+            ref="dropdownContainer"
+            class="fixed z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
         >
             <!-- Heading -->
             <div class="border-b border-gray-100 px-3 py-1.5">
@@ -300,6 +320,7 @@ onMounted(async () => {
                 </button>
             </div>
         </div>
+        </Transition>
 
         <!-- Helper text -->
         <p v-if="allowCreate" class="mt-1 text-xs text-gray-400">
@@ -313,3 +334,28 @@ onMounted(async () => {
         </p>
     </div>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 150ms ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+.scale-fade-enter-active,
+.scale-fade-leave-active {
+    transition:
+        opacity 150ms ease,
+        transform 150ms ease;
+}
+
+.scale-fade-enter-from,
+.scale-fade-leave-to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+}
+</style>

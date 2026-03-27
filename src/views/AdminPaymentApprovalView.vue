@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Icon } from '@iconify/vue';
-import type { CreditPurchase, CreditPurchasePayment } from '@/types';
+import type { Client, CreditPurchase, CreditPurchasePayment } from '@/types';
 import { useCreditPurchases } from '@/composables/useCreditPurchases';
+import { useClients } from '@/composables/useClients';
 import { useToast } from '@/composables/useToast';
 
 type TypeaheadOption = {
@@ -12,6 +13,7 @@ type TypeaheadOption = {
 
 const { purchases, loading, error, fetchPurchases, getReceiptUrl } = useCreditPurchases();
 const toast = useToast();
+const { searchClients } = useClients();
 
 type PendingPayment = CreditPurchasePayment & {
     creditPurchase: CreditPurchase;
@@ -28,13 +30,13 @@ const offlinePaymentMethodKeys = new Set<string>(['pix_offline', 'bank_transfer'
 // Filter pending payments
 const pendingPayments = ref<PendingPayment[]>([]);
 
+const clientOptions = ref<TypeaheadOption[]>([]);
+const walletOptions = ref<TypeaheadOption[]>([]);
+const paymentMethodOptions = ref<TypeaheadOption[]>([]);
+
 const selectedClientId = ref<number | null>(null);
 const selectedWalletId = ref<number | null>(null);
 const selectedPaymentMethodKey = ref<string | null>(null);
-
-onMounted(async () => {
-    await loadPendingPayments();
-});
 
 function isOfflinePaymentMethod(method: CreditPurchasePayment['payment_method']): boolean {
     if (!method) {
@@ -56,8 +58,10 @@ function isOfflinePaymentMethod(method: CreditPurchasePayment['payment_method'])
     return offlinePaymentMethodKeys.has(method.key);
 }
 
-async function loadPendingPayments(): Promise<void> {
-    await fetchPurchases();
+async function loadPendingPayments(filters: Record<string, unknown> = {}): Promise<void> {
+    const params: Record<string, unknown> = { ...filters };
+
+    await fetchPurchases(params);
 
     // Extract pending offline payments
     const pending: PendingPayment[] = [];
@@ -76,6 +80,12 @@ async function loadPendingPayments(): Promise<void> {
     });
 
     pendingPayments.value = pending;
+
+    await Promise.all([
+        refreshClientOptions(),
+        refreshWalletOptions(selectedClientId.value),
+        refreshPaymentMethodOptions(),
+    ]);
 }
 
 function getPaymentMethodKey(method: CreditPurchasePayment['payment_method']): string | null {
@@ -165,6 +175,10 @@ async function ensurePurchasesLoaded(): Promise<void> {
     await waitForPurchases();
 }
 
+function formatClientLabel(client: Client): string {
+    return client.notes ? `${client.name} — ${client.notes}` : client.name;
+}
+
 function buildClientOptions(): TypeaheadOption[] {
     const map = new Map<number, string>();
 
@@ -175,7 +189,7 @@ function buildClientOptions(): TypeaheadOption[] {
             return;
         }
 
-        map.set(client.id, client.name);
+        map.set(client.id, formatClientLabel(client));
     });
 
     return Array.from(map.entries()).map(([id, name]) => {
@@ -186,13 +200,17 @@ function buildClientOptions(): TypeaheadOption[] {
     });
 }
 
-function buildWalletOptions(): TypeaheadOption[] {
+function buildWalletOptions(clientId: number | null = null): TypeaheadOption[] {
     const map = new Map<number, string>();
 
     purchases.value.forEach((purchase) => {
         const wallet = purchase.wallet;
 
         if (!wallet || map.has(wallet.id)) {
+            return;
+        }
+
+        if (clientId && wallet.client?.id !== clientId) {
             return;
         }
 
@@ -234,23 +252,58 @@ function buildPaymentMethodOptions(): TypeaheadOption[] {
         };
     });
 }
-
-async function loadClientOptions(): Promise<TypeaheadOption[]> {
+async function refreshClientOptions(): Promise<void> {
     await ensurePurchasesLoaded();
-
-    return buildClientOptions();
+    clientOptions.value = buildClientOptions();
 }
 
-async function loadWalletOptions(): Promise<TypeaheadOption[]> {
+async function refreshWalletOptions(clientId: number | null = null): Promise<void> {
     await ensurePurchasesLoaded();
-
-    return buildWalletOptions();
+    walletOptions.value = buildWalletOptions(clientId);
 }
 
-async function loadPaymentMethodOptions(): Promise<TypeaheadOption[]> {
+async function refreshPaymentMethodOptions(): Promise<void> {
+    await ensurePurchasesLoaded();
+    paymentMethodOptions.value = buildPaymentMethodOptions();
+}
+
+async function refreshClientSearch({
+    searchTerm,
+}: {
+    searchTerm: string;
+}): Promise<TypeaheadOption[]> {
     await ensurePurchasesLoaded();
 
-    return buildPaymentMethodOptions();
+    const normalized = (searchTerm ?? '').trim().toLowerCase();
+    const baseMatches = normalized
+        ? clientOptions.value.filter((option) => option.label.toLowerCase().includes(normalized))
+        : clientOptions.value.slice();
+
+    if (!normalized) {
+        return baseMatches;
+    }
+
+    try {
+        const results = await searchClients(searchTerm);
+        const options = results.map((client) => {
+            return {
+                value: client.id,
+                label: formatClientLabel(client),
+            };
+        });
+
+        const existingValues = new Set(baseMatches.map((option) => option.value));
+
+        options.forEach((option) => {
+            if (!existingValues.has(option.value)) {
+                baseMatches.push(option);
+            }
+        });
+    } catch {
+        // Ignore and fall back to cached matches
+    }
+
+    return baseMatches;
 }
 
 function resetFilters(): void {
@@ -315,7 +368,7 @@ async function handleApprovalSubmit(): Promise<void> {
         approvalAction.value = null;
 
         // Reload pending payments
-        await loadPendingPayments();
+        await loadPendingPayments(backendFilters.value);
     } catch (err) {
         toast.error(err instanceof Error ? err.message : 'Failed to process approval');
     } finally {
@@ -364,6 +417,40 @@ function getPaymentBadgeColor(status: string): string {
 
     return colors[status] || 'bg-gray-100 text-gray-800';
 }
+
+const backendFilters = computed<Record<string, unknown>>(() => {
+    const params: Record<string, unknown> = {};
+
+    if (selectedClientId.value) {
+        params.client_id = selectedClientId.value;
+    }
+
+    if (selectedWalletId.value) {
+        params.wallet_id = selectedWalletId.value;
+    }
+
+    if (selectedPaymentMethodKey.value) {
+        params.payment_method = selectedPaymentMethodKey.value;
+    }
+
+    return params;
+});
+
+watch(
+    backendFilters,
+    (filters) => {
+        loadPendingPayments(filters);
+    },
+    { immediate: true }
+);
+
+watch(selectedClientId, (clientId, oldClientId) => {
+    if (clientId !== oldClientId) {
+        selectedWalletId.value = null;
+    }
+
+    refreshWalletOptions(clientId ?? null);
+});
 </script>
 
 <template>
@@ -404,7 +491,8 @@ function getPaymentBadgeColor(status: string): string {
                     clearable
                     loading-text="Loading clients..."
                     empty-text="No clients found"
-                    :initial-options="loadClientOptions"
+                    :initial-options="clientOptions"
+                    :refresh-options="refreshClientSearch"
                 />
 
                 <CTypeahead
@@ -414,7 +502,7 @@ function getPaymentBadgeColor(status: string): string {
                     clearable
                     loading-text="Loading wallets..."
                     empty-text="No wallets found"
-                    :initial-options="loadWalletOptions"
+                    :initial-options="walletOptions"
                 />
 
                 <CTypeahead
@@ -424,7 +512,7 @@ function getPaymentBadgeColor(status: string): string {
                     clearable
                     loading-text="Loading methods..."
                     empty-text="No methods found"
-                    :initial-options="loadPaymentMethodOptions"
+                    :initial-options="paymentMethodOptions"
                 />
             </div>
         </div>

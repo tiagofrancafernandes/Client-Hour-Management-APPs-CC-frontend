@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, onUnmounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useTimerStore } from '@/stores/timer';
 import { useAuthStore } from '@/stores/auth';
 import { useConfirm } from '@/composables/useConfirm';
 import TimerStartModal from '@/components/TimerStartModal.vue';
 import TimerConfirmModal from '@/components/TimerConfirmModal.vue';
-import type { Timer } from '@/types';
+import { api } from '@/services/api';
+import type { TypeaheadOption } from '@/components/CTypeahead.vue';
+import type { Client, PaginatedResponse, Timer, WalletWithBalance } from '@/types';
 
 const route = useRoute();
+const router = useRouter();
 const timerStore = useTimerStore();
 const authStore = useAuthStore();
 const { confirm } = useConfirm();
@@ -19,6 +22,11 @@ const showConfirmModal = ref(false);
 const selectedTimer = ref<Timer | null>(null);
 const filterStatus = ref<string>('all');
 const listAll = ref(false);
+const showManualEntryModal = ref(false);
+const manualClientOptions = ref<TypeaheadOption[]>([]);
+const manualWalletOptions = ref<TypeaheadOption[]>([]);
+const manualSelectedClientId = ref<number | null>(null);
+const manualSelectedWalletId = ref<number | null>(null);
 
 const canCreateTimer = computed(() => authStore.can('timer.create'));
 const canConfirmTimer = computed(() => authStore.can('timer.confirm'));
@@ -154,9 +162,114 @@ async function loadTimers(): Promise<void> {
     await timerStore.fetchTimers(undefined, listAll.value);
 }
 
+const MANUAL_ENTRY_PAGE_SIZE = 15;
+
 watch(listAll, () => {
     loadTimers();
 });
+
+watch(manualSelectedClientId, () => {
+    manualSelectedWalletId.value = null;
+    refreshManualWalletOptions({ searchTerm: '' });
+});
+
+function formatManualClientLabel(client: Client): string {
+    return client.notes ? `${client.name} — ${client.notes}` : client.name;
+}
+
+function formatManualWalletLabel(wallet: WalletWithBalance): string {
+    const clientName = wallet.client?.name || 'Unknown client';
+
+    return `${clientName} — ${wallet.name}`;
+}
+
+async function refreshManualClientOptions({ searchTerm }: { searchTerm: string }): Promise<TypeaheadOption[]> {
+    const filters: Record<string, string> = {
+        per_page: String(MANUAL_ENTRY_PAGE_SIZE),
+    };
+
+    const trimmed = (searchTerm ?? '').trim();
+
+    if (trimmed) {
+        filters.search = trimmed;
+    }
+
+    try {
+        const response = await api.get<PaginatedResponse<Client>>('/clients', { params: filters });
+        const options = response.data.map((client) => ({
+            value: client.id,
+            label: formatManualClientLabel(client),
+        }));
+
+        manualClientOptions.value = options;
+
+        return options;
+    } catch (error) {
+        console.error('Failed to load manual entry clients', error);
+
+        return manualClientOptions.value;
+    }
+}
+
+async function refreshManualWalletOptions({ searchTerm }: { searchTerm: string }): Promise<TypeaheadOption[]> {
+    const filters: Record<string, string> = {
+        per_page: String(MANUAL_ENTRY_PAGE_SIZE),
+    };
+
+    const trimmed = (searchTerm ?? '').trim();
+
+    if (trimmed) {
+        filters.search = trimmed;
+    }
+
+    if (manualSelectedClientId.value) {
+        filters.client_id = String(manualSelectedClientId.value);
+    }
+
+    try {
+        const response = await api.get<PaginatedResponse<WalletWithBalance>>('/wallets', { params: filters });
+        const options = response.data.map((wallet) => ({
+            value: wallet.id,
+            label: formatManualWalletLabel(wallet),
+        }));
+
+        manualWalletOptions.value = options;
+
+        return options;
+    } catch (error) {
+        console.error('Failed to load manual entry wallets', error);
+
+        return manualWalletOptions.value;
+    }
+}
+
+function openManualEntryModal(): void {
+    manualSelectedClientId.value = null;
+    manualSelectedWalletId.value = null;
+    showManualEntryModal.value = true;
+    void refreshManualClientOptions({ searchTerm: '' });
+    void refreshManualWalletOptions({ searchTerm: '' });
+}
+
+function closeManualEntryModal(): void {
+    showManualEntryModal.value = false;
+}
+
+function handleManualEntryConfirm(): void {
+    if (!manualSelectedWalletId.value) {
+        return;
+    }
+
+    showManualEntryModal.value = false;
+    manualSelectedClientId.value = null;
+    manualSelectedWalletId.value = null;
+
+    void router.push({
+        name: 'wallet-detail',
+        params: { id: manualSelectedWalletId.value },
+        query: { manual_entry: '1' },
+    });
+}
 
 function formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -241,6 +354,14 @@ onUnmounted(() => {
                         @click="showStartModal = true"
                     >
                         Start Timer
+                    </CButton>
+                    <CButton
+                        v-if="canCreateTimer"
+                        preset="gray"
+                        icon="hugeicons:add-circle"
+                        @click="openManualEntryModal"
+                    >
+                        Entrada manual
                     </CButton>
                 </div>
             </template>
@@ -458,6 +579,66 @@ onUnmounted(() => {
                             <span v-else class="text-xs text-gray-400 italic">View only</span>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div
+            v-if="showManualEntryModal"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6"
+            @click.self="closeManualEntryModal"
+        >
+            <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl" @click.stop>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Entrada manual</p>
+                        <h3 class="text-xl font-semibold text-gray-900">Selecionar carteira</h3>
+                    </div>
+                    <button type="button" class="text-gray-400 hover:text-gray-700" @click="closeManualEntryModal">
+                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor">
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 6l8 8m0-8l-8 8"
+                            />
+                        </svg>
+                    </button>
+                </div>
+
+                <p class="mt-2 text-sm text-gray-500">
+                    Use o cliente para reduzir as opções de carteiras antes de continuar.
+                </p>
+
+                <div class="mt-6 space-y-4">
+                    <CTypeahead
+                        v-model="manualSelectedClientId"
+                        label="Cliente"
+                        placeholder="Buscar por nome ou nota"
+                        clearable
+                        :initial-options="manualClientOptions"
+                        :refresh-options="refreshManualClientOptions"
+                        empty-text="Nenhum cliente encontrado"
+                        loading-text="Buscando clientes..."
+                    />
+
+                    <CTypeahead
+                        v-model="manualSelectedWalletId"
+                        label="Carteira"
+                        placeholder="Escolher carteira"
+                        clearable
+                        :initial-options="manualWalletOptions"
+                        :refresh-options="refreshManualWalletOptions"
+                        empty-text="Nenhuma carteira encontrada"
+                        loading-text="Buscando carteiras..."
+                    />
+                </div>
+
+                <div class="mt-6 flex justify-end gap-3">
+                    <CButton preset="gray" @click="closeManualEntryModal">Cancelar</CButton>
+                    <CButton preset="primary" :disabled="!manualSelectedWalletId" @click="handleManualEntryConfirm">
+                        Continuar
+                    </CButton>
                 </div>
             </div>
         </div>
