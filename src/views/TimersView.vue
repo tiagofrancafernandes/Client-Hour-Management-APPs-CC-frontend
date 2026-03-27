@@ -9,6 +9,7 @@ import { useWallets } from '@/composables/useWallets';
 import { useUsers } from '@/composables/useUsers';
 import TimerStartModal from '@/components/TimerStartModal.vue';
 import TimerConfirmModal from '@/components/TimerConfirmModal.vue';
+import TimerEntriesModal from '@/components/TimerEntriesModal.vue';
 import ManualEntryModal from '@/components/ManualEntryModal.vue';
 import { api } from '@/services/api';
 import type { Timer, TypeaheadOption } from '@/types';
@@ -25,6 +26,7 @@ const { users, fetchUsers, searchUsers } = useUsers();
 const callAction = ref<any>(null);
 const showStartModal = ref(false);
 const showConfirmModal = ref(false);
+const showEntriesModal = ref(false);
 const selectedTimer = ref<Timer | null>(null);
 const filterStatus = ref<string>('all');
 const listAll = ref(false);
@@ -159,6 +161,11 @@ function getStatusLabel(status: string): string {
 function handleConfirmTimer(timer: Timer): void {
     selectedTimer.value = timer;
     showConfirmModal.value = true;
+}
+
+function handleViewEntries(timer: Timer): void {
+    selectedTimer.value = timer;
+    showEntriesModal.value = true;
 }
 
 async function handlePauseTimer(timer: Timer): Promise<void> {
@@ -584,6 +591,11 @@ onUnmounted(() => {
 
                         <!-- Actions -->
                         <div class="flex flex-col gap-2 ml-4">
+                            <!-- View Entries button (always visible) -->
+                            <CButton preset="outlined-black" size="sm" @click="handleViewEntries(timer)" class="whitespace-nowrap">
+                                View Entries
+                            </CButton>
+
                             <!-- Own timer actions only -->
                             <template v-if="isOwnTimer(timer)">
                                 <!-- Running timer actions -->
@@ -639,5 +651,7 @@ onUnmounted(() => {
             @close="showConfirmModal = false"
             @confirmed="handleTimerConfirmed"
         />
+
+        <TimerEntriesModal :show="showEntriesModal" :timer="selectedTimer" @close="showEntriesModal = false" />
     </div>
 </template>
