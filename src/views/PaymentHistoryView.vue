@@ -4,7 +4,10 @@ import { Icon } from '@iconify/vue';
 import type { CreditPurchase, CreditPurchasePayment, PaymentMethod } from '@/types';
 import { useCreditPurchases } from '@/composables/useCreditPurchases';
 import { usePermissions } from '@/composables/usePermissions';
+import { useClients } from '@/composables/useClients';
+import { useWallets } from '@/composables/useWallets';
 import { useToast } from '@/composables/useToast';
+import type { TypeaheadOption } from '@/components/CTypeahead.vue';
 
 const {
     purchases,
@@ -18,7 +21,9 @@ const {
     rejectPayment,
 } = useCreditPurchases();
 
-const { canApprovePayments, isAdmin, isCustomer } = usePermissions();
+const { canApprovePayments, canViewAnyClients, isCustomer } = usePermissions();
+const { clients, fetchClients } = useClients();
+const { wallets, fetchWallets } = useWallets();
 const toast = useToast();
 
 // ─── Filters ────────────────────────────────────────────────────────────────
@@ -53,88 +58,32 @@ watch(
     { deep: true }
 );
 
-// Typeahead — wallets
-const walletQuery = ref('');
-const showWalletDropdown = ref(false);
+// ─── Typeahead options ─────────────────────────────────────────────────────────
 
-const uniqueWallets = computed(() => {
-    const map = new Map<number, { id: number; name: string }>();
-
-    purchases.value.forEach((p) => {
-        if (p.wallet && !map.has(p.wallet.id)) {
-            map.set(p.wallet.id, { id: p.wallet.id, name: p.wallet.name });
-        }
-    });
-
-    return Array.from(map.values());
+const walletOptions = computed<TypeaheadOption[]>(() => {
+    return wallets.value.map((w) => ({
+        value: w.id,
+        label: w.name,
+    }));
 });
 
-const filteredWalletOptions = computed(() => {
-    const q = walletQuery.value.toLowerCase();
-
-    if (!q) {
-        return uniqueWallets.value;
-    }
-
-    return uniqueWallets.value.filter((w) => w.name.toLowerCase().includes(q));
+const clientOptions = computed<TypeaheadOption[]>(() => {
+    return clients.value.map((c) => ({
+        value: c.id,
+        label: c.name,
+    }));
 });
 
-const selectedWalletLabel = computed(() => {
-    if (!filters.value.walletId) {
-        return '';
-    }
+async function refreshWalletOptions({ searchTerm }: { searchTerm: string }): Promise<TypeaheadOption[]> {
+    await fetchWallets(undefined, 1);
 
-    return uniqueWallets.value.find((w) => w.id === filters.value.walletId)?.name ?? '';
-});
-
-function selectWallet(wallet: { id: number; name: string } | null): void {
-    filters.value.walletId = wallet?.id ?? null;
-    walletQuery.value = wallet?.name ?? '';
-    showWalletDropdown.value = false;
+    return walletOptions.value;
 }
 
-function clearWallet(): void {
-    filters.value.walletId = null;
-    walletQuery.value = '';
-}
+async function refreshClientOptions({ searchTerm }: { searchTerm: string }): Promise<TypeaheadOption[]> {
+    await fetchClients(1, searchTerm || '');
 
-// Typeahead — clients (admin only)
-const clientQuery = ref('');
-const showClientDropdown = ref(false);
-
-const uniqueClients = computed(() => {
-    const map = new Map<number, { id: number; name: string }>();
-
-    purchases.value.forEach((p) => {
-        const client = p.wallet?.client;
-
-        if (client && !map.has(client.id)) {
-            map.set(client.id, { id: client.id, name: client.name });
-        }
-    });
-
-    return Array.from(map.values());
-});
-
-const filteredClientOptions = computed(() => {
-    const q = clientQuery.value.toLowerCase();
-
-    if (!q) {
-        return uniqueClients.value;
-    }
-
-    return uniqueClients.value.filter((c) => c.name.toLowerCase().includes(q));
-});
-
-function selectClient(client: { id: number; name: string } | null): void {
-    filters.value.clientId = client?.id ?? null;
-    clientQuery.value = client?.name ?? '';
-    showClientDropdown.value = false;
-}
-
-function clearClient(): void {
-    filters.value.clientId = null;
-    clientQuery.value = '';
+    return clientOptions.value;
 }
 
 function resetFilters(): void {
@@ -147,8 +96,6 @@ function resetFilters(): void {
         walletId: null,
         clientId: null,
     };
-    walletQuery.value = '';
-    clientQuery.value = '';
 }
 
 // ─── Filtered data ───────────────────────────────────────────────────────────
@@ -476,7 +423,7 @@ function formatExpiresAt(expiresAt: string): string {
 // ─── Lifecycle ───────────────────────────────────────────────────────────────
 
 onMounted(async () => {
-    await fetchPurchases();
+    await Promise.all([fetchPurchases(), fetchClients(1, ''), fetchWallets()]);
 });
 </script>
 
@@ -588,89 +535,24 @@ onMounted(async () => {
                     </select>
                 </div>
 
-                <!-- Wallet typeahead -->
-                <div class="space-y-1 relative">
-                    <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Wallet</label>
-                    <div class="relative">
-                        <input
-                            v-model="walletQuery"
-                            type="text"
-                            placeholder="Search wallet…"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent pr-7"
-                            @focus="showWalletDropdown = true"
-                            @blur="setTimeout(() => (showWalletDropdown = false), 150)"
-                        />
-                        <button
-                            v-if="filters.walletId"
-                            @mousedown.prevent="clearWallet()"
-                            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            aria-label="Clear wallet filter"
-                        >
-                            <Icon icon="mdi:close-circle" class="w-4 h-4" />
-                        </button>
-                    </div>
-                    <ul
-                        v-if="showWalletDropdown && filteredWalletOptions.length > 0"
-                        class="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-44 overflow-y-auto"
-                    >
-                        <li
-                            v-for="w in filteredWalletOptions"
-                            :key="w.id"
-                            @mousedown.prevent="selectWallet(w)"
-                            :class="[
-                                'px-3 py-2 text-sm cursor-pointer',
-                                {
-                                    'bg-red-50 text-red-700 font-medium': filters.walletId === w.id,
-                                    'hover:bg-gray-50 text-gray-700': filters.walletId !== w.id,
-                                },
-                            ]"
-                        >
-                            {{ w.name }}
-                        </li>
-                    </ul>
-                </div>
+                <CTypeahead
+                    label="Wallet"
+                    v-model="filters.walletId"
+                    :initialOptions="walletOptions"
+                    :refreshOptions="refreshWalletOptions"
+                    placeholder="All Wallets"
+                    clearable
+                />
 
-                <!-- Client typeahead (admin only) -->
-                <div v-if="isAdmin" class="space-y-1 relative">
-                    <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Client</label>
-                    <div class="relative">
-                        <input
-                            v-model="clientQuery"
-                            type="text"
-                            placeholder="Search client…"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent pr-7"
-                            @focus="showClientDropdown = true"
-                            @blur="setTimeout(() => (showClientDropdown = false), 150)"
-                        />
-                        <button
-                            v-if="filters.clientId"
-                            @mousedown.prevent="clearClient()"
-                            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            aria-label="Clear client filter"
-                        >
-                            <Icon icon="mdi:close-circle" class="w-4 h-4" />
-                        </button>
-                    </div>
-                    <ul
-                        v-if="showClientDropdown && filteredClientOptions.length > 0"
-                        class="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-44 overflow-y-auto"
-                    >
-                        <li
-                            v-for="c in filteredClientOptions"
-                            :key="c.id"
-                            @mousedown.prevent="selectClient(c)"
-                            :class="[
-                                'px-3 py-2 text-sm cursor-pointer',
-                                {
-                                    'bg-red-50 text-red-700 font-medium': filters.clientId === c.id,
-                                    'hover:bg-gray-50 text-gray-700': filters.clientId !== c.id,
-                                },
-                            ]"
-                        >
-                            {{ c.name }}
-                        </li>
-                    </ul>
-                </div>
+                <CTypeahead
+                    v-if="canViewAnyClients"
+                    label="Client"
+                    v-model="filters.clientId"
+                    :initialOptions="clientOptions"
+                    :refreshOptions="refreshClientOptions"
+                    placeholder="All Clients"
+                    clearable
+                />
 
                 <!-- Reset filters -->
                 <div class="flex items-end">
@@ -750,7 +632,7 @@ onMounted(async () => {
                                 Date
                             </th>
                             <th
-                                v-if="isAdmin"
+                                v-if="canViewAnyClients"
                                 class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
                             >
                                 Client
@@ -801,8 +683,8 @@ onMounted(async () => {
                                 {{ formatDate(purchase.created_at) }}
                             </td>
 
-                            <!-- Client (admin) -->
-                            <td v-if="isAdmin" class="px-4 py-3 text-sm text-gray-800 whitespace-nowrap">
+                            <!-- Client -->
+                            <td v-if="canViewAnyClients" class="px-4 py-3 text-sm text-gray-800 whitespace-nowrap">
                                 {{ purchase.wallet?.client?.name ?? '—' }}
                             </td>
 
@@ -963,13 +845,13 @@ onMounted(async () => {
                                         {{ selectedPurchase.wallet?.name ?? '—' }}
                                     </p>
                                 </div>
-                                <div v-if="isAdmin" class="bg-gray-50 rounded-lg p-3">
+                                <div v-if="canViewAnyClients" class="bg-gray-50 rounded-lg p-3">
                                     <p class="text-xs text-gray-500 mb-1">Client</p>
                                     <p class="text-sm font-medium text-gray-800 truncate">
                                         {{ selectedPurchase.wallet?.client?.name ?? '—' }}
                                     </p>
                                 </div>
-                                <div v-if="isAdmin" class="bg-gray-50 rounded-lg p-3">
+                                <div v-if="canViewAnyClients" class="bg-gray-50 rounded-lg p-3">
                                     <p class="text-xs text-gray-500 mb-1">Customer</p>
                                     <p class="text-sm font-medium text-gray-800 truncate">
                                         {{ selectedPurchase.customer?.name ?? '—' }}
