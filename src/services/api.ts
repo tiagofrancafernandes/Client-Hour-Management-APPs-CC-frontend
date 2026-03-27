@@ -170,10 +170,6 @@ async function request<T>(
 
     if (!isGet) {
         let _url: URL = getApiUrl(endpoint);
-        console.log('getApiBaseUrl(null)', getApiBaseUrl(null));
-        console.log('getApiUrl', getApiUrl());
-        console.log('_url', _url);
-        console.log('config', config);
         response = await fetch(_url, config);
     }
 
