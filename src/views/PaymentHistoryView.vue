@@ -21,7 +21,7 @@ const {
     rejectPayment,
 } = useCreditPurchases();
 
-const { canApprovePayments, canViewAnyClients, isCustomer } = usePermissions();
+const { canApprovePayments, canViewAnyReports, isCustomer } = usePermissions();
 const { clients, fetchClients } = useClients();
 const { wallets, fetchWallets } = useWallets();
 const toast = useToast();
@@ -545,7 +545,7 @@ onMounted(async () => {
                 />
 
                 <CTypeahead
-                    v-if="canViewAnyClients"
+                    v-if="canViewAnyReports"
                     label="Client"
                     v-model="filters.clientId"
                     :initialOptions="clientOptions"
@@ -632,7 +632,7 @@ onMounted(async () => {
                                 Date
                             </th>
                             <th
-                                v-if="canViewAnyClients"
+                                v-if="canViewAnyReports"
                                 class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
                             >
                                 Client
@@ -684,7 +684,7 @@ onMounted(async () => {
                             </td>
 
                             <!-- Client -->
-                            <td v-if="canViewAnyClients" class="px-4 py-3 text-sm text-gray-800 whitespace-nowrap">
+                            <td v-if="canViewAnyReports" class="px-4 py-3 text-sm text-gray-800 whitespace-nowrap">
                                 {{ purchase.wallet?.client?.name ?? '—' }}
                             </td>
 
@@ -845,13 +845,13 @@ onMounted(async () => {
                                         {{ selectedPurchase.wallet?.name ?? '—' }}
                                     </p>
                                 </div>
-                                <div v-if="canViewAnyClients" class="bg-gray-50 rounded-lg p-3">
+                                <div v-if="canViewAnyReports" class="bg-gray-50 rounded-lg p-3">
                                     <p class="text-xs text-gray-500 mb-1">Client</p>
                                     <p class="text-sm font-medium text-gray-800 truncate">
                                         {{ selectedPurchase.wallet?.client?.name ?? '—' }}
                                     </p>
                                 </div>
-                                <div v-if="canViewAnyClients" class="bg-gray-50 rounded-lg p-3">
+                                <div v-if="canViewAnyReports" class="bg-gray-50 rounded-lg p-3">
                                     <p class="text-xs text-gray-500 mb-1">Customer</p>
                                     <p class="text-sm font-medium text-gray-800 truncate">
                                         {{ selectedPurchase.customer?.name ?? '—' }}
