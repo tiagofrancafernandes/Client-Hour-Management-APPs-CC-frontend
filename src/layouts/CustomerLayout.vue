@@ -53,7 +53,7 @@ onUnmounted(() => {
         <!-- Top Navigation -->
         <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex h-16 items-center justify-between">
+                <div class="flex h-12 items-center justify-between">
                     <!-- Logo -->
                     <div class="flex items-center gap-6">
                         <RouterLink to="/dashboard" class="flex items-center gap-2.5">

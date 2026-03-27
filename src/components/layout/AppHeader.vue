@@ -56,7 +56,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <header class="bg-white border-b border-gray-200 h-16 flex items-center px-4 gap-3 flex-shrink-0 z-10 shadow-sm">
+    <header class="bg-white border-b border-gray-200 h-12 flex items-center px-4 gap-3 flex-shrink-0 z-10 shadow-sm">
         <!-- Desktop: Sidebar toggle -->
         <button
             class="hidden lg:flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"

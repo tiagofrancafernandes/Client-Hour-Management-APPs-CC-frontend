@@ -171,7 +171,7 @@ watch(() => route.path, syncExpandedGroups, { immediate: true });
         <!-- Logo -->
         <div
             :class="[
-                'flex items-center h-16 px-4 border-b border-white/10 flex-shrink-0 gap-3',
+                'flex items-center h-12 px-4 border-b border-white/10 flex-shrink-0 gap-3',
                 { 'justify-center': collapsed },
             ]"
         >
