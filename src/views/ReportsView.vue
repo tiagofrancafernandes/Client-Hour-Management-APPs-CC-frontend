@@ -7,6 +7,7 @@ import { useWallets } from '@/composables/useWallets';
 import { useTags } from '@/composables/useTags';
 import { useAuth } from '@/composables/useAuth';
 import { useCustomerData } from '@/composables/useCustomerData';
+import { formatHoursDisplay } from '@/utils/timeFormatters';
 import api from '@/services/api';
 import type { ReportFilters } from '@/types';
 
@@ -222,11 +223,7 @@ function clearFilters() {
 function formatHours(hours: string): string {
     const num = parseFloat(hours);
 
-    if (num > 0) {
-        return `+${hours}h`;
-    }
-
-    return `${hours}h`;
+    return formatHoursDisplay(num, true);
 }
 
 function getHoursColor(hours: string): string {

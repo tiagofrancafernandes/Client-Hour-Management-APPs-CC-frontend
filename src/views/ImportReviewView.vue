@@ -115,13 +115,15 @@
                                 <td class="px-4 py-3 text-sm text-gray-900">{{ formatDate(row.reference_date) }}</td>
                                 <td class="px-4 py-3 text-sm">
                                     <span
-                                        :class="{
-                                            'text-green-600 font-medium': (row.hours ?? 0) > 0,
-                                            'text-red-600 font-medium': (row.hours ?? 0) < 0,
-                                            'text-gray-400': !row.hours,
-                                        }"
+                                        :class="[
+                                            {
+                                                'text-green-600 font-medium': (row.hours ?? 0) > 0,
+                                                'text-red-600 font-medium': (row.hours ?? 0) < 0,
+                                                'text-gray-400': !row.hours,
+                                            },
+                                        ]"
                                     >
-                                        {{ row.hours ? (row.hours > 0 ? '+' : '') + row.hours + 'h' : '-' }}
+                                        {{ formatHours(row.hours) }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-sm">
@@ -231,6 +233,7 @@ import { Icon } from '@iconify/vue';
 import { useImport } from '@/composables/useImport';
 import { useConfirm } from '@/composables/useConfirm';
 import { useToast } from '@/composables/useToast';
+import { formatHoursDisplay } from '@/utils/timeFormatters';
 import ImportRowEditModal from '@/components/ImportRowEditModal.vue';
 import type { ImportPlanRow, ImportRowForm } from '@/types';
 
@@ -276,6 +279,14 @@ function formatDate(dateString: string): string {
     const date = new Date(dateString);
 
     return date.toLocaleDateString('pt-BR');
+}
+
+function formatHours(hours: number | null): string {
+    if (hours === null || hours === undefined) {
+        return '-';
+    }
+
+    return formatHoursDisplay(hours, true);
 }
 
 function handleEditRow(row: ImportPlanRow): void {

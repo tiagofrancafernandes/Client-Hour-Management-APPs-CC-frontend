@@ -38,7 +38,9 @@ const newWalletDescription = ref('');
 const newWalletHourlyRate = ref<number | undefined>(undefined);
 const newWalletCurrencyCode = ref('USD');
 const newWalletInternalNote = ref('');
+const newWalletCreditPurchaseAllowed = ref(false);
 
+const canUpdateRules = computed(() => hasPermission('wallet.update_rules'));
 const canViewInternalNote = computed(() => {
     return hasPermission('wallet.view_internal_note');
 });
@@ -79,6 +81,10 @@ async function handleCreateWallet() {
             payload.internal_note = newWalletInternalNote.value || undefined;
         }
 
+        if (canUpdateRules.value) {
+            payload.credit_purchase_allowed = newWalletCreditPurchaseAllowed.value;
+        }
+
         await createWallet(payload);
 
         showCreateWalletModal.value = false;
@@ -87,6 +93,7 @@ async function handleCreateWallet() {
         newWalletHourlyRate.value = undefined;
         newWalletCurrencyCode.value = 'USD';
         newWalletInternalNote.value = '';
+        newWalletCreditPurchaseAllowed.value = false;
         fetchClient(clientId);
     } catch {
         // Error handled in composable
@@ -349,10 +356,22 @@ async function handleDeleteUser(userId: number) {
                     <div class="flex items-start justify-between mb-2">
                         <div class="flex-1">
                             <h3 class="font-semibold text-gray-900">{{ wallet.name }}</h3>
-                            <p v-if="wallet.description" class="mt-1 text-sm text-gray-500">
-                                {{ wallet.description }}
-                            </p>
-                        </div>
+                    <p v-if="wallet.description" class="mt-1 text-sm text-gray-500">
+                        {{ wallet.description }}
+                    </p>
+                    <div class="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
+                        <span
+                            :class="[
+                                'inline-flex items-center rounded-full px-2 py-0.5',
+                                wallet.credit_purchase_allowed
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-gray-100 text-gray-600',
+                            ]"
+                        >
+                            {{ wallet.credit_purchase_allowed ? 'Credit purchases allowed' : 'Credit purchases disabled' }}
+                        </span>
+                    </div>
+                </div>
                         <div class="text-right">
                             <p class="text-lg font-bold" :class="getBalanceColor(wallet.balance)">
                                 {{ formatBalance(wallet.balance) }}
@@ -653,6 +672,34 @@ async function handleDeleteUser(userId: number) {
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                         placeholder="Visible only to authorized users"
                     ></textarea>
+                </div>
+                <div v-if="canUpdateRules" class="mb-4 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Allow credit purchases</p>
+                            <p class="text-xs text-gray-500">
+                                Enable this wallet for selling credits.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            role="switch"
+                            :aria-checked="newWalletCreditPurchaseAllowed"
+                            :class="[
+                                'relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500',
+                                newWalletCreditPurchaseAllowed ? 'bg-red-600' : 'bg-gray-200',
+                            ]"
+                            @click="newWalletCreditPurchaseAllowed = !newWalletCreditPurchaseAllowed"
+                        >
+                            <span
+                                :class="[
+                                    'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200',
+                                    newWalletCreditPurchaseAllowed ? 'translate-x-5' : 'translate-x-0',
+                                ]"
+                            />
+                        </button>
+                    </div>
                 </div>
                 <div class="mb-4">
                     <label class="mb-1 block text-sm font-medium text-gray-700">Hourly Rate Reference (optional)</label>

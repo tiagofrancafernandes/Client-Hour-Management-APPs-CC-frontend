@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useWallets } from '@/composables/useWallets';
 import { useLedger } from '@/composables/useLedger';
@@ -7,6 +7,7 @@ import { useTags } from '@/composables/useTags';
 import { usePermissions } from '@/composables/usePermissions';
 import { useAuth } from '@/composables/useAuth';
 import { useToast } from '@/composables/useToast';
+import { formatHoursDisplay, splitDecimalHours, combineDualTimeInput } from '@/utils/timeFormatters';
 import TagInput from '@/components/TagInput.vue';
 import WalletEditModal from '@/components/WalletEditModal.vue';
 import CCreditPurchaseModal from '@/components/CCreditPurchaseModal.vue';
@@ -61,6 +62,15 @@ const entryForm = ref<LedgerEntryForm>({
     tags: [],
 });
 
+// Separate hours and minutes inputs for better UX
+const entryFormHours = ref(0);
+const entryFormMinutes = ref(0);
+
+// Sync dual time input to decimal hours
+watch([entryFormHours, entryFormMinutes], ([h, m]) => {
+    entryForm.value.hours = combineDualTimeInput(h, m);
+});
+
 const currentBalance = computed(() => wallet.value?.balance || '0');
 
 onMounted(async () => {
@@ -91,16 +101,7 @@ async function handleCreateEntry() {
     try {
         const response = await createEntry(entryForm.value);
 
-        showEntryModal.value = false;
-        entryForm.value = {
-            wallet_id: walletId,
-            type: 'debit',
-            hours: 0,
-            title: '',
-            description: '',
-            reference_date: new Date().toISOString().split('T')[0],
-            tags: [],
-        };
+        closeEntryModal();
 
         if (wallet.value) {
             wallet.value.balance = response.new_balance;
@@ -112,14 +113,33 @@ async function handleCreateEntry() {
     }
 }
 
+function openEntryModal(): void {
+    const { hours, minutes } = splitDecimalHours(entryForm.value.hours);
+
+    entryFormHours.value = hours;
+    entryFormMinutes.value = minutes;
+    showEntryModal.value = true;
+}
+
+function closeEntryModal(): void {
+    showEntryModal.value = false;
+    entryForm.value = {
+        wallet_id: walletId,
+        type: 'debit',
+        hours: 0,
+        title: '',
+        description: '',
+        reference_date: new Date().toISOString().split('T')[0],
+        tags: [],
+    };
+    entryFormHours.value = 0;
+    entryFormMinutes.value = 0;
+}
+
 function formatBalance(balance: string): string {
     const num = parseFloat(balance);
 
-    if (num > 0) {
-        return `+${balance}h`;
-    }
-
-    return `${balance}h`;
+    return formatHoursDisplay(num, true);
 }
 
 function getBalanceColor(balance: string): string {
@@ -139,11 +159,7 @@ function getBalanceColor(balance: string): string {
 function formatHours(hours: string): string {
     const num = parseFloat(hours);
 
-    if (num > 0) {
-        return `+${hours}h`;
-    }
-
-    return `${hours}h`;
+    return formatHoursDisplay(num, true);
 }
 
 function getHoursColor(hours: string): string {
@@ -291,7 +307,7 @@ function handleCreditPurchaseSuccess(): void {
 
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="text-xl font-semibold text-gray-900">Ledger Entries</h2>
-                <CButton v-if="canAddEntry" @click="showEntryModal = true" icon="hugeicons:add-circle">
+                <CButton v-if="canAddEntry" @click="openEntryModal" icon="hugeicons:add-circle">
                     Add Entry
                 </CButton>
             </div>
@@ -405,14 +421,30 @@ function handleCreditPurchaseSuccess(): void {
                     </div>
 
                     <div class="mb-4">
-                        <label class="mb-1 block text-sm font-medium text-gray-700">Hours</label>
-                        <input
-                            v-model.number="entryForm.hours"
-                            type="number"
-                            step="0.25"
-                            min="0"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                        />
+                        <label class="mb-2 block text-sm font-medium text-gray-700">Time</label>
+                        <div class="flex gap-3">
+                            <div class="flex-1">
+                                <label class="mb-1 block text-xs text-gray-600">Hours</label>
+                                <input
+                                    v-model.number="entryFormHours"
+                                    type="number"
+                                    min="0"
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                    placeholder="0"
+                                />
+                            </div>
+                            <div class="flex-1">
+                                <label class="mb-1 block text-xs text-gray-600">Minutes</label>
+                                <input
+                                    v-model.number="entryFormMinutes"
+                                    type="number"
+                                    min="0"
+                                    max="59"
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                    placeholder="0"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mb-4">
@@ -451,7 +483,7 @@ function handleCreditPurchaseSuccess(): void {
                 <div class="flex justify-end gap-2 pt-2">
                     <button
                         class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
-                        @click="showEntryModal = false"
+                        @click="closeEntryModal"
                     >
                         Cancel
                     </button>

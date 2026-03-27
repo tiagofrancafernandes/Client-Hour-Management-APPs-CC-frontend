@@ -98,6 +98,7 @@ export function useWallets() {
         description?: string;
         hourly_rate_reference?: number;
         currency_code?: string;
+        credit_purchase_allowed?: boolean;
         internal_note?: string;
     }) {
         loading.value = true;
@@ -124,6 +125,7 @@ export function useWallets() {
             hourly_rate_reference?: number;
             currency_code?: string;
             internal_note?: string;
+            credit_purchase_allowed?: boolean;
         }
     ) {
         loading.value = true;

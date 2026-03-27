@@ -23,6 +23,7 @@ const form = ref({
     description: '',
     hourly_rate_reference: '',
     currency_code: 'USD',
+    credit_purchase_allowed: false,
     internal_note: '',
 });
 
@@ -40,6 +41,7 @@ watch(
                 description: newWallet.description || '',
                 hourly_rate_reference: newWallet.hourly_rate_reference ? String(newWallet.hourly_rate_reference) : '',
                 currency_code: newWallet.currency_code || 'USD',
+                credit_purchase_allowed: newWallet.credit_purchase_allowed ?? false,
                 internal_note: newWallet.internal_note || '',
             };
         }
@@ -49,6 +51,7 @@ watch(
 
 const { hasPermission } = usePermissions();
 const canViewInternalNote = computed(() => hasPermission('wallet.view_internal_note'));
+const canUpdateRules = computed(() => hasPermission('wallet.update_rules'));
 
 async function handleSubmit() {
     if (!props.wallet || !form.value.name.trim()) {
@@ -56,16 +59,22 @@ async function handleSubmit() {
         return;
     }
 
-    try {
-        await updateWallet(props.wallet.id, {
-            name: form.value.name,
-            description: form.value.description || undefined,
-            hourly_rate_reference: form.value.hourly_rate_reference
-                ? parseFloat(form.value.hourly_rate_reference)
-                : undefined,
-            currency_code: form.value.currency_code || undefined,
-            ...(canViewInternalNote.value ? { internal_note: form.value.internal_note || undefined } : {}),
-        });
+        try {
+            const payload: Record<string, unknown> = {
+                name: form.value.name,
+                description: form.value.description || undefined,
+                hourly_rate_reference: form.value.hourly_rate_reference
+                    ? parseFloat(form.value.hourly_rate_reference)
+                    : undefined,
+                currency_code: form.value.currency_code || undefined,
+                ...(canViewInternalNote.value ? { internal_note: form.value.internal_note || undefined } : {}),
+            };
+
+            if (canUpdateRules.value) {
+                payload.credit_purchase_allowed = form.value.credit_purchase_allowed;
+            }
+
+            await updateWallet(props.wallet.id, payload);
 
         toast.success('Wallet updated successfully');
         emit('updated');
@@ -138,6 +147,36 @@ function handleClose() {
                         :disabled="isSubmitting"
                         placeholder="Visible only to authorized users"
                     ></textarea>
+                </div>
+
+                <div v-if="canUpdateRules" class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Allow credit purchases</p>
+                            <p class="text-xs text-gray-500">
+                                Permit credits to be sold for this wallet.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            role="switch"
+                            :aria-checked="form.credit_purchase_allowed"
+                            :class="[
+                                'relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500',
+                                form.credit_purchase_allowed ? 'bg-blue-600' : 'bg-gray-200',
+                            ]"
+                            @click="form.credit_purchase_allowed = !form.credit_purchase_allowed"
+                            :disabled="isSubmitting"
+                        >
+                            <span
+                                :class="[
+                                    'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200',
+                                    form.credit_purchase_allowed ? 'translate-x-5' : 'translate-x-0',
+                                ]"
+                            />
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Hourly Rate Reference -->

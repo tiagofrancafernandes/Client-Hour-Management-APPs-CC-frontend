@@ -6,6 +6,7 @@ import { useCustomerData } from '@/composables/useCustomerData';
 import { usePermissions } from '@/composables/usePermissions';
 import { useWallets } from '@/composables/useWallets';
 import { useToast } from '@/composables/useToast';
+import { formatHoursDisplay } from '@/utils/timeFormatters';
 import type { Wallet } from '@/types';
 
 const router = useRouter();
@@ -93,7 +94,7 @@ function goBuyCredits(wallet: Wallet): void {
 function formatBalance(balance: string | number): string {
     const num = typeof balance === 'string' ? parseFloat(balance) : balance;
 
-    return num.toFixed(2).replace('.', ',');
+    return formatHoursDisplay(num, false);
 }
 
 function formatMonthYear(dateString: string | null | undefined): string {
