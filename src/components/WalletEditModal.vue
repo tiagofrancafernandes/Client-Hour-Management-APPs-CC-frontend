@@ -53,28 +53,59 @@ const { hasPermission } = usePermissions();
 const canViewInternalNote = computed(() => hasPermission('wallet.view_internal_note'));
 const canUpdateRules = computed(() => hasPermission('wallet.update_rules'));
 
+const validationErrors = ref<Record<string, string>>({});
+
+const isFormValid = computed(() => {
+    const errors: Record<string, string> = {};
+
+    if (!form.value.name.trim()) {
+        errors.name = 'Wallet name is required';
+    }
+
+    if (form.value.credit_purchase_allowed) {
+        if (!form.value.hourly_rate_reference || parseFloat(form.value.hourly_rate_reference) <= 0) {
+            errors.hourly_rate_reference = 'Hourly rate is required when credit purchase is enabled';
+        }
+
+        if (!form.value.currency_code) {
+            errors.currency_code = 'Currency is required when credit purchase is enabled';
+        }
+    }
+
+    validationErrors.value = errors;
+
+    return Object.keys(errors).length === 0;
+});
+
 async function handleSubmit() {
-    if (!props.wallet || !form.value.name.trim()) {
-        toast.error('Wallet name is required');
+    if (!props.wallet || !isFormValid.value) {
+        if (!isFormValid.value) {
+            const firstError = Object.values(validationErrors.value)[0];
+
+            if (firstError) {
+                toast.error(firstError);
+            }
+        }
+
         return;
     }
 
-        try {
-            const payload: Record<string, unknown> = {
-                name: form.value.name,
-                description: form.value.description || undefined,
-                hourly_rate_reference: form.value.hourly_rate_reference
-                    ? parseFloat(form.value.hourly_rate_reference)
-                    : undefined,
-                currency_code: form.value.currency_code || undefined,
-                ...(canViewInternalNote.value ? { internal_note: form.value.internal_note || undefined } : {}),
-            };
+    try {
+        const payload: Record<string, unknown> = {
+            name: form.value.name,
+            description: form.value.description || undefined,
+            hourly_rate_reference: form.value.hourly_rate_reference
+                ? parseFloat(form.value.hourly_rate_reference)
+                : undefined,
+            currency_code: form.value.currency_code || undefined,
+            ...(canViewInternalNote.value ? { internal_note: form.value.internal_note || undefined } : {}),
+        };
 
-            if (canUpdateRules.value) {
-                payload.credit_purchase_allowed = form.value.credit_purchase_allowed;
-            }
+        if (canUpdateRules.value) {
+            payload.credit_purchase_allowed = form.value.credit_purchase_allowed;
+        }
 
-            await updateWallet(props.wallet.id, payload);
+        await updateWallet(props.wallet.id, payload);
 
         toast.success('Wallet updated successfully');
         emit('updated');
@@ -183,6 +214,7 @@ function handleClose() {
                 <div>
                     <label for="hourly_rate" class="mb-1 block text-sm font-medium text-gray-700">
                         Hourly Rate Reference
+                        <span v-if="form.credit_purchase_allowed" class="text-red-600">*</span>
                     </label>
                     <input
                         id="hourly_rate"
@@ -191,20 +223,34 @@ function handleClose() {
                         step="0.01"
                         min="0"
                         placeholder="0.00"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                        :class="[
+                            'w-full rounded-lg border px-3 py-2 focus:outline-none',
+                            validationErrors.hourly_rate_reference
+                                ? 'border-red-500 focus:border-red-600 bg-red-50'
+                                : 'border-gray-300 focus:border-blue-500',
+                        ]"
                         :disabled="isSubmitting"
                     />
+                    <p v-if="validationErrors.hourly_rate_reference" class="mt-1 text-xs text-red-600">
+                        {{ validationErrors.hourly_rate_reference }}
+                    </p>
                 </div>
 
                 <!-- Currency Code -->
                 <div>
                     <label for="currency_code" class="mb-1 block text-sm font-medium text-gray-700">
                         Currency Code
+                        <span v-if="form.credit_purchase_allowed" class="text-red-600">*</span>
                     </label>
                     <select
                         id="currency_code"
                         v-model="form.currency_code"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                        :class="[
+                            'w-full rounded-lg border px-3 py-2 focus:outline-none',
+                            validationErrors.currency_code
+                                ? 'border-red-500 focus:border-red-600 bg-red-50'
+                                : 'border-gray-300 focus:border-blue-500',
+                        ]"
                         :disabled="isSubmitting"
                     >
                         <option value="">Select currency...</option>
@@ -212,6 +258,9 @@ function handleClose() {
                             {{ code }}
                         </option>
                     </select>
+                    <p v-if="validationErrors.currency_code" class="mt-1 text-xs text-red-600">
+                        {{ validationErrors.currency_code }}
+                    </p>
                 </div>
 
                 <!-- Actions -->
@@ -227,7 +276,7 @@ function handleClose() {
                     <button
                         type="submit"
                         class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-                        :disabled="isSubmitting"
+                        :disabled="isSubmitting || !isFormValid"
                     >
                         {{ isSubmitting ? 'Saving...' : 'Save Changes' }}
                     </button>

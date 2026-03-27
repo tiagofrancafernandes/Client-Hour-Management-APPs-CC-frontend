@@ -47,6 +47,30 @@ const canViewInternalNote = computed(() => {
 
 const currencyCodes = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'MXN', 'BRL'];
 
+const newWalletValidationErrors = ref<Record<string, string>>({});
+
+const isNewWalletFormValid = computed(() => {
+    const errors: Record<string, string> = {};
+
+    if (!newWalletName.value.trim()) {
+        errors.name = 'Wallet name is required';
+    }
+
+    if (newWalletCreditPurchaseAllowed.value) {
+        if (!newWalletHourlyRate.value || newWalletHourlyRate.value <= 0) {
+            errors.hourly_rate_reference = 'Hourly rate is required when credit purchase is enabled';
+        }
+
+        if (!newWalletCurrencyCode.value) {
+            errors.currency_code = 'Currency is required when credit purchase is enabled';
+        }
+    }
+
+    newWalletValidationErrors.value = errors;
+
+    return Object.keys(errors).length === 0;
+});
+
 const showCreateUserModal = ref(false);
 const showEditUserModal = ref(false);
 const editingUser = ref<User | null>(null);
@@ -64,7 +88,13 @@ onMounted(() => {
 });
 
 async function handleCreateWallet() {
-    if (!newWalletName.value.trim()) {
+    if (!isNewWalletFormValid.value) {
+        const firstError = Object.values(newWalletValidationErrors.value)[0];
+
+        if (firstError) {
+            toast.error(firstError);
+        }
+
         return;
     }
 
@@ -702,26 +732,49 @@ async function handleDeleteUser(userId: number) {
                     </div>
                 </div>
                 <div class="mb-4">
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Hourly Rate Reference (optional)</label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">
+                        Hourly Rate Reference
+                        <span v-if="newWalletCreditPurchaseAllowed" class="text-red-600">*</span>
+                        <span v-else class="text-gray-500">(optional)</span>
+                    </label>
                     <input
                         v-model.number="newWalletHourlyRate"
                         type="number"
                         step="0.01"
                         min="0"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                        :class="[
+                            'w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-1',
+                            newWalletValidationErrors.hourly_rate_reference
+                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
+                                : 'border-gray-300 focus:border-red-500 focus:ring-red-500',
+                        ]"
                     />
+                    <p v-if="newWalletValidationErrors.hourly_rate_reference" class="mt-1 text-xs text-red-600">
+                        {{ newWalletValidationErrors.hourly_rate_reference }}
+                    </p>
                 </div>
                 <div class="mb-4">
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Currency Code</label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">
+                        Currency Code
+                        <span v-if="newWalletCreditPurchaseAllowed" class="text-red-600">*</span>
+                    </label>
                     <select
                         v-model="newWalletCurrencyCode"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                        :class="[
+                            'w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-1',
+                            newWalletValidationErrors.currency_code
+                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
+                                : 'border-gray-300 focus:border-red-500 focus:ring-red-500',
+                        ]"
                     >
                         <option value="">Select currency...</option>
                         <option v-for="code in currencyCodes" :key="code" :value="code">
                             {{ code }}
                         </option>
                     </select>
+                    <p v-if="newWalletValidationErrors.currency_code" class="mt-1 text-xs text-red-600">
+                        {{ newWalletValidationErrors.currency_code }}
+                    </p>
                 </div>
                 <div class="flex justify-end gap-2">
                     <button
@@ -730,7 +783,7 @@ async function handleDeleteUser(userId: number) {
                     >
                         Cancel
                     </button>
-                    <CButton @click="handleCreateWallet">Create</CButton>
+                    <CButton :disabled="!isNewWalletFormValid" @click="handleCreateWallet">Create</CButton>
                 </div>
             </div>
         </div>

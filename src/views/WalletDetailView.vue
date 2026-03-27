@@ -516,7 +516,7 @@ function onValueFormMinutes(event: Event) {
 
         <!-- Add Entry Modal -->
         <div v-if="showEntryModal" class="fixed inset-0 flex items-center justify-center bg-black/50">
-            <div class="w-full max-w-md rounded-lg bg-white p-2">
+            <div class="w-full max-w-2xl rounded-lg bg-white p-2">
                 <h2 class="mb-4 text-lg font-semibold">Add Ledger Entry</h2>
 
                 <div class="max-h-[60vh] overflow-y-auto px-2 rounded">
