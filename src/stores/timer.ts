@@ -162,6 +162,8 @@ export const useTimerStore = defineStore('timer', () => {
 
             stopPolling();
 
+            await fetchActiveTimer();
+
             return true;
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Failed to stop timer';
@@ -384,6 +386,8 @@ export const useTimerStore = defineStore('timer', () => {
             if (activeTimer.value?.id === id) {
                 activeTimer.value = response;
                 stopPolling();
+
+                await fetchActiveTimer();
             }
 
             await fetchTimers();
