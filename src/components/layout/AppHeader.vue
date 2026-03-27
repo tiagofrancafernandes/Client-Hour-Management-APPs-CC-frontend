@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
+import { useTimerStore } from '@/stores/timer';
+import { usePermissions } from '@/composables/usePermissions';
+import ManualEntryModal from '@/components/ManualEntryModal.vue';
+import TimerStartModal from '@/components/TimerStartModal.vue';
 
 const props = defineProps<{
     sidebarCollapsed: boolean;
@@ -15,23 +19,63 @@ const emit = defineEmits<{
 
 const router = useRouter();
 const { user, logout, loading } = useAuth();
+const timerStore = useTimerStore();
+const { can } = usePermissions();
 
 const showUserMenu = ref(false);
+const showTimerMenu = ref(false);
 const userMenuRef = ref<HTMLElement | null>(null);
+const timerMenuRef = ref<HTMLElement | null>(null);
+
+const showManualEntryModal = ref(false);
+const showStartTimerModal = ref(false);
+
+const canCreateTimer = computed(() => can('timers.create'));
+const hasActiveTimer = computed(() => timerStore.hasActiveTimer);
+const isTimerRunning = computed(() => timerStore.isRunning);
 
 const userInitial = () => user.value?.name?.charAt(0)?.toUpperCase() ?? '?';
 
 function toggleUserMenu(): void {
     showUserMenu.value = !showUserMenu.value;
+    showTimerMenu.value = false;
 }
 
 function closeUserMenu(): void {
     showUserMenu.value = false;
 }
 
+function toggleTimerMenu(): void {
+    showTimerMenu.value = !showTimerMenu.value;
+    showUserMenu.value = false;
+}
+
+function closeTimerMenu(): void {
+    showTimerMenu.value = false;
+}
+
+function openManualEntryModal(): void {
+    closeTimerMenu();
+    showManualEntryModal.value = true;
+}
+
+function openStartTimerModal(): void {
+    closeTimerMenu();
+    showStartTimerModal.value = true;
+}
+
+function closeModals(): void {
+    showManualEntryModal.value = false;
+    showStartTimerModal.value = false;
+}
+
 function handleClickOutside(event: MouseEvent): void {
     if (userMenuRef.value && !userMenuRef.value.contains(event.target as Node)) {
         closeUserMenu();
+    }
+
+    if (timerMenuRef.value && !timerMenuRef.value.contains(event.target as Node)) {
+        closeTimerMenu();
     }
 }
 
@@ -77,6 +121,93 @@ onUnmounted(() => {
 
         <!-- Spacer -->
         <div class="flex-1" />
+
+        <!-- Timer actions: Desktop (md+) -->
+        <div v-if="canCreateTimer" class="hidden md:flex items-center gap-2">
+            <button
+                class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors font-medium"
+                @click="openManualEntryModal"
+            >
+                <Icon icon="hugeicons:add-circle" class="w-4 h-4" />
+                Manual Entry
+            </button>
+
+            <button
+                v-if="!hasActiveTimer"
+                class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-white bg-red-600 hover:bg-red-700 transition-colors font-medium"
+                @click="openStartTimerModal"
+            >
+                <Icon icon="mdi:timer-plus" class="w-4 h-4" />
+                Start Timer
+            </button>
+
+            <button
+                v-else
+                class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-red-600 bg-red-50 hover:bg-red-100 transition-colors font-medium"
+                @click="$router.push('/timers')"
+            >
+                <Icon icon="mdi:timer" :class="['w-4 h-4', { 'animate-pulse': isTimerRunning }]" />
+                Running
+            </button>
+        </div>
+
+        <!-- Timer menu: Mobile (< md) -->
+        <div v-if="canCreateTimer" ref="timerMenuRef" class="md:hidden relative">
+            <button
+                class="flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                @click="toggleTimerMenu"
+                aria-label="Timer options"
+            >
+                <Icon icon="mdi:timer" class="w-5 h-5" />
+            </button>
+
+            <!-- Dropdown -->
+            <Transition
+                enter-active-class="transition ease-out duration-100"
+                enter-from-class="transform opacity-0 scale-95"
+                enter-to-class="transform opacity-100 scale-100"
+                leave-active-class="transition ease-in duration-75"
+                leave-from-class="transform opacity-100 scale-100"
+                leave-to-class="transform opacity-0 scale-95"
+            >
+                <div
+                    v-if="showTimerMenu"
+                    class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50"
+                >
+                    <button
+                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        @click="openManualEntryModal"
+                    >
+                        <Icon icon="hugeicons:add-circle" class="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        Manual Entry
+                    </button>
+
+                    <button
+                        v-if="!hasActiveTimer"
+                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        @click="openStartTimerModal"
+                    >
+                        <Icon icon="mdi:timer-plus" class="w-4 h-4 flex-shrink-0" />
+                        Start Timer
+                    </button>
+
+                    <button
+                        v-else
+                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        @click="
+                            $router.push('/timers');
+                            closeTimerMenu();
+                        "
+                    >
+                        <Icon
+                            icon="mdi:timer"
+                            :class="['w-4 h-4 flex-shrink-0', { 'animate-pulse': isTimerRunning }]"
+                        />
+                        View Running
+                    </button>
+                </div>
+            </Transition>
+        </div>
 
         <!-- Right area -->
         <div ref="userMenuRef" class="relative">
@@ -145,4 +276,9 @@ onUnmounted(() => {
             </Transition>
         </div>
     </header>
+
+    <!-- Modals -->
+    <ManualEntryModal :show="showManualEntryModal" @close="showManualEntryModal = false" @entry-created="closeModals" />
+
+    <TimerStartModal :show="showStartTimerModal" @close="showStartTimerModal = false" @started="closeModals" />
 </template>
