@@ -243,7 +243,7 @@ function onValueFormHours(event: Event) {
 
     let max = Number((event?.target as any)?.getAttribute('max')) || null;
     /** @ts-ignore */
-    let value = (event?.target || null as any)?.value || 0;
+    let value = (event?.target || (null as any))?.value || 0;
 
     console.log('onValueFormHours', value);
 
@@ -278,7 +278,7 @@ function onValueFormMinutes(event: Event) {
 
     let max = Number((event?.target as any)?.getAttribute('max')) || null;
     /** @ts-ignore */
-    let value = (event?.target || null as any)?.value || 0;
+    let value = (event?.target || (null as any))?.value || 0;
 
     console.log('onValueFormMinutes', value);
 
@@ -515,26 +515,17 @@ function onValueFormMinutes(event: Event) {
         />
 
         <!-- Add Entry Modal -->
-        <div v-if="showEntryModal" class="fixed inset-0 flex items-center justify-center bg-black/50 pt-4">
-            <div class="w-full max-w-2xl rounded-lg bg-white p-2">
+        <div v-if="showEntryModal" class="fixed inset-0 flex items-center justify-center bg-black/50 pt-4 z-40">
+            <div class="w-full mx-2 md:mx-auto max-w-2xl rounded-lg bg-white p-2">
                 <h2 class="mb-4 text-lg font-semibold">Add Ledger Entry</h2>
 
-                <div class="max-h-[60vh] overflow-y-auto px-2 rounded">
-
+                <div class="max-h-[70vh] md:max-h-[60vh] overflow-y-auto px-2 rounded">
                     <div class="mb-4">
                         <label class="mb-2 block text-sm font-medium text-gray-700">Type</label>
                         <div class="flex gap-3">
                             <!-- Debit Card -->
-                            <label
-                                v-if="canAddDebits"
-                                class="flex-1 cursor-pointer"
-                            >
-                                <input
-                                    v-model="entryForm.type"
-                                    type="radio"
-                                    value="debit"
-                                    class="sr-only"
-                                />
+                            <label v-if="canAddDebits" class="flex-1 cursor-pointer">
+                                <input v-model="entryForm.type" type="radio" value="debit" class="sr-only" />
                                 <div
                                     :class="[
                                         'flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all',
@@ -543,7 +534,12 @@ function onValueFormMinutes(event: Event) {
                                             : 'border-gray-200 bg-white hover:border-red-300',
                                     ]"
                                 >
-                                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg
+                                        class="h-6 w-6 text-red-600"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
                                         <path
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
@@ -559,16 +555,8 @@ function onValueFormMinutes(event: Event) {
                             </label>
 
                             <!-- Credit Card -->
-                            <label
-                                v-if="canAddCredits"
-                                class="flex-1 cursor-pointer"
-                            >
-                                <input
-                                    v-model="entryForm.type"
-                                    type="radio"
-                                    value="credit"
-                                    class="sr-only"
-                                />
+                            <label v-if="canAddCredits" class="flex-1 cursor-pointer">
+                                <input v-model="entryForm.type" type="radio" value="credit" class="sr-only" />
                                 <div
                                     :class="[
                                         'flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all',
@@ -577,7 +565,12 @@ function onValueFormMinutes(event: Event) {
                                             : 'border-gray-200 bg-white hover:border-green-300',
                                     ]"
                                 >
-                                    <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg
+                                        class="h-6 w-6 text-green-600"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
                                         <path
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
@@ -593,16 +586,8 @@ function onValueFormMinutes(event: Event) {
                             </label>
 
                             <!-- Adjustment Card -->
-                            <label
-                                v-if="canAddAdjustments"
-                                class="flex-1 cursor-pointer"
-                            >
-                                <input
-                                    v-model="entryForm.type"
-                                    type="radio"
-                                    value="adjustment"
-                                    class="sr-only"
-                                />
+                            <label v-if="canAddAdjustments" class="flex-1 cursor-pointer">
+                                <input v-model="entryForm.type" type="radio" value="adjustment" class="sr-only" />
                                 <div
                                     :class="[
                                         'flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all',
@@ -611,7 +596,12 @@ function onValueFormMinutes(event: Event) {
                                             : 'border-gray-200 bg-white hover:border-amber-300',
                                     ]"
                                 >
-                                    <svg class="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg
+                                        class="h-6 w-6 text-amber-600"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
                                         <path
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
@@ -634,36 +624,47 @@ function onValueFormMinutes(event: Event) {
                             <TagInput v-model="entryForm.tags" placeholder="Add tags..." :allow-create="true" />
                         </div>
 
-                        <div class="mb-4">
-                            <label class="mb-2 block text-sm font-medium text-gray-700">Time</label>
-                            <div class="flex gap-3">
-                                <div class="flex-1">
-                                    <label class="mb-1 block text-xs text-gray-600">Hours</label>
-                                    <input
-                                        :value="entryFormHours"
-                                        @blur="onValueFormHours"
-                                        @keypress="onValueFormHours"
-                                        @input="onValueFormHours"
-                                        type="number"
-                                        min="0"
-                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                                        placeholder="0"
-                                    />
-                                </div>
-                                <div class="flex-1">
-                                    <label class="mb-1 block text-xs text-gray-600">Minutes</label>
-                                    <input
-                                        :value="entryFormMinutes"
-                                        @blur="onValueFormMinutes"
-                                        @keypress="onValueFormMinutes"
-                                        @input="onValueFormMinutes"
-                                        type="number"
-                                        min="0"
-                                        max="59"
-                                        step="5"
-                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                                        placeholder="0"
-                                    />
+                        <div class="flex flex-col md:flex-row gap-3 mb-4">
+                            <div class="mb-4 w-full flex flex-col justify-around">
+                                <label class="mb-1 block text-sm font-medium text-gray-700">Reference Date</label>
+                                <input
+                                    v-model="entryForm.reference_date"
+                                    type="date"
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                />
+                            </div>
+
+                            <div class="mb-4 w-full">
+                                <label class="mb-2 block text-sm font-medium text-gray-700">Time</label>
+                                <div class="flex gap-3">
+                                    <div class="flex-1">
+                                        <label class="mb-1 block text-xs text-gray-600">Hours</label>
+                                        <input
+                                            :value="entryFormHours"
+                                            @blur="onValueFormHours"
+                                            @keypress="onValueFormHours"
+                                            @input="onValueFormHours"
+                                            type="number"
+                                            min="0"
+                                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                    <div class="flex-1">
+                                        <label class="mb-1 block text-xs text-gray-600">Minutes</label>
+                                        <input
+                                            :value="entryFormMinutes"
+                                            @blur="onValueFormMinutes"
+                                            @keypress="onValueFormMinutes"
+                                            @input="onValueFormMinutes"
+                                            type="number"
+                                            min="0"
+                                            max="59"
+                                            step="5"
+                                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                            placeholder="0"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -684,15 +685,6 @@ function onValueFormMinutes(event: Event) {
                                 rows="2"
                                 class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                             ></textarea>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="mb-1 block text-sm font-medium text-gray-700">Reference Date</label>
-                            <input
-                                v-model="entryForm.reference_date"
-                                type="date"
-                                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                            />
                         </div>
                     </template>
                 </div>

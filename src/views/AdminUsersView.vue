@@ -78,7 +78,7 @@ const permissionGroups = computed(() => {
 type ModalTab = 'info' | 'role' | 'permissions' | 'client';
 
 const showModal = ref(false);
-const activeTab = ref<ModalTab>('info');
+const activeTab = ref<ModalTab | string>('info');
 const selectedUserDetail = ref<UserDetail | null>(null);
 const modalLoading = ref(false);
 
@@ -776,7 +776,7 @@ onMounted(async () => {
                         <span v-if="tab === 'info'">Basic Info</span>
                         <span v-else-if="tab === 'role'">Role</span>
                         <span v-else-if="tab === 'client'">Client</span>
-                        <span v-else>Extra Permissions</span>
+                        <span v-else>Permissions</span>
                     </button>
                 </div>
 
@@ -1064,7 +1064,7 @@ onMounted(async () => {
                         </div>
                     </div>
 
-                    <!-- ── Extra Permissions ── -->
+                    <!-- ── Permissions ── -->
                     <div v-else class="space-y-5">
                         <!-- Info banner -->
                         <div
