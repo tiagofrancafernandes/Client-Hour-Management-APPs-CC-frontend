@@ -321,36 +321,43 @@ onUnmounted(() => {
                     </button>
                 </div>
 
-                <div class="flex justify-end w-full truncate">
-                    <div :class="['px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap']">
-                        <!-- List All toggle - admin only -->
-                        <label v-if="canViewAnyTimer" class="flex cursor-pointer items-center gap-2 select-none">
-                            <span class="text-sm text-gray-600">List all users</span>
 
-                            <button
-                                type="button"
-                                role="switch"
-                                :aria-checked="listAll"
-                                :class="[
-                                    'relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200',
-                                    {
-                                        'bg-red-600': listAll,
-                                        'bg-gray-200': !listAll,
-                                    },
-                                ]"
-                                @click="listAll = !listAll"
-                            >
-                                <span
+                <div class="flex justify-between w-full">
+                    <div class="flex md:justify-start w-full p-3">
+                        <CButton icon="mdi:reload" preset="outlined-black" @click="loadTimers" class="py-1">Refresh list</CButton>
+                    </div>
+
+                    <div class="flex justify-end w-full truncate">
+                        <div :class="['px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap']">
+                            <!-- List All toggle - admin only -->
+                            <label v-if="canViewAnyTimer" class="flex cursor-pointer items-center gap-2 select-none">
+                                <span class="text-sm text-gray-600">List all users</span>
+
+                                <button
+                                    type="button"
+                                    role="switch"
+                                    :aria-checked="listAll"
                                     :class="[
-                                        'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200',
+                                        'relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200',
                                         {
-                                            'translate-x-5': listAll,
-                                            'translate-x-0': !listAll,
+                                            'bg-red-600': listAll,
+                                            'bg-gray-200': !listAll,
                                         },
                                     ]"
-                                />
-                            </button>
-                        </label>
+                                    @click="listAll = !listAll"
+                                >
+                                    <span
+                                        :class="[
+                                            'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200',
+                                            {
+                                                'translate-x-5': listAll,
+                                                'translate-x-0': !listAll,
+                                            },
+                                        ]"
+                                    />
+                                </button>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
