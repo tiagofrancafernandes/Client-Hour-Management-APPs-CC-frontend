@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useConfirm } from '@/composables/useConfirm';
 import { useClients } from '@/composables/useClients';
 import { useWallets } from '@/composables/useWallets';
+import { useUsers } from '@/composables/useUsers';
 import TimerStartModal from '@/components/TimerStartModal.vue';
 import TimerConfirmModal from '@/components/TimerConfirmModal.vue';
 import ManualEntryModal from '@/components/ManualEntryModal.vue';
@@ -19,6 +20,7 @@ const authStore = useAuthStore();
 const { confirm } = useConfirm();
 const { clients, fetchClients } = useClients();
 const { wallets, fetchWallets } = useWallets();
+const { users, fetchUsers, searchUsers } = useUsers();
 
 const callAction = ref<any>(null);
 const showStartModal = ref(false);
@@ -29,6 +31,7 @@ const listAll = ref(false);
 const showManualEntryModal = ref(false);
 const selectedClientId = ref<string | number | null>(null);
 const selectedWalletId = ref<string | number | null>(null);
+const selectedUserId = ref<string | number | null>(null);
 
 const canCreateTimer = computed(() => authStore.can('timer.create'));
 const canConfirmTimer = computed(() => authStore.can('timer.confirm'));
@@ -57,6 +60,13 @@ const walletOptions = computed(() => {
     }));
 });
 
+const userOptions = computed(() => {
+    return users.value.map((user) => ({
+        value: user.id,
+        label: user.name,
+    }));
+});
+
 async function refreshClientOptions(query: string): Promise<void> {
     await fetchClients(1, query);
 }
@@ -67,6 +77,10 @@ async function refreshWalletOptions(query: string): Promise<void> {
     }
 
     await fetchWallets();
+}
+
+async function refreshUserOptions(query: string): Promise<void> {
+    await searchUsers(query);
 }
 
 function isOwnTimer(timer: Timer): boolean {
@@ -89,6 +103,11 @@ const filteredTimers = computed(() => {
     // Filter by wallet
     if (selectedWalletId.value) {
         result = result.filter((timer) => timer.wallet_id === selectedWalletId.value);
+    }
+
+    // Filter by user
+    if (selectedUserId.value) {
+        result = result.filter((timer) => timer.user_id === selectedUserId.value);
     }
 
     return result;
@@ -211,7 +230,11 @@ async function loadTimers(): Promise<void> {
     await timerStore.fetchTimers(undefined, listAll.value);
 }
 
-watch(listAll, () => {
+watch(listAll, (newValue) => {
+    if (!newValue) {
+        selectedUserId.value = null;
+    }
+
     loadTimers();
 });
 
@@ -258,6 +281,10 @@ onMounted(async () => {
     await loadTimers();
     await fetchClients(1, '');
     await fetchWallets();
+
+    if (canViewAnyTimer.value) {
+        await fetchUsers();
+    }
 
     callAction.value = (route.query.call as string) || null;
 
@@ -382,7 +409,7 @@ onUnmounted(() => {
 
                 <!-- Client and Wallet Filters -->
                 <div class="border-t border-gray-200 p-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div :class="['grid gap-4', canViewAnyTimer ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2']">
                         <CTypeahead
                             v-model="selectedClientId"
                             label="Filter by Client"
@@ -404,6 +431,18 @@ onUnmounted(() => {
                             empty-text="No wallets available"
                             loading-text="Loading wallets..."
                             :disabled="!selectedClientId"
+                        />
+
+                        <CTypeahead
+                            v-if="canViewAnyTimer && listAll"
+                            v-model="selectedUserId"
+                            label="Filter by User"
+                            placeholder="Search user..."
+                            clearable
+                            :initial-options="userOptions"
+                            :refresh-options="refreshUserOptions"
+                            empty-text="No users found"
+                            loading-text="Loading users..."
                         />
                     </div>
                 </div>
