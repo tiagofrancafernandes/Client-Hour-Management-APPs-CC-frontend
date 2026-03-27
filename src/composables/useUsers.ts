@@ -36,9 +36,9 @@ export function useUsers() {
         }
     }
 
-    async function searchUsers(search: string): Promise<User[]> {
+    async function searchUsers(search: string, extra: Record<string, unknown> = {}): Promise<User[]> {
         try {
-            const response = await api.get<PaginatedResponse<User>>('/users', { search, per_page: 10 });
+            const response = await api.get<PaginatedResponse<User>>('/users', { search, per_page: 10, ...extra });
 
             return response.data;
         } catch (e) {

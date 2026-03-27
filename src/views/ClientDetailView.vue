@@ -27,7 +27,7 @@ const {
     deleteClientUser,
 } = useClientUsers();
 const { searchUsers } = useUsers();
-const { canManageWallets, canManageClients } = usePermissions();
+const { canManageWallets, canManageClients, hasPermission } = usePermissions();
 const toast = useToast();
 
 const showCreateWalletModal = ref(false);
@@ -36,6 +36,14 @@ const editingWallet = ref<WalletWithBalance | null>(null);
 const newWalletName = ref('');
 const newWalletDescription = ref('');
 const newWalletHourlyRate = ref<number | undefined>(undefined);
+const newWalletCurrencyCode = ref('USD');
+const newWalletInternalNote = ref('');
+
+const canViewInternalNote = computed(() => {
+    return hasPermission('wallet.view_internal_note');
+});
+
+const currencyCodes = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'MXN', 'BRL'];
 
 const showCreateUserModal = ref(false);
 const showEditUserModal = ref(false);
@@ -59,17 +67,26 @@ async function handleCreateWallet() {
     }
 
     try {
-        await createWallet({
+        const payload: Record<string, unknown> = {
             client_id: clientId,
             name: newWalletName.value,
             description: newWalletDescription.value || undefined,
             hourly_rate_reference: newWalletHourlyRate.value,
-        });
+            currency_code: newWalletCurrencyCode.value || undefined,
+        };
+
+        if (canViewInternalNote.value) {
+            payload.internal_note = newWalletInternalNote.value || undefined;
+        }
+
+        await createWallet(payload);
 
         showCreateWalletModal.value = false;
         newWalletName.value = '';
         newWalletDescription.value = '';
         newWalletHourlyRate.value = undefined;
+        newWalletCurrencyCode.value = 'USD';
+        newWalletInternalNote.value = '';
         fetchClient(clientId);
     } catch {
         // Error handled in composable
@@ -139,57 +156,47 @@ const hasClientUsers = computed(() => {
 // ─── Attach Existing User Modal ───────────────────────────────────────────────
 
 const showAttachModal = ref(false);
-const attachSearch = ref('');
-const attachResults = ref<User[]>([]);
-const attachSearchLoading = ref(false);
 const attachSelected = ref<User | null>(null);
 const attachRole = ref<'admin' | 'member'>('member');
 const attachLoading = ref(false);
-const attachSearchTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+const attachUserCache = new Map<number, User>();
 
 function openAttachModal(): void {
     showAttachModal.value = true;
-    attachSearch.value = '';
-    attachResults.value = [];
     attachSelected.value = null;
     attachRole.value = 'member';
 }
 
 function closeAttachModal(): void {
     showAttachModal.value = false;
-    attachSearch.value = '';
-    attachResults.value = [];
     attachSelected.value = null;
+    attachUserCache.clear();
 }
 
-async function onAttachSearchInput(): Promise<void> {
-    if (attachSearchTimer.value) {
-        clearTimeout(attachSearchTimer.value);
+async function searchAttachableUsers({ searchTerm }: { searchTerm: string }) {
+    if (!searchTerm.trim()) {
+        return [];
     }
 
-    if (!attachSearch.value.trim()) {
-        attachResults.value = [];
+    const results = await searchUsers(searchTerm.trim(), { without_client: 1, role: 'customer' });
+
+    results.forEach((u) => {
+        attachUserCache.set(u.id, u);
+    });
+
+    return results.map((u) => ({ value: u.id, label: u.name }));
+}
+
+function onAttachUserChange({ value }: { value: unknown }): void {
+    if (!value) {
+        attachSelected.value = null;
 
         return;
     }
 
-    attachSearchTimer.value = setTimeout(async () => {
-        attachSearchLoading.value = true;
+    const user = attachUserCache.get(value as number);
 
-        try {
-            attachResults.value = await searchUsers(attachSearch.value.trim());
-        } catch {
-            // ignore
-        } finally {
-            attachSearchLoading.value = false;
-        }
-    }, 350);
-}
-
-function selectAttachUser(user: User): void {
-    attachSelected.value = user;
-    attachSearch.value = user.name;
-    attachResults.value = [];
+    attachSelected.value = user ?? null;
 }
 
 async function handleAttachUser(): Promise<void> {
@@ -502,77 +509,13 @@ async function handleDeleteUser(userId: number) {
                                 <span class="text-red-500">*</span>
                             </label>
 
-                            <div class="relative">
-                                <input
-                                    v-model="attachSearch"
-                                    type="text"
-                                    placeholder="Type name or email..."
-                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
-                                    @input="onAttachSearchInput"
-                                />
-
-                                <div v-if="attachSearchLoading" class="absolute top-1/2 right-3 -translate-y-1/2">
-                                    <div
-                                        class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"
-                                    ></div>
-                                </div>
-                            </div>
-
-                            <!-- Results dropdown -->
-                            <div
-                                v-if="attachResults.length > 0"
-                                class="mt-1 max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
-                            >
-                                <button
-                                    v-for="result in attachResults"
-                                    :key="result.id"
-                                    type="button"
-                                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition hover:bg-gray-50"
-                                    @click="selectAttachUser(result)"
-                                >
-                                    <div
-                                        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-100 text-xs font-bold text-red-700"
-                                    >
-                                        {{ result.name.charAt(0).toUpperCase() }}
-                                    </div>
-
-                                    <div>
-                                        <p class="font-medium text-gray-900">{{ result.name }}</p>
-                                        <p class="text-xs text-gray-500">{{ result.email }}</p>
-                                    </div>
-
-                                    <span
-                                        v-if="result.customer_id"
-                                        class="ml-auto shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700"
-                                    >
-                                        Already assigned
-                                    </span>
-                                </button>
-                            </div>
-
-                            <!-- Selected user chip -->
-                            <div
-                                v-if="attachSelected"
-                                class="mt-2 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2"
-                            >
-                                <Icon icon="mdi:account-check" class="shrink-0 text-red-600" />
-
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-gray-900 truncate">{{ attachSelected.name }}</p>
-                                    <p class="text-xs text-gray-500 truncate">{{ attachSelected.email }}</p>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    class="shrink-0 text-gray-400 hover:text-gray-600"
-                                    @click="
-                                        attachSelected = null;
-                                        attachSearch = '';
-                                    "
-                                >
-                                    <Icon icon="mdi:close" class="text-sm" />
-                                </button>
-                            </div>
+                            <CTypeahead
+                                :refresh-options="searchAttachableUsers"
+                                placeholder="Type name or email..."
+                                empty-text="No users found"
+                                clearable
+                                @change="onAttachUserChange"
+                            />
                         </div>
 
                         <!-- Role selector (only when there's already an admin) -->
@@ -655,17 +598,27 @@ async function handleDeleteUser(userId: number) {
                         </div>
 
                         <!-- Footer -->
-                        <div class="flex justify-end gap-2 pt-2">
-                            <CButton preset="outlined-black" type="button" @click="closeAttachModal">Cancel</CButton>
+                        <div class="flex justify-between gap-2 pt-2">
+                            <div class="flex">
+                                <CButton preset="primary" icon="mdi:account-plus" @click="showCreateUserModal = true">
+                                    New User
+                                </CButton>
+                            </div>
 
-                            <CButton
-                                preset="primary"
-                                icon="mdi:account-arrow-right"
-                                :disabled="!attachSelected || attachLoading"
-                                @click="handleAttachUser"
-                            >
-                                {{ attachLoading ? 'Linking...' : 'Link User' }}
-                            </CButton>
+                            <div class="flex justify-end gap-2">
+                                <CButton preset="outlined-black" type="button" @click="closeAttachModal">
+                                    Cancel
+                                </CButton>
+
+                                <CButton
+                                    preset="primary"
+                                    icon="mdi:account-arrow-right"
+                                    :disabled="!attachSelected || attachLoading"
+                                    @click="handleAttachUser"
+                                >
+                                    {{ attachLoading ? 'Linking...' : 'Link User' }}
+                                </CButton>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -692,6 +645,15 @@ async function handleDeleteUser(userId: number) {
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                     ></textarea>
                 </div>
+                <div v-if="canViewInternalNote" class="mb-4">
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Internal Note</label>
+                    <textarea
+                        v-model="newWalletInternalNote"
+                        rows="2"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                        placeholder="Visible only to authorized users"
+                    ></textarea>
+                </div>
                 <div class="mb-4">
                     <label class="mb-1 block text-sm font-medium text-gray-700">Hourly Rate Reference (optional)</label>
                     <input
@@ -701,6 +663,18 @@ async function handleDeleteUser(userId: number) {
                         min="0"
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                     />
+                </div>
+                <div class="mb-4">
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Currency Code</label>
+                    <select
+                        v-model="newWalletCurrencyCode"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                    >
+                        <option value="">Select currency...</option>
+                        <option v-for="code in currencyCodes" :key="code" :value="code">
+                            {{ code }}
+                        </option>
+                    </select>
                 </div>
                 <div class="flex justify-end gap-2">
                     <button
@@ -757,88 +731,88 @@ async function handleDeleteUser(userId: number) {
                     <CButton @click="handleUpdateWallet">Update</CButton>
                 </div>
             </div>
+        </div>
 
-            <!-- Create User Modal -->
-            <div v-if="showCreateUserModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                <div class="w-full max-w-md rounded-lg bg-white p-6">
-                    <h2 class="mb-4 text-lg font-semibold">Add User</h2>
+        <!-- Create User Modal -->
+        <div v-if="showCreateUserModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div class="w-full max-w-md rounded-lg bg-white p-6">
+                <h2 class="mb-4 text-lg font-semibold">Add User</h2>
 
-                    <div class="space-y-4">
-                        <CInput v-model="userForm.name" label="Name" type="text" required />
+                <div class="space-y-4">
+                    <CInput v-model="userForm.name" label="Name" type="text" required />
 
-                        <CInput v-model="userForm.email" label="Email" type="email" required />
+                    <CInput v-model="userForm.email" label="Email" type="email" required />
 
-                        <CInput v-model="userForm.password" label="Password" type="password" required />
+                    <CInput v-model="userForm.password" label="Password" type="password" required />
 
-                        <CInput
-                            v-model="userForm.password_confirmation"
-                            label="Confirm Password"
-                            type="password"
-                            required
-                        />
-                    </div>
+                    <CInput
+                        v-model="userForm.password_confirmation"
+                        label="Confirm Password"
+                        type="password"
+                        required
+                    />
+                </div>
 
-                    <div class="mt-6 flex justify-end gap-2">
-                        <CButton preset="gray" @click="showCreateUserModal = false">Cancel</CButton>
+                <div class="mt-6 flex justify-end gap-2">
+                    <CButton preset="gray" @click="showCreateUserModal = false">Cancel</CButton>
 
-                        <CButton
-                            preset="primary"
-                            @click="handleCreateUser"
-                            :disabled="!userForm.name || !userForm.email || !userForm.password"
-                        >
-                            Create User
-                        </CButton>
-                    </div>
+                    <CButton
+                        preset="primary"
+                        @click="handleCreateUser"
+                        :disabled="!userForm.name || !userForm.email || !userForm.password"
+                    >
+                        Create User
+                    </CButton>
                 </div>
             </div>
+        </div>
 
-            <!-- Edit User Modal -->
-            <div
-                v-if="showEditUserModal && editingUser"
-                class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-            >
-                <div class="w-full max-w-md rounded-lg bg-white p-6">
-                    <h2 class="mb-4 text-lg font-semibold">Edit User</h2>
+        <!-- Edit User Modal -->
+        <div
+            v-if="showEditUserModal && editingUser"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+        >
+            <div class="w-full max-w-md rounded-lg bg-white p-6">
+                <h2 class="mb-4 text-lg font-semibold">Edit User</h2>
 
-                    <div class="space-y-4">
-                        <CInput v-model="editingUser.name" label="Name" type="text" required />
+                <div class="space-y-4">
+                    <CInput v-model="editingUser.name" label="Name" type="text" required />
 
-                        <CInput v-model="editingUser.email" label="Email" type="email" required />
+                    <CInput v-model="editingUser.email" label="Email" type="email" required />
 
-                        <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
-                            <p class="text-sm text-yellow-800">
-                                Leave the password fields blank if you don't want to change it
-                            </p>
-                        </div>
-
-                        <CInput
-                            v-model="editingUser.password"
-                            label="New Password (optional)"
-                            type="password"
-                            placeholder="Leave blank to keep current password"
-                        />
-
-                        <CInput
-                            v-if="editingUser.password"
-                            v-model="editingUser.password_confirmation"
-                            label="Confirm New Password"
-                            type="password"
-                        />
+                    <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+                        <p class="text-sm text-yellow-800">
+                            Leave the password fields blank if you don't want to change it
+                        </p>
                     </div>
 
-                    <div class="mt-6 flex justify-end gap-2">
-                        <CButton
-                            preset="gray"
-                            @click="
-                                showEditUserModal = false;
-                                editingUser = null;
-                            "
-                        >
-                            Cancel
-                        </CButton>
+                    <CInput
+                        v-model="editingUser.password"
+                        label="New Password (optional)"
+                        type="password"
+                        placeholder="Leave blank to keep current password"
+                    />
 
-                        <CButton preset="primary" @click="handleUpdateUser">Save Changes</CButton>
-                    </div>
+                    <CInput
+                        v-if="editingUser.password"
+                        v-model="editingUser.password_confirmation"
+                        label="Confirm New Password"
+                        type="password"
+                    />
+                </div>
+
+                <div class="mt-6 flex justify-end gap-2">
+                    <CButton
+                        preset="gray"
+                        @click="
+                            showEditUserModal = false;
+                            editingUser = null;
+                        "
+                    >
+                        Cancel
+                    </CButton>
+
+                    <CButton preset="primary" @click="handleUpdateUser">Save Changes</CButton>
                 </div>
             </div>
         </div>

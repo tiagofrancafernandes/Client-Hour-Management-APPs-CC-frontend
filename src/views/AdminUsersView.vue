@@ -103,6 +103,16 @@ function getRoleColor(role: string): string {
     return colors[role] ?? 'bg-gray-100 text-gray-700';
 }
 
+const currentSelectedRole = computed(() => {
+    if (!selectedUserDetail.value || !selectedUserDetail.value?.user) {
+        return false;
+    }
+
+    let selectedUserRoles: any[] = (selectedUserDetail.value || {})?.user?.roles || [];
+
+    return selectedUserRoles[0]?.name || null;
+});
+
 function isCurrentRole(role: string | null = null): boolean {
     if (!role) {
         return false;
@@ -537,6 +547,18 @@ async function handleCreateUser(): Promise<void> {
     }
 }
 
+const allowedTabs = computed(() => {
+    let _currentSelectedRole = currentSelectedRole.value || null;
+
+    const tabs = ['info', 'role', 'permissions'];
+
+    if (_currentSelectedRole && ['customer'].includes(_currentSelectedRole)) {
+        tabs.push('client');
+    }
+
+    return tabs;
+});
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 onMounted(async () => {
@@ -739,7 +761,7 @@ onMounted(async () => {
                 <!-- Tabs -->
                 <div class="flex shrink-0 border-b border-gray-200">
                     <button
-                        v-for="tab in ['info', 'role', 'client', 'permissions'] as const"
+                        v-for="tab in allowedTabs"
                         :key="tab"
                         type="button"
                         :class="[

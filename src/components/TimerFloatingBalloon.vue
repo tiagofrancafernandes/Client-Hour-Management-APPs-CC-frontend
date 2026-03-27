@@ -170,7 +170,7 @@ function openModal() {
     <div
         v-if="showFloatingModal"
         :class="[
-            'fixed bottom-4 right-4 z-40 bg-white border border-gray-200 rounded-lg shadow-lg transition-all duration-300',
+            'fixed bottom-2 right-2 z-40 bg-white border border-gray-200 rounded-lg shadow-lg transition-all duration-300',
             {
                 'w-80': expanded,
                 'w-16 h-16': !expanded,

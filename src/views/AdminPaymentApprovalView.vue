@@ -1,37 +1,75 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { Icon } from '@iconify/vue';
-import type { CreditPurchasePayment } from '@/types';
+import type { CreditPurchase, CreditPurchasePayment } from '@/types';
 import { useCreditPurchases } from '@/composables/useCreditPurchases';
 import { useToast } from '@/composables/useToast';
+
+type TypeaheadOption = {
+    value: unknown;
+    label: string;
+};
 
 const { purchases, loading, error, fetchPurchases, getReceiptUrl } = useCreditPurchases();
 const toast = useToast();
 
-const selectedPayment = ref<CreditPurchasePayment | null>(null);
+type PendingPayment = CreditPurchasePayment & {
+    creditPurchase: CreditPurchase;
+};
+
+const selectedPayment = ref<PendingPayment | null>(null);
 const showApprovalModal = ref(false);
 const approvalNotes = ref('');
 const approvalAction = ref<'approve' | 'reject' | null>(null);
 const isSubmitting = ref(false);
 
+const offlinePaymentMethodKeys = new Set<string>(['pix_offline', 'bank_transfer']);
+
 // Filter pending payments
-const pendingPayments = ref<CreditPurchasePayment[]>([]);
+const pendingPayments = ref<PendingPayment[]>([]);
+
+const selectedClientId = ref<number | null>(null);
+const selectedWalletId = ref<number | null>(null);
+const selectedPaymentMethodKey = ref<string | null>(null);
 
 onMounted(async () => {
     await loadPendingPayments();
 });
 
+function isOfflinePaymentMethod(method: CreditPurchasePayment['payment_method']): boolean {
+    if (!method) {
+        return false;
+    }
+
+    if (typeof method === 'string') {
+        if (method.includes('offline')) {
+            return true;
+        }
+
+        return offlinePaymentMethodKeys.has(method);
+    }
+
+    if (method.is_offline) {
+        return true;
+    }
+
+    return offlinePaymentMethodKeys.has(method.key);
+}
+
 async function loadPendingPayments(): Promise<void> {
     await fetchPurchases();
 
-    // Extract pending PIX Offline payments
-    const pending: CreditPurchasePayment[] = [];
+    // Extract pending offline payments
+    const pending: PendingPayment[] = [];
 
     purchases.value.forEach((purchase) => {
         if (purchase.payments) {
             purchase.payments.forEach((payment) => {
-                if (payment.payment_method === 'pix_offline' && payment.payment_status === 'pending') {
-                    pending.push(payment);
+                if (isOfflinePaymentMethod(payment.payment_method) && payment.payment_status === 'pending') {
+                    pending.push({
+                        ...payment,
+                        creditPurchase: purchase,
+                    });
                 }
             });
         }
@@ -40,7 +78,188 @@ async function loadPendingPayments(): Promise<void> {
     pendingPayments.value = pending;
 }
 
-function openApprovalModal(payment: CreditPurchasePayment, action: 'approve' | 'reject'): void {
+function getPaymentMethodKey(method: CreditPurchasePayment['payment_method']): string | null {
+    if (!method) {
+        return null;
+    }
+
+    if (typeof method === 'string') {
+        return method;
+    }
+
+    return method.key;
+}
+
+const filteredPendingPayments = computed(() => {
+    let filtered = pendingPayments.value;
+
+    if (selectedClientId.value) {
+        filtered = filtered.filter((payment) => {
+            return payment.creditPurchase.wallet?.client?.id === selectedClientId.value;
+        });
+    }
+
+    if (selectedWalletId.value) {
+        filtered = filtered.filter((payment) => {
+            return payment.creditPurchase.wallet?.id === selectedWalletId.value;
+        });
+    }
+
+    if (selectedPaymentMethodKey.value) {
+        filtered = filtered.filter((payment) => {
+            return getPaymentMethodKey(payment.payment_method) === selectedPaymentMethodKey.value;
+        });
+    }
+
+    return filtered;
+});
+
+const activeFiltersCount = computed(() => {
+    let count = 0;
+
+    if (selectedClientId.value) {
+        count += 1;
+    }
+
+    if (selectedWalletId.value) {
+        count += 1;
+    }
+
+    if (selectedPaymentMethodKey.value) {
+        count += 1;
+    }
+
+    return count;
+});
+
+async function waitForPurchases(): Promise<void> {
+    if (!loading.value) {
+        return;
+    }
+
+    await new Promise<void>((resolve) => {
+        const stop = watch(
+            () => loading.value,
+            (isLoading) => {
+                if (isLoading) {
+                    return;
+                }
+
+                stop();
+                resolve();
+            }
+        );
+    });
+}
+
+async function ensurePurchasesLoaded(): Promise<void> {
+    if (purchases.value.length > 0) {
+        return;
+    }
+
+    if (!loading.value) {
+        await fetchPurchases();
+        return;
+    }
+
+    await waitForPurchases();
+}
+
+function buildClientOptions(): TypeaheadOption[] {
+    const map = new Map<number, string>();
+
+    purchases.value.forEach((purchase) => {
+        const client = purchase.wallet?.client;
+
+        if (!client || map.has(client.id)) {
+            return;
+        }
+
+        map.set(client.id, client.name);
+    });
+
+    return Array.from(map.entries()).map(([id, name]) => {
+        return {
+            value: id,
+            label: name,
+        };
+    });
+}
+
+function buildWalletOptions(): TypeaheadOption[] {
+    const map = new Map<number, string>();
+
+    purchases.value.forEach((purchase) => {
+        const wallet = purchase.wallet;
+
+        if (!wallet || map.has(wallet.id)) {
+            return;
+        }
+
+        map.set(wallet.id, wallet.name);
+    });
+
+    return Array.from(map.entries()).map(([id, name]) => {
+        return {
+            value: id,
+            label: name,
+        };
+    });
+}
+
+function buildPaymentMethodOptions(): TypeaheadOption[] {
+    const map = new Map<string, string>();
+
+    purchases.value.forEach((purchase) => {
+        purchase.payments?.forEach((payment) => {
+            const methodKey = getPaymentMethodKey(payment.payment_method);
+
+            if (!methodKey || map.has(methodKey)) {
+                return;
+            }
+
+            const methodLabel =
+                typeof payment.payment_method === 'string'
+                    ? payment.payment_method
+                    : (payment.payment_method?.label ?? methodKey);
+
+            map.set(methodKey, methodLabel);
+        });
+    });
+
+    return Array.from(map.entries()).map(([key, label]) => {
+        return {
+            value: key,
+            label,
+        };
+    });
+}
+
+async function loadClientOptions(): Promise<TypeaheadOption[]> {
+    await ensurePurchasesLoaded();
+
+    return buildClientOptions();
+}
+
+async function loadWalletOptions(): Promise<TypeaheadOption[]> {
+    await ensurePurchasesLoaded();
+
+    return buildWalletOptions();
+}
+
+async function loadPaymentMethodOptions(): Promise<TypeaheadOption[]> {
+    await ensurePurchasesLoaded();
+
+    return buildPaymentMethodOptions();
+}
+
+function resetFilters(): void {
+    selectedClientId.value = null;
+    selectedWalletId.value = null;
+    selectedPaymentMethodKey.value = null;
+}
+
+function openApprovalModal(payment: PendingPayment, action: 'approve' | 'reject'): void {
     selectedPayment.value = payment;
     approvalAction.value = action;
     approvalNotes.value = '';
@@ -151,12 +370,63 @@ function getPaymentBadgeColor(status: string): string {
     <div class="container mx-auto px-4 py-8">
         <div class="mb-6">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">Payment Approvals</h1>
-            <p class="text-gray-600">Review and approve PIX Offline payments</p>
+            <p class="text-gray-600">Review and approve offline payments</p>
         </div>
 
         <!-- Error State -->
         <div v-if="error" class="mb-6 rounded-lg bg-red-100 p-4 text-red-700">
             {{ error }}
+        </div>
+
+        <!-- Filters -->
+        <div class="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                    <Icon icon="mdi:filter-variant" class="w-4 h-4 text-gray-500" />
+                    Filters
+                </div>
+
+                <button
+                    v-if="activeFiltersCount > 0"
+                    type="button"
+                    class="text-xs font-medium text-gray-600 hover:text-red-600 transition-colors"
+                    @click="resetFilters"
+                >
+                    Clear all
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+                <CTypeahead
+                    v-model="selectedClientId"
+                    label="Client"
+                    placeholder="Select a client"
+                    clearable
+                    loading-text="Loading clients..."
+                    empty-text="No clients found"
+                    :initial-options="loadClientOptions"
+                />
+
+                <CTypeahead
+                    v-model="selectedWalletId"
+                    label="Wallet"
+                    placeholder="Select a wallet"
+                    clearable
+                    loading-text="Loading wallets..."
+                    empty-text="No wallets found"
+                    :initial-options="loadWalletOptions"
+                />
+
+                <CTypeahead
+                    v-model="selectedPaymentMethodKey"
+                    label="Payment Method"
+                    placeholder="Select a method"
+                    clearable
+                    loading-text="Loading methods..."
+                    empty-text="No methods found"
+                    :initial-options="loadPaymentMethodOptions"
+                />
+            </div>
         </div>
 
         <!-- Loading State -->
@@ -169,18 +439,26 @@ function getPaymentBadgeColor(status: string): string {
 
         <!-- Empty State -->
         <div
-            v-else-if="pendingPayments.length === 0"
+            v-else-if="filteredPendingPayments.length === 0"
             class="rounded-lg border border-green-200 bg-green-50 p-12 text-center"
         >
             <Icon icon="mdi:check-circle" class="w-12 h-12 text-green-600 mx-auto mb-4" />
-            <p class="text-green-900 font-semibold mb-2">No Pending Approvals</p>
-            <p class="text-sm text-green-700">All PIX payments have been reviewed</p>
+            <p class="text-green-900 font-semibold mb-2">
+                {{ activeFiltersCount > 0 ? 'No Results Found' : 'No Pending Approvals' }}
+            </p>
+            <p class="text-sm text-green-700">
+                {{
+                    activeFiltersCount > 0
+                        ? 'No pending approvals match the current filters'
+                        : 'All offline payments have been reviewed'
+                }}
+            </p>
         </div>
 
         <!-- Pending Payments List -->
         <div v-else class="space-y-3">
             <div
-                v-for="payment in pendingPayments"
+                v-for="payment in filteredPendingPayments"
                 :key="payment.id"
                 class="rounded-lg border border-yellow-200 bg-yellow-50 p-6"
             >
@@ -225,7 +503,9 @@ function getPaymentBadgeColor(status: string): string {
                                 }}
                             </p>
 
-                            <p class="text-xs text-gray-600 mt-1">PIX Offline</p>
+                            <p class="text-xs text-gray-600 mt-1">
+                                {{ payment.payment_method?.label ?? 'Offline' }}
+                            </p>
                         </div>
                     </div>
 
