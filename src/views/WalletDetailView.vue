@@ -515,88 +515,186 @@ function onValueFormMinutes(event: Event) {
         />
 
         <!-- Add Entry Modal -->
-        <div v-if="showEntryModal" class="fixed inset-0 flex items-center justify-center bg-black/50">
+        <div v-if="showEntryModal" class="fixed inset-0 flex items-center justify-center bg-black/50 pt-4">
             <div class="w-full max-w-2xl rounded-lg bg-white p-2">
                 <h2 class="mb-4 text-lg font-semibold">Add Ledger Entry</h2>
 
                 <div class="max-h-[60vh] overflow-y-auto px-2 rounded">
-                    <div class="mb-4">
-                        <label class="mb-1 block text-sm font-medium text-gray-700">Type</label>
-                        <select
-                            v-model="entryForm.type"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                        >
-                            <option v-if="canAddDebits" value="debit">Debit (consume hours)</option>
-                            <option v-if="canAddCredits" value="credit">Credit (add hours)</option>
-                            <option v-if="canAddAdjustments" value="adjustment">Adjustment</option>
-                        </select>
-                    </div>
 
                     <div class="mb-4">
-                        <label class="mb-2 block text-sm font-medium text-gray-700">Time</label>
+                        <label class="mb-2 block text-sm font-medium text-gray-700">Type</label>
                         <div class="flex gap-3">
-                            <div class="flex-1">
-                                <label class="mb-1 block text-xs text-gray-600">Hours</label>
+                            <!-- Debit Card -->
+                            <label
+                                v-if="canAddDebits"
+                                class="flex-1 cursor-pointer"
+                            >
                                 <input
-                                    :value="entryFormHours"
-                                    @blur="onValueFormHours"
-                                    @keypress="onValueFormHours"
-                                    @input="onValueFormHours"
-                                    type="number"
-                                    min="0"
-                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                                    placeholder="0"
+                                    v-model="entryForm.type"
+                                    type="radio"
+                                    value="debit"
+                                    class="sr-only"
                                 />
-                            </div>
-                            <div class="flex-1">
-                                <label class="mb-1 block text-xs text-gray-600">Minutes</label>
+                                <div
+                                    :class="[
+                                        'flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all',
+                                        entryForm.type === 'debit'
+                                            ? 'border-red-500 bg-red-50'
+                                            : 'border-gray-200 bg-white hover:border-red-300',
+                                    ]"
+                                >
+                                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M13 13h8m-8-6h8M5 5a2 2 0 012-2h.01A2 2 0 019 5v.01A2 2 0 017.01 9H7a2 2 0 01-2-2V5z"
+                                        />
+                                    </svg>
+                                    <div class="text-center">
+                                        <p class="text-sm font-semibold text-gray-900">Debit</p>
+                                        <p class="text-xs text-gray-600">Consume hours</p>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <!-- Credit Card -->
+                            <label
+                                v-if="canAddCredits"
+                                class="flex-1 cursor-pointer"
+                            >
                                 <input
-                                    :value="entryFormMinutes"
-                                    @blur="onValueFormMinutes"
-                                    @keypress="onValueFormMinutes"
-                                    @input="onValueFormMinutes"
-                                    type="number"
-                                    min="0"
-                                    max="59"
-                                    step="5"
-                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                                    placeholder="0"
+                                    v-model="entryForm.type"
+                                    type="radio"
+                                    value="credit"
+                                    class="sr-only"
                                 />
-                            </div>
+                                <div
+                                    :class="[
+                                        'flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all',
+                                        entryForm.type === 'credit'
+                                            ? 'border-green-500 bg-green-50'
+                                            : 'border-gray-200 bg-white hover:border-green-300',
+                                    ]"
+                                >
+                                    <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M12 4v16m8-8H4"
+                                        />
+                                    </svg>
+                                    <div class="text-center">
+                                        <p class="text-sm font-semibold text-gray-900">Credit</p>
+                                        <p class="text-xs text-gray-600">Add hours</p>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <!-- Adjustment Card -->
+                            <label
+                                v-if="canAddAdjustments"
+                                class="flex-1 cursor-pointer"
+                            >
+                                <input
+                                    v-model="entryForm.type"
+                                    type="radio"
+                                    value="adjustment"
+                                    class="sr-only"
+                                />
+                                <div
+                                    :class="[
+                                        'flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all',
+                                        entryForm.type === 'adjustment'
+                                            ? 'border-amber-500 bg-amber-50'
+                                            : 'border-gray-200 bg-white hover:border-amber-300',
+                                    ]"
+                                >
+                                    <svg class="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M9 7h6m0 10v-3m-3 3v.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                        />
+                                    </svg>
+                                    <div class="text-center">
+                                        <p class="text-sm font-semibold text-gray-900">Adjustment</p>
+                                        <p class="text-xs text-gray-600">Correction</p>
+                                    </div>
+                                </div>
+                            </label>
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="mb-1 block text-sm font-medium text-gray-700">Title</label>
-                        <input
-                            v-model="entryForm.title"
-                            type="text"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                        />
-                    </div>
+                    <template v-if="entryForm.type">
+                        <div class="mb-4 overflow-visible">
+                            <label class="mb-1 block text-sm font-medium text-gray-700">Tags</label>
+                            <TagInput v-model="entryForm.tags" placeholder="Add tags..." :allow-create="true" />
+                        </div>
 
-                    <div class="mb-4">
-                        <label class="mb-1 block text-sm font-medium text-gray-700">Description</label>
-                        <textarea
-                            v-model="entryForm.description"
-                            rows="2"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                        ></textarea>
-                    </div>
+                        <div class="mb-4">
+                            <label class="mb-2 block text-sm font-medium text-gray-700">Time</label>
+                            <div class="flex gap-3">
+                                <div class="flex-1">
+                                    <label class="mb-1 block text-xs text-gray-600">Hours</label>
+                                    <input
+                                        :value="entryFormHours"
+                                        @blur="onValueFormHours"
+                                        @keypress="onValueFormHours"
+                                        @input="onValueFormHours"
+                                        type="number"
+                                        min="0"
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                        placeholder="0"
+                                    />
+                                </div>
+                                <div class="flex-1">
+                                    <label class="mb-1 block text-xs text-gray-600">Minutes</label>
+                                    <input
+                                        :value="entryFormMinutes"
+                                        @blur="onValueFormMinutes"
+                                        @keypress="onValueFormMinutes"
+                                        @input="onValueFormMinutes"
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        step="5"
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                        placeholder="0"
+                                    />
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="mb-4">
-                        <label class="mb-1 block text-sm font-medium text-gray-700">Reference Date</label>
-                        <input
-                            v-model="entryForm.reference_date"
-                            type="date"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                        />
-                    </div>
+                        <div class="mb-4">
+                            <label class="mb-1 block text-sm font-medium text-gray-700">Title</label>
+                            <input
+                                v-model="entryForm.title"
+                                type="text"
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                            />
+                        </div>
 
-                    <div class="mb-4 overflow-visible">
-                        <label class="mb-1 block text-sm font-medium text-gray-700">Tags</label>
-                        <TagInput v-model="entryForm.tags" placeholder="Add tags..." :allow-create="true" />
-                    </div>
+                        <div class="mb-4">
+                            <label class="mb-1 block text-sm font-medium text-gray-700">Description</label>
+                            <textarea
+                                v-model="entryForm.description"
+                                rows="2"
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                            ></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="mb-1 block text-sm font-medium text-gray-700">Reference Date</label>
+                            <input
+                                v-model="entryForm.reference_date"
+                                type="date"
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                            />
+                        </div>
+                    </template>
                 </div>
 
                 <div class="flex justify-end gap-2 pt-2">
@@ -607,7 +705,7 @@ function onValueFormMinutes(event: Event) {
                         Cancel
                     </button>
                     <button
-                        :disabled="entryLoading"
+                        :disabled="!entryForm.type || entryLoading"
                         class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
                         @click="handleCreateEntry"
                     >
