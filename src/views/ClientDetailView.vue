@@ -19,6 +19,7 @@ const { createWallet, updateWallet } = useWallets();
 const {
     users: clientUsers,
     loading: usersLoading,
+    error: clientUsersError,
     fetchClientUsers,
     createClientUser,
     attachUser,
@@ -251,10 +252,10 @@ async function handleAttachUser(): Promise<void> {
 
         closeAttachModal();
         toast.success('User linked successfully');
-    } catch (e: any) {
-        const msg = e?.response?.data?.message;
+    } catch {
+        const errorMessage = clientUsersError.value || 'Failed to link user';
 
-        toast.error(msg ?? 'Failed to link user');
+        toast.error(errorMessage);
     } finally {
         attachLoading.value = false;
     }
@@ -268,7 +269,9 @@ async function handleSetAdmin(userId: number): Promise<void> {
 
         toast.success('Admin updated successfully');
     } catch {
-        toast.error('Failed to update admin');
+        const errorMessage = clientUsersError.value || 'Failed to update admin';
+
+        toast.error(errorMessage);
     }
 }
 
@@ -292,7 +295,9 @@ async function handleCreateUser() {
 
         toast.success('User created successfully');
     } catch {
-        toast.error('Failed to create user');
+        const errorMessage = clientUsersError.value || 'Failed to create user';
+
+        toast.error(errorMessage);
     }
 }
 
@@ -319,7 +324,9 @@ async function handleUpdateUser() {
 
         toast.success('User updated successfully');
     } catch {
-        toast.error('Failed to update user');
+        const errorMessage = clientUsersError.value || 'Failed to update user';
+
+        toast.error(errorMessage);
     }
 }
 
@@ -333,7 +340,9 @@ async function handleDeleteUser(userId: number) {
 
         toast.success('User deleted successfully');
     } catch {
-        toast.error('Failed to delete user');
+        const errorMessage = clientUsersError.value || 'Failed to delete user';
+
+        toast.error(errorMessage);
     }
 }
 </script>
@@ -733,28 +742,6 @@ async function handleDeleteUser(userId: number) {
                 </div>
                 <div class="mb-4">
                     <label class="mb-1 block text-sm font-medium text-gray-700">
-                        Hourly Rate Reference
-                        <span v-if="newWalletCreditPurchaseAllowed" class="text-red-600">*</span>
-                        <span v-else class="text-gray-500">(optional)</span>
-                    </label>
-                    <input
-                        v-model.number="newWalletHourlyRate"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        :class="[
-                            'w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-1',
-                            newWalletValidationErrors.hourly_rate_reference
-                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
-                                : 'border-gray-300 focus:border-red-500 focus:ring-red-500',
-                        ]"
-                    />
-                    <p v-if="newWalletValidationErrors.hourly_rate_reference" class="mt-1 text-xs text-red-600">
-                        {{ newWalletValidationErrors.hourly_rate_reference }}
-                    </p>
-                </div>
-                <div class="mb-4">
-                    <label class="mb-1 block text-sm font-medium text-gray-700">
                         Currency Code
                         <span v-if="newWalletCreditPurchaseAllowed" class="text-red-600">*</span>
                     </label>
@@ -774,6 +761,28 @@ async function handleDeleteUser(userId: number) {
                     </select>
                     <p v-if="newWalletValidationErrors.currency_code" class="mt-1 text-xs text-red-600">
                         {{ newWalletValidationErrors.currency_code }}
+                    </p>
+                </div>
+                <div class="mb-4">
+                    <label class="mb-1 block text-sm font-medium text-gray-700">
+                        Hourly Rate Reference
+                        <span v-if="newWalletCreditPurchaseAllowed" class="text-red-600">*</span>
+                        <span v-else class="text-gray-500">(optional)</span>
+                    </label>
+                    <input
+                        v-model.number="newWalletHourlyRate"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        :class="[
+                            'w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-1',
+                            newWalletValidationErrors.hourly_rate_reference
+                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50'
+                                : 'border-gray-300 focus:border-red-500 focus:ring-red-500',
+                        ]"
+                    />
+                    <p v-if="newWalletValidationErrors.hourly_rate_reference" class="mt-1 text-xs text-red-600">
+                        {{ newWalletValidationErrors.hourly_rate_reference }}
                     </p>
                 </div>
                 <div class="flex justify-end gap-2">
@@ -834,7 +843,7 @@ async function handleDeleteUser(userId: number) {
         </div>
 
         <!-- Create User Modal -->
-        <div v-if="showCreateUserModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div v-if="showCreateUserModal" class="fixed inset-0 z-60 flex items-center justify-center bg-black/50">
             <div class="w-full max-w-md rounded-lg bg-white p-6">
                 <h2 class="mb-4 text-lg font-semibold">Add User</h2>
 

@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import api from '@/services/api';
+import { extractErrorMessage } from '@/utils/errorHelpers';
 import type { User, ClientUserForm, UpdateClientUserForm } from '@/types';
 
 export function useClientUsers() {
@@ -25,7 +26,7 @@ export function useClientUsers() {
 
             return response.user;
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'Failed to attach user';
+            error.value = extractErrorMessage(e);
 
             throw e;
         } finally {
@@ -54,7 +55,7 @@ export function useClientUsers() {
 
             return response.user;
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'Failed to set admin';
+            error.value = extractErrorMessage(e);
 
             throw e;
         } finally {
@@ -69,7 +70,7 @@ export function useClientUsers() {
         try {
             users.value = await api.get<User[]>(`/clients/${clientId}/users`);
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'Failed to fetch users';
+            error.value = extractErrorMessage(e);
         } finally {
             loading.value = false;
         }
@@ -86,7 +87,7 @@ export function useClientUsers() {
 
             return response.user;
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'Failed to create user';
+            error.value = extractErrorMessage(e);
 
             throw e;
         } finally {
@@ -109,7 +110,7 @@ export function useClientUsers() {
 
             return response.user;
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'Failed to update user';
+            error.value = extractErrorMessage(e);
 
             throw e;
         } finally {
@@ -126,7 +127,7 @@ export function useClientUsers() {
 
             users.value = users.value.filter((u) => u.id !== userId);
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'Failed to delete user';
+            error.value = extractErrorMessage(e);
 
             throw e;
         } finally {
