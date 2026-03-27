@@ -4,17 +4,21 @@ import { useRoute, useRouter } from 'vue-router';
 import { useTimerStore } from '@/stores/timer';
 import { useAuthStore } from '@/stores/auth';
 import { useConfirm } from '@/composables/useConfirm';
+import { useClients } from '@/composables/useClients';
+import { useWallets } from '@/composables/useWallets';
 import TimerStartModal from '@/components/TimerStartModal.vue';
 import TimerConfirmModal from '@/components/TimerConfirmModal.vue';
 import ManualEntryModal from '@/components/ManualEntryModal.vue';
 import { api } from '@/services/api';
-import type { Timer } from '@/types';
+import type { Timer, TypeaheadOption } from '@/types';
 
 const route = useRoute();
 const router = useRouter();
 const timerStore = useTimerStore();
 const authStore = useAuthStore();
 const { confirm } = useConfirm();
+const { clients, fetchClients } = useClients();
+const { wallets, fetchWallets } = useWallets();
 
 const callAction = ref<any>(null);
 const showStartModal = ref(false);
@@ -23,22 +27,71 @@ const selectedTimer = ref<Timer | null>(null);
 const filterStatus = ref<string>('all');
 const listAll = ref(false);
 const showManualEntryModal = ref(false);
+const selectedClientId = ref<string | number | null>(null);
+const selectedWalletId = ref<string | number | null>(null);
 
 const canCreateTimer = computed(() => authStore.can('timer.create'));
 const canConfirmTimer = computed(() => authStore.can('timer.confirm'));
 const canDeleteTimer = computed(() => authStore.can('timer.delete'));
 const canViewAnyTimer = computed(() => authStore.can('timer.view_any'));
 
+const clientOptions = computed(() => {
+    return clients.value.map((client) => ({
+        value: client.id,
+        label: `${client.name}${client.notes ? ` (${client.notes})` : ''}`,
+    }));
+});
+
+const filteredWallets = computed(() => {
+    if (!selectedClientId.value) {
+        return [];
+    }
+
+    return wallets.value.filter((wallet) => wallet.client_id === selectedClientId.value);
+});
+
+const walletOptions = computed(() => {
+    return filteredWallets.value.map((wallet) => ({
+        value: wallet.id,
+        label: wallet.name,
+    }));
+});
+
+async function refreshClientOptions(query: string): Promise<void> {
+    await fetchClients(1, query);
+}
+
+async function refreshWalletOptions(query: string): Promise<void> {
+    if (!selectedClientId.value) {
+        return;
+    }
+
+    await fetchWallets();
+}
+
 function isOwnTimer(timer: Timer): boolean {
     return timer.user_id === authStore.user?.id;
 }
 
 const filteredTimers = computed(() => {
-    if (filterStatus.value === 'all') {
-        return timerStore.timers;
+    let result = timerStore.timers;
+
+    // Filter by status
+    if (filterStatus.value !== 'all') {
+        result = result.filter((timer) => timer.status === filterStatus.value);
     }
 
-    return timerStore.timers.filter((timer) => timer.status === filterStatus.value);
+    // Filter by client
+    if (selectedClientId.value) {
+        result = result.filter((timer) => timer.wallet?.client_id === selectedClientId.value);
+    }
+
+    // Filter by wallet
+    if (selectedWalletId.value) {
+        result = result.filter((timer) => timer.wallet_id === selectedWalletId.value);
+    }
+
+    return result;
 });
 
 const statusCounts = computed(() => {
@@ -162,6 +215,10 @@ watch(listAll, () => {
     loadTimers();
 });
 
+watch(selectedClientId, () => {
+    selectedWalletId.value = null;
+});
+
 function openManualEntryModal(): void {
     showManualEntryModal.value = true;
 }
@@ -197,8 +254,10 @@ function startTimerAction() {
     showStartModal.value = true;
 }
 
-onMounted(() => {
-    loadTimers();
+onMounted(async () => {
+    await loadTimers();
+    await fetchClients(1, '');
+    await fetchWallets();
 
     callAction.value = (route.query.call as string) || null;
 
@@ -321,6 +380,33 @@ onUnmounted(() => {
                     </button>
                 </div>
 
+                <!-- Client and Wallet Filters -->
+                <div class="border-t border-gray-200 p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <CTypeahead
+                            v-model="selectedClientId"
+                            label="Filter by Client"
+                            placeholder="Search client..."
+                            clearable
+                            :initial-options="clientOptions"
+                            :refresh-options="refreshClientOptions"
+                            empty-text="No clients found"
+                            loading-text="Loading clients..."
+                        />
+
+                        <CTypeahead
+                            v-model="selectedWalletId"
+                            label="Filter by Wallet"
+                            placeholder="Select wallet"
+                            clearable
+                            :initial-options="walletOptions"
+                            :refresh-options="refreshWalletOptions"
+                            empty-text="No wallets available"
+                            loading-text="Loading wallets..."
+                            :disabled="!selectedClientId"
+                        />
+                    </div>
+                </div>
 
                 <div class="flex justify-between w-full">
                     <div class="flex md:justify-start w-full p-3">
