@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
-import { RouterLink, useRouter, useRoute } from 'vue-router';
 import { useTimerStore } from '@/stores/timer';
 import { useConfirm } from '@/composables/useConfirm';
+import { useClients } from '@/composables/useClients';
+import { useWallets } from '@/composables/useWallets';
+import type { TypeaheadOption } from '@/components/CTypeahead.vue';
 
 const props = defineProps({
     timerStore: {
@@ -13,34 +15,58 @@ const props = defineProps({
 
 const emit = defineEmits(['openModal']);
 
-const router = useRouter();
-const route = useRoute();
-
-function callStartTimer() {
-    if (typeof document !== 'undefined') {
-        document.dispatchEvent(
-            new CustomEvent('callAction::startTimer', {
-                detail: {
-                    router,
-                    route,
-                    from: route.fullPath,
-                },
-            })
-        );
-    }
-}
-
 const timerStore = props.timerStore || useTimerStore();
 const { confirm } = useConfirm();
+const { clients, fetchClients } = useClients();
+const { wallets, fetchWallets } = useWallets();
 
 const expanded = ref(true);
 const localTime = ref(0);
 const intervalId = ref<number | null>(null);
 
+const showStartTimerModal = ref(false);
+const selectedClientId = ref<number | null>(null);
+const selectedWalletId = ref<number | null>(null);
+
 const hasTimer = computed(() => timerStore.hasActiveTimer);
 const timer = computed(() => timerStore.activeTimer);
 const isRunning = computed(() => timerStore.isRunning);
 const isPaused = computed(() => timerStore.isPaused);
+
+// Typeahead options
+const clientOptions = computed<TypeaheadOption[]>(() => {
+    return clients.value.map((client) => ({
+        value: client.id,
+        label: `${client.name}${client.notes ? ` - ${client.notes}` : ''}`,
+    }));
+});
+
+const filteredWallets = computed(() => {
+    if (!selectedClientId.value) {
+        return wallets.value;
+    }
+
+    return wallets.value.filter((wallet) => wallet.client_id === selectedClientId.value);
+});
+
+const walletOptions = computed<TypeaheadOption[]>(() => {
+    return filteredWallets.value.map((w) => ({
+        value: w.id,
+        label: w.name,
+    }));
+});
+
+async function refreshClientOptions({ searchTerm }: { searchTerm: string }): Promise<TypeaheadOption[]> {
+    await fetchClients(1, searchTerm || '');
+
+    return clientOptions.value;
+}
+
+async function refreshWalletOptions({ searchTerm }: { searchTerm: string }): Promise<TypeaheadOption[]> {
+    await fetchWallets(selectedClientId.value || undefined, 1);
+
+    return walletOptions.value;
+}
 
 const formattedTime = computed(() => {
     if (!timer.value) {
@@ -118,10 +144,9 @@ function stopLocalTimer(): void {
     }
 }
 
-const allwaysShowFloatingModal = ref(true);
-const showFloatingModal = computed(() => allwaysShowFloatingModal.value || hasTimer.value);
+const showFloatingModal = computed(() => hasTimer.value && isRunning.value);
 
-onMounted(() => {
+onMounted(async () => {
     if (hasTimer.value) {
         startLocalTimer();
     }
@@ -129,13 +154,19 @@ onMounted(() => {
     if (typeof localStorage !== 'undefined') {
         expanded.value = ['true', '1'].includes((localStorage as any)?.getItem('expanded'));
     }
+
+    await Promise.all([fetchClients(1, ''), fetchWallets()]);
 });
 
 onUnmounted(() => {
     stopLocalTimer();
 });
 
-// Watch for timer changes and start/stop local timer accordingly
+watch(selectedClientId, () => {
+    selectedWalletId.value = null;
+    void refreshWalletOptions({ searchTerm: '' });
+});
+
 watch(hasTimer, (newValue, oldValue) => {
     if (newValue && !intervalId.value) {
         // Timer became active - start local timer
@@ -163,6 +194,27 @@ function openModal() {
     emit('openModal', {
         timerStore,
     });
+}
+
+function openStartTimerModal(): void {
+    selectedClientId.value = null;
+    selectedWalletId.value = null;
+    showStartTimerModal.value = true;
+    void refreshClientOptions({ searchTerm: '' });
+    void refreshWalletOptions({ searchTerm: '' });
+}
+
+function closeStartTimerModal(): void {
+    showStartTimerModal.value = false;
+}
+
+async function handleStartTimer(): Promise<void> {
+    if (!selectedWalletId.value) {
+        return;
+    }
+
+    await timerStore.startTimer(selectedWalletId.value);
+    closeStartTimerModal();
 }
 </script>
 
@@ -236,13 +288,7 @@ function openModal() {
 
             <!-- Controls -->
             <div v-if="!hasTimer" class="space-y-2">
-                <CButton
-                    preset="dark-lg"
-                    flex
-                    to="/timers?call=startTimer"
-                    @click.stop.prevent="callStartTimer"
-                    class="w-full truncate"
-                >
+                <CButton preset="dark-lg" flex class="w-full truncate" @click="openStartTimerModal">
                     Start Timer
                 </CButton>
             </div>
@@ -274,6 +320,65 @@ function openModal() {
                     >
                         Stop
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Start Timer Modal -->
+        <div
+            v-if="showStartTimerModal"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6"
+            @click.self="closeStartTimerModal"
+        >
+            <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl" @click.stop>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Timer</p>
+                        <h3 class="text-xl font-semibold text-gray-900">Select Wallet</h3>
+                    </div>
+                    <button type="button" class="text-gray-400 hover:text-gray-700" @click="closeStartTimerModal">
+                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor">
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 6l8 8m0-8l-8 8"
+                            />
+                        </svg>
+                    </button>
+                </div>
+
+                <p class="mt-2 text-sm text-gray-500">Select a wallet to start tracking time for this entry.</p>
+
+                <div class="mt-6 space-y-4">
+                    <CTypeahead
+                        v-model="selectedClientId"
+                        label="Client"
+                        placeholder="Search by name or notes"
+                        clearable
+                        :initial-options="clientOptions"
+                        :refresh-options="refreshClientOptions"
+                        empty-text="No clients found"
+                        loading-text="Loading clients..."
+                    />
+
+                    <CTypeahead
+                        v-model="selectedWalletId"
+                        label="Wallet"
+                        placeholder="Choose wallet"
+                        clearable
+                        :initial-options="walletOptions"
+                        :refresh-options="refreshWalletOptions"
+                        empty-text="No wallets found"
+                        loading-text="Loading wallets..."
+                    />
+                </div>
+
+                <div class="mt-6 flex justify-end gap-3">
+                    <CButton preset="gray" @click="closeStartTimerModal">Cancel</CButton>
+                    <CButton preset="primary" :disabled="!selectedWalletId" @click="handleStartTimer">
+                        Start Timer
+                    </CButton>
                 </div>
             </div>
         </div>
