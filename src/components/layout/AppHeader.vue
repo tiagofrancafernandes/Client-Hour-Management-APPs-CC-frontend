@@ -3,8 +3,8 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
+import { useAuthStore } from '@/stores/auth';
 import { useTimerStore } from '@/stores/timer';
-import { usePermissions } from '@/composables/usePermissions';
 import ManualEntryModal from '@/components/ManualEntryModal.vue';
 import TimerStartModal from '@/components/TimerStartModal.vue';
 
@@ -19,8 +19,8 @@ const emit = defineEmits<{
 
 const router = useRouter();
 const { user, logout, loading } = useAuth();
+const authStore = useAuthStore();
 const timerStore = useTimerStore();
-const { can } = usePermissions();
 
 const showUserMenu = ref(false);
 const showTimerMenu = ref(false);
@@ -30,7 +30,7 @@ const timerMenuRef = ref<HTMLElement | null>(null);
 const showManualEntryModal = ref(false);
 const showStartTimerModal = ref(false);
 
-const canCreateTimer = computed(() => can('timers.create'));
+const canCreateTimer = computed(() => authStore.can('timer.create'));
 const hasActiveTimer = computed(() => timerStore.hasActiveTimer);
 const isTimerRunning = computed(() => timerStore.isRunning);
 
