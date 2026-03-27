@@ -65,9 +65,31 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Hours</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Time</label>
 
-                            <CInput v-model.number="formData.hours" type="number" step="0.01" />
+                            <div class="flex gap-3">
+                                <div class="flex-1">
+                                    <label class="mb-1 block text-xs text-gray-600">Hours</label>
+                                    <input
+                                        v-model.number="formRowHours"
+                                        type="number"
+                                        min="0"
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                        placeholder="0"
+                                    />
+                                </div>
+                                <div class="flex-1">
+                                    <label class="mb-1 block text-xs text-gray-600">Minutes</label>
+                                    <input
+                                        v-model.number="formRowMinutes"
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                        placeholder="0"
+                                    />
+                                </div>
+                            </div>
 
                             <p class="mt-1 text-xs text-gray-500">
                                 Optional if start/end times are provided. Otherwise required for credit/adjustment
@@ -152,6 +174,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, type Ref } from 'vue';
 import { Icon } from '@iconify/vue';
+import { splitDecimalHours, combineDualTimeInput } from '@/utils/timeFormatters';
 import type { ImportPlanRow, ImportRowForm } from '@/types';
 
 export interface ImportRowEditModalProps {
@@ -182,6 +205,21 @@ const formData: Ref<ImportRowForm> = ref({
     tags: [],
 });
 
+// Separate hours and minutes inputs
+const formRowHours = ref(0);
+const formRowMinutes = ref(0);
+
+// Sync dual time input to decimal hours
+watch([formRowHours, formRowMinutes], ([h, m]) => {
+    if (h === 0 && m === 0) {
+        formData.value.hours = null;
+
+        return;
+    }
+
+    formData.value.hours = combineDualTimeInput(h, m);
+});
+
 const newTag: Ref<string> = ref('');
 const saving: Ref<boolean> = ref(false);
 
@@ -205,6 +243,16 @@ watch(
                     input_type: props.row.input_type || 'debit',
                     tags: props.row.tags ? [...props.row.tags] : [],
                 };
+
+                // Split hours into separate fields
+                if (props.row.hours) {
+                    const { hours, minutes } = splitDecimalHours(props.row.hours);
+                    formRowHours.value = hours;
+                    formRowMinutes.value = minutes;
+                } else {
+                    formRowHours.value = 0;
+                    formRowMinutes.value = 0;
+                }
             } else {
                 formData.value = {
                     reference_date: today.value ?? '',
@@ -216,6 +264,8 @@ watch(
                     input_type: 'debit',
                     tags: [],
                 };
+                formRowHours.value = 0;
+                formRowMinutes.value = 0;
             }
 
             newTag.value = '';

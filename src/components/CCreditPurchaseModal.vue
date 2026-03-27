@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { Icon } from '@iconify/vue';
+import { decimalToTimeFormat } from '@/utils/timeFormatters';
 import type { WalletWithBalance } from '@/types';
 import { useCreditPurchases } from '@/composables/useCreditPurchases';
 import { useToast } from '@/composables/useToast';
@@ -49,6 +50,10 @@ const totalHours = computed(() => {
     };
 
     return packageMap[selectedPackage.value || ''] || 0;
+});
+
+const formattedTotalHours = computed(() => {
+    return decimalToTimeFormat(totalHours.value);
 });
 
 const discountPercentage = computed(() => {
@@ -400,7 +405,7 @@ function formatCurrency(value: number): string {
                             <div class="text-sm text-gray-600">
                                 <div class="flex justify-between mb-2">
                                     <span>Total Hours:</span>
-                                    <span class="font-semibold text-gray-900">{{ totalHours }}h</span>
+                                    <span class="font-semibold text-gray-900">{{ formattedTotalHours }}</span>
                                 </div>
 
                                 <div class="flex justify-between mb-2">
@@ -435,7 +440,7 @@ function formatCurrency(value: number): string {
 
                             <div class="flex justify-between items-center pb-3 border-b border-gray-200">
                                 <span class="text-gray-600">Hours:</span>
-                                <span class="font-semibold text-gray-900">{{ totalHours }}h</span>
+                                <span class="font-semibold text-gray-900">{{ formattedTotalHours }}</span>
                             </div>
 
                             <div class="flex justify-between items-center pb-3 border-b border-gray-200">
