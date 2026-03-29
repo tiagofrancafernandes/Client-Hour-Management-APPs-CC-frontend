@@ -1,37 +1,37 @@
 {
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "framework": "vite",
-  "outputDirectory": "dist",
-  "env": {
-    "VITE_API_URL": "@vite_api_url",
-    "VITE_ENABLED_SPEED_INSIGHTS": "@vite_enabled_speed_insights"
-  },
-  "headers": [
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
+    "buildCommand": "npm run build",
+    "devCommand": "npm run dev",
+    "installCommand": "npm install",
+    "framework": "vite",
+    "outputDirectory": "dist",
+    "env": {
+        "VITE_API_URL": "@vite_api_url",
+        "VITE_ENABLED_SPEED_INSIGHTS": "@vite_enabled_speed_insights"
     },
-    {
-      "source": "/index.html",
-      "headers": [
+    "headers": [
         {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600, must-revalidate"
+            "source": "/assets/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=31536000, immutable"
+                }
+            ]
+        },
+        {
+            "source": "/index.html",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=3600, must-revalidate"
+                }
+            ]
         }
-      ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+    ],
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
 }
