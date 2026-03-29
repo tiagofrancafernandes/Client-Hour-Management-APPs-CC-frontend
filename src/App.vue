@@ -9,6 +9,7 @@ import TimerActiveModal from '@/components/TimerActiveModal.vue';
 import ConfirmModal from '@/components/ConfirmModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
+import { SpeedInsights } from '@vercel/speed-insights/vue';
 
 const route = useRoute();
 const { isAuthenticated, isCustomer } = useAuth();
@@ -97,5 +98,8 @@ onUnmounted(() => {
             @confirm="handleConfirm"
             @cancel="handleCancel"
         />
+
+        <!-- Vercel Speed Insights -->
+        <SpeedInsights />
     </div>
 </template>
