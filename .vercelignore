@@ -42,7 +42,6 @@ CHANGELOG.md
 
 # Development
 vite.config.ts
-tsconfig*.json
 src
 
 # Package managers
