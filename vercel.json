@@ -28,6 +28,10 @@
         {
             "source": "/(.*)",
             "destination": "/index.html"
+        },
+        {
+            "source": "^/favicon.ico$",
+            "destination": "https://coming-soon-page-in-vue-js.vercel.app/favicon.ico"
         }
     ]
 }
