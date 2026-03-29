@@ -1,0 +1,56 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+pnpm-debug.log
+
+# Production
+dist
+build
+
+# Testing
+coverage
+.nyc_output
+*.lcov
+
+# IDE & Editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Documentation & Config
+README.md
+CHANGELOG.md
+.prettierignore
+.prettierrc
+.eslintignore
+.eslintrc*
+
+# Development
+vite.config.ts
+tsconfig*.json
+src
+
+# Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Misc
+*.md
+.turbo
+.turboignore
