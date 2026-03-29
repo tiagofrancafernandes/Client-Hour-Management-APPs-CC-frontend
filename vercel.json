@@ -4,10 +4,6 @@
     "installCommand": "npm install",
     "framework": "vite",
     "outputDirectory": "dist",
-    "env": {
-        "VITE_API_URL": "@vite_api_url",
-        "VITE_ENABLED_SPEED_INSIGHTS": "@vite_enabled_speed_insights"
-    },
     "headers": [
         {
             "source": "/assets/(.*)",
