@@ -7,7 +7,7 @@ import { usePermissions } from '@/composables/usePermissions';
 import { useClients } from '@/composables/useClients';
 import { useWallets } from '@/composables/useWallets';
 import { useToast } from '@/composables/useToast';
-import type { TypeaheadOption } from '@/components/CTypeahead.vue';
+import type { TypeaheadOption } from '@/types';
 
 const {
     purchases,

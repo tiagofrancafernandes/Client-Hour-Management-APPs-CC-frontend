@@ -4,8 +4,7 @@ import { useTimerStore } from '@/stores/timer';
 import { api } from '@/services/api';
 import { useClients } from '@/composables/useClients';
 import { useWallets } from '@/composables/useWallets';
-import type { WalletWithBalance, Tag } from '@/types';
-import type { TypeaheadOption } from '@/components/CTypeahead.vue';
+import type { WalletWithBalance, Tag, TypeaheadOption } from '@/types';
 import TagInput from '@/components/TagInput.vue';
 
 const props = defineProps<{

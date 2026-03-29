@@ -29,8 +29,10 @@ export function timeFormatToDecimal(timeFormat: string): number {
         throw new Error('Invalid time format. Use HH:MM or H:MM');
     }
 
-    const hours = parseInt(parts[0], 10);
-    const minutes = parseInt(parts[1], 10);
+    const hoursStr = parts[0]!;
+    const minutesStr = parts[1]!;
+    const hours = parseInt(hoursStr, 10);
+    const minutes = parseInt(minutesStr, 10);
 
     if (Number.isNaN(hours) || Number.isNaN(minutes)) {
         throw new Error('Hours and minutes must be valid numbers');
@@ -85,8 +87,10 @@ export function parseTimeInput(input: string): number {
             throw new Error('Invalid time format. Use HH:MM, H:MM, or Xh');
         }
 
-        const hours = parseInt(parts[0], 10);
-        const minutes = parseInt(parts[1] || '0', 10);
+        const hoursStr = parts[0]!;
+        const minutesStr = parts[1] || '0';
+        const hours = parseInt(hoursStr, 10);
+        const minutes = parseInt(minutesStr, 10);
 
         if (Number.isNaN(hours) || Number.isNaN(minutes)) {
             throw new Error('Hours and minutes must be valid numbers');
@@ -156,7 +160,7 @@ export function isValidTimeFormat(timeFormat: string): boolean {
     const timeRegex = /^(\d{1,2}):(\d{2})$/;
     const match = timeFormat.trim().match(timeRegex);
 
-    if (!match) {
+    if (!match || !match[2]) {
         return false;
     }
 

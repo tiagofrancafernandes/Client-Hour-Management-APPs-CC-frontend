@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import { Icon } from '@iconify/vue';
-
-export type TypeaheadOption = {
-    value: unknown;
-    label: string;
-};
+import type { TypeaheadOption } from '@/types';
 
 type RefreshOptionsParams = {
     searchTerm: string;
@@ -210,7 +206,7 @@ function handleSelect(option: TypeaheadOption) {
     handleClose();
 }
 
-function handleClear(event: MouseEvent) {
+function handleClear(event: MouseEvent | KeyboardEvent) {
     event.stopPropagation();
 
     const oldValue = currentValue.value;

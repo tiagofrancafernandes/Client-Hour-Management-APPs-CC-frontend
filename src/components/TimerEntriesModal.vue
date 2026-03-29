@@ -71,7 +71,12 @@ function calculateCycleDuration(cycle: TimerCycle): string {
                         @click="emit('close')"
                     >
                         <svg class="w-5 h-5" viewBox="0 0 20 20" fill="none" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l8 8m0-8l-8 8" />
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 6l8 8m0-8l-8 8"
+                            />
                         </svg>
                     </button>
                 </div>

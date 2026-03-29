@@ -315,3 +315,8 @@ export interface UpdateClientUserForm {
     password_confirmation?: string;
     client_id?: number | null;
 }
+
+export type TypeaheadOption = {
+    value: unknown;
+    label: string;
+};

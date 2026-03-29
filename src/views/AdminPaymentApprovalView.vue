@@ -11,7 +11,7 @@ type TypeaheadOption = {
     label: string;
 };
 
-const { purchases, loading, error, fetchPurchases, getReceiptUrl } = useCreditPurchases();
+const { purchases, loading, error, fetchPurchases, downloadReceipt } = useCreditPurchases();
 const toast = useToast();
 const { searchClients } = useClients();
 
@@ -41,14 +41,6 @@ const selectedPaymentMethodKey = ref<string | null>(null);
 function isOfflinePaymentMethod(method: CreditPurchasePayment['payment_method']): boolean {
     if (!method) {
         return false;
-    }
-
-    if (typeof method === 'string') {
-        if (method.includes('offline')) {
-            return true;
-        }
-
-        return offlinePaymentMethodKeys.has(method);
     }
 
     if (method.is_offline) {
@@ -267,11 +259,7 @@ async function refreshPaymentMethodOptions(): Promise<void> {
     paymentMethodOptions.value = buildPaymentMethodOptions();
 }
 
-async function refreshClientSearch({
-    searchTerm,
-}: {
-    searchTerm: string;
-}): Promise<TypeaheadOption[]> {
+async function refreshClientSearch({ searchTerm }: { searchTerm: string }): Promise<TypeaheadOption[]> {
     await ensurePurchasesLoaded();
 
     const normalized = (searchTerm ?? '').trim().toLowerCase();
@@ -383,9 +371,7 @@ async function handleDownloadReceipt(): Promise<void> {
     }
 
     try {
-        const url = await getReceiptUrl(selectedPayment.value.id);
-
-        window.open(url, '_blank');
+        await downloadReceipt(selectedPayment.value.id);
     } catch {
         toast.error('Failed to download receipt');
     }

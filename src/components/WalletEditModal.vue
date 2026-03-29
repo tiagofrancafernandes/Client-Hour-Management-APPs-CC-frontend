@@ -184,9 +184,7 @@ function handleClose() {
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-900">Allow credit purchases</p>
-                            <p class="text-xs text-gray-500">
-                                Permit credits to be sold for this wallet.
-                            </p>
+                            <p class="text-xs text-gray-500">Permit credits to be sold for this wallet.</p>
                         </div>
 
                         <button

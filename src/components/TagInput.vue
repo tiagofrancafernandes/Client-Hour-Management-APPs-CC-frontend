@@ -194,9 +194,9 @@ function calculateInputBounding(): void {
 
     const rect = input.getBoundingClientRect();
 
-    dropdown.style.top = `${rect.bottom}px`
-    dropdown.style.left = `${rect.left}px`
-    dropdown.style.width = `${rect.width}px`
+    dropdown.style.top = `${rect.bottom}px`;
+    dropdown.style.left = `${rect.left}px`;
+    dropdown.style.width = `${rect.width}px`;
 }
 
 function handleFocus(): void {
@@ -276,50 +276,52 @@ onMounted(async () => {
 
         <!-- Dropdown -->
         <Transition name="scale-fade">
-        <div
-            v-show="showDropdown && (filteredTags.length > 0 || (allowCreate && inputValue.trim() && !exactMatchExists))"
-            ref="dropdownContainer"
-            class="fixed z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
-        >
-            <!-- Heading -->
-            <div class="border-b border-gray-100 px-3 py-1.5">
-                <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                    {{ inputValue.trim() ? 'Results' : 'Suggestions' }}
-                </span>
-            </div>
+            <div
+                v-show="
+                    showDropdown && (filteredTags.length > 0 || (allowCreate && inputValue.trim() && !exactMatchExists))
+                "
+                ref="dropdownContainer"
+                class="fixed z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+            >
+                <!-- Heading -->
+                <div class="border-b border-gray-100 px-3 py-1.5">
+                    <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                        {{ inputValue.trim() ? 'Results' : 'Suggestions' }}
+                    </span>
+                </div>
 
-            <!-- Tag options -->
-            <div v-if="filteredTags.length > 0" class="p-1">
-                <button
-                    v-for="tag in filteredTags"
-                    :key="tag.id"
-                    type="button"
-                    class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700"
-                    @mousedown.prevent="addTag(tag)"
-                >
-                    <Icon icon="heroicons:tag" class="h-3.5 w-3.5 text-gray-400" />
-                    {{ tag.name }}
-                </button>
-            </div>
+                <!-- Tag options -->
+                <div v-if="filteredTags.length > 0" class="p-1">
+                    <button
+                        v-for="tag in filteredTags"
+                        :key="tag.id"
+                        type="button"
+                        class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700"
+                        @mousedown.prevent="addTag(tag)"
+                    >
+                        <Icon icon="heroicons:tag" class="h-3.5 w-3.5 text-gray-400" />
+                        {{ tag.name }}
+                    </button>
+                </div>
 
-            <!-- Empty search result -->
-            <div v-else-if="inputValue.trim() && !allowCreate" class="px-4 py-3 text-center text-sm text-gray-400">
-                No tags found
-            </div>
+                <!-- Empty search result -->
+                <div v-else-if="inputValue.trim() && !allowCreate" class="px-4 py-3 text-center text-sm text-gray-400">
+                    No tags found
+                </div>
 
-            <!-- Create new tag option -->
-            <div v-if="allowCreate && inputValue.trim() && !exactMatchExists" class="border-t border-gray-100 p-1">
-                <button
-                    type="button"
-                    class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-50"
-                    @mousedown.prevent="handleCreateTag(inputValue.trim())"
-                >
-                    <Icon icon="heroicons:plus" class="h-3.5 w-3.5" />
-                    Create
-                    <strong class="ml-1">"{{ inputValue.trim() }}"</strong>
-                </button>
+                <!-- Create new tag option -->
+                <div v-if="allowCreate && inputValue.trim() && !exactMatchExists" class="border-t border-gray-100 p-1">
+                    <button
+                        type="button"
+                        class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-50"
+                        @mousedown.prevent="handleCreateTag(inputValue.trim())"
+                    >
+                        <Icon icon="heroicons:plus" class="h-3.5 w-3.5" />
+                        Create
+                        <strong class="ml-1">"{{ inputValue.trim() }}"</strong>
+                    </button>
+                </div>
             </div>
-        </div>
         </Transition>
 
         <!-- Helper text -->

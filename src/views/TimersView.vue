@@ -416,7 +416,12 @@ onUnmounted(() => {
 
                 <!-- Client and Wallet Filters -->
                 <div class="border-t border-gray-200 p-4">
-                    <div :class="['grid gap-4', canViewAnyTimer ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2']">
+                    <div
+                        :class="[
+                            'grid gap-4',
+                            canViewAnyTimer ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2',
+                        ]"
+                    >
                         <CTypeahead
                             v-model="selectedClientId"
                             label="Filter by Client"
@@ -456,7 +461,9 @@ onUnmounted(() => {
 
                 <div class="flex justify-between w-full">
                     <div class="flex md:justify-start w-full p-3">
-                        <CButton icon="mdi:reload" preset="outlined-black" @click="loadTimers" class="py-1">Refresh list</CButton>
+                        <CButton icon="mdi:reload" preset="outlined-black" @click="loadTimers" class="py-1">
+                            Refresh list
+                        </CButton>
                     </div>
 
                     <div class="flex justify-end w-full truncate">
@@ -592,7 +599,12 @@ onUnmounted(() => {
                         <!-- Actions -->
                         <div class="flex flex-col gap-2 ml-4">
                             <!-- View Entries button (always visible) -->
-                            <CButton preset="outlined-black" size="sm" @click="handleViewEntries(timer)" class="whitespace-nowrap">
+                            <CButton
+                                preset="outlined-black"
+                                size="sm"
+                                @click="handleViewEntries(timer)"
+                                class="whitespace-nowrap"
+                            >
                                 View Entries
                             </CButton>
 

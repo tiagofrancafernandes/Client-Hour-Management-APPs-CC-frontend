@@ -7,8 +7,7 @@ import { usePermissions } from '@/composables/usePermissions';
 import { useToast } from '@/composables/useToast';
 import { splitDecimalHours, combineDualTimeInput } from '@/utils/timeFormatters';
 import { extractErrorMessage } from '@/utils/errorHelpers';
-import type { TypeaheadOption } from '@/components/CTypeahead.vue';
-import type { LedgerEntryForm } from '@/types';
+import type { TypeaheadOption, LedgerEntryForm } from '@/types';
 
 interface Props {
     show: boolean;

@@ -417,7 +417,7 @@ async function handleRemoveClientUser(userId: number): Promise<void> {
             <button
                 :disabled="pagination.currentPage === 1"
                 class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                @click="fetchClients(pagination.currentPage - 1, searchQuery)"
+                @click="fetchClients(pagination.currentPage - 1, filters.search)"
             >
                 <Icon icon="heroicons:chevron-left" class="w-4 h-4" />
                 Previous
@@ -426,7 +426,7 @@ async function handleRemoveClientUser(userId: number): Promise<void> {
             <button
                 :disabled="pagination.currentPage === pagination.lastPage"
                 class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                @click="fetchClients(pagination.currentPage + 1, searchQuery)"
+                @click="fetchClients(pagination.currentPage + 1, filters.search)"
             >
                 Next
                 <Icon icon="heroicons:chevron-right" class="w-4 h-4" />

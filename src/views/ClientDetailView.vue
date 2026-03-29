@@ -74,7 +74,7 @@ const isNewWalletFormValid = computed(() => {
 
 const showCreateUserModal = ref(false);
 const showEditUserModal = ref(false);
-const editingUser = ref<User | null>(null);
+const editingUser = ref<(User & { password?: string; password_confirmation?: string }) | null>(null);
 const userForm = ref<ClientUserForm>({
     client_id: clientId,
     name: '',
@@ -100,21 +100,15 @@ async function handleCreateWallet() {
     }
 
     try {
-        const payload: Record<string, unknown> = {
+        const payload = {
             client_id: clientId,
             name: newWalletName.value,
             description: newWalletDescription.value || undefined,
             hourly_rate_reference: newWalletHourlyRate.value,
             currency_code: newWalletCurrencyCode.value || undefined,
+            ...(canViewInternalNote.value ? { internal_note: newWalletInternalNote.value || undefined } : {}),
+            ...(canUpdateRules.value ? { credit_purchase_allowed: newWalletCreditPurchaseAllowed.value } : {}),
         };
-
-        if (canViewInternalNote.value) {
-            payload.internal_note = newWalletInternalNote.value || undefined;
-        }
-
-        if (canUpdateRules.value) {
-            payload.credit_purchase_allowed = newWalletCreditPurchaseAllowed.value;
-        }
 
         await createWallet(payload);
 
@@ -395,22 +389,26 @@ async function handleDeleteUser(userId: number) {
                     <div class="flex items-start justify-between mb-2">
                         <div class="flex-1">
                             <h3 class="font-semibold text-gray-900">{{ wallet.name }}</h3>
-                    <p v-if="wallet.description" class="mt-1 text-sm text-gray-500">
-                        {{ wallet.description }}
-                    </p>
-                    <div class="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
-                        <span
-                            :class="[
-                                'inline-flex items-center rounded-full px-2 py-0.5',
-                                wallet.credit_purchase_allowed
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-gray-100 text-gray-600',
-                            ]"
-                        >
-                            {{ wallet.credit_purchase_allowed ? 'Credit purchases allowed' : 'Credit purchases disabled' }}
-                        </span>
-                    </div>
-                </div>
+                            <p v-if="wallet.description" class="mt-1 text-sm text-gray-500">
+                                {{ wallet.description }}
+                            </p>
+                            <div class="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
+                                <span
+                                    :class="[
+                                        'inline-flex items-center rounded-full px-2 py-0.5',
+                                        wallet.credit_purchase_allowed
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-gray-100 text-gray-600',
+                                    ]"
+                                >
+                                    {{
+                                        wallet.credit_purchase_allowed
+                                            ? 'Credit purchases allowed'
+                                            : 'Credit purchases disabled'
+                                    }}
+                                </span>
+                            </div>
+                        </div>
                         <div class="text-right">
                             <p class="text-lg font-bold" :class="getBalanceColor(wallet.balance)">
                                 {{ formatBalance(wallet.balance) }}
@@ -716,9 +714,7 @@ async function handleDeleteUser(userId: number) {
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-900">Allow credit purchases</p>
-                            <p class="text-xs text-gray-500">
-                                Enable this wallet for selling credits.
-                            </p>
+                            <p class="text-xs text-gray-500">Enable this wallet for selling credits.</p>
                         </div>
 
                         <button

@@ -4,7 +4,7 @@ import { useTimerStore } from '@/stores/timer';
 import { useConfirm } from '@/composables/useConfirm';
 import { useClients } from '@/composables/useClients';
 import { useWallets } from '@/composables/useWallets';
-import type { TypeaheadOption } from '@/components/CTypeahead.vue';
+import type { TypeaheadOption } from '@/types';
 
 const props = defineProps({
     timerStore: {
