@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { Icon } from '@iconify/vue'
 import { usePasswordRecovery } from '@/composables/usePasswordRecovery'
+import { useAuthResources } from '@/composables/useAuthResources'
+import { isValidEmail } from '@/utils/data-helpers';
 
 const router = useRouter()
+
+const { canRecoverPassword, fetchAuthResources } = useAuthResources()
 
 const {
     currentStep,
@@ -63,6 +68,10 @@ function handleGoBack(): void {
 function handleLoginRedirect(): void {
     router.push('/login')
 }
+
+onMounted(() => {
+    fetchAuthResources()
+})
 </script>
 
 <template>
@@ -75,7 +84,25 @@ function handleLoginRedirect(): void {
             </div>
 
             <!-- Card -->
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
+            <div
+                v-if="!canRecoverPassword"
+                class="bg-white rounded-xl border border-gray-200 shadow-sm p-8"
+            >
+                <div class="text-center py-8">
+                    <Icon icon="heroicons:exclamation-circle" class="w-12 h-12 text-red-600 mx-auto mb-4" />
+                    <h2 class="text-lg font-semibold text-gray-900 mb-2">Password Recovery Disabled</h2>
+                    <p class="text-gray-600 mb-6">
+                        Password recovery is currently not available. Please contact administrator for assistance.
+                    </p>
+                    <router-link to="/login">
+                        <CButton preset="outlined-black" class="w-full">
+                            Back to Login
+                        </CButton>
+                    </router-link>
+                </div>
+            </div>
+
+            <div v-else class="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
                 <!-- Step Indicator -->
                 <div class="flex items-center gap-2 mb-8">
                     <div
@@ -140,7 +167,7 @@ function handleLoginRedirect(): void {
                         </router-link>
                         <CButton
                             class="flex-1"
-                            :disabled="isLoading || !email"
+                            :disabled="isLoading || !isValidEmail(email)"
                             @click="handleStep1Submit"
                         >
                             <span v-if="!isLoading">Continue</span>
@@ -269,12 +296,13 @@ function handleLoginRedirect(): void {
                     </CButton>
                 </div>
             </div>
+            </div>
 
             <!-- Footer -->
-            <div class="text-center mt-6 text-sm text-gray-600">
+            <div v-if="canRecoverPassword" class="text-center mt-6 text-sm text-gray-600">
                 Don't have an account?
                 <router-link to="/register" class="font-medium text-red-600 hover:text-red-700">
-                    Create one
+                    Register
                 </router-link>
             </div>
         </div>

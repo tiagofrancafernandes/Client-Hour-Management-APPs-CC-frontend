@@ -1,16 +1,20 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
+import { useAuthResources } from '@/composables/useAuthResources';
 import { IS_PRODUCTION, SHOW_DEV_HELPERS } from '@/configs/app';
+import { isValidEmail } from '@/utils/data-helpers';
 
 const router = useRouter();
 const { login, loading, error } = useAuth();
+const { canRegister, canRecoverPassword, fetchAuthResources } = useAuthResources();
 
 const email = ref('');
 const password = ref('');
 const showPassword = ref(false);
+const remember = ref(false);
 
 async function handleSubmit(): Promise<void> {
     if (!email.value || !password.value) {
@@ -20,6 +24,7 @@ async function handleSubmit(): Promise<void> {
     const success = await login({
         email: email.value,
         password: password.value,
+        remember: remember.value,
     });
 
     if (success) {
@@ -53,6 +58,10 @@ const demoUsers = computed(() => [
         role: 'customer',
     },
 ]);
+
+onMounted(() => {
+    fetchAuthResources();
+});
 </script>
 
 <template>
@@ -125,10 +134,43 @@ const demoUsers = computed(() => [
                             </div>
                         </div>
 
+                        <div
+                            :class="[
+                                'flex items-center',
+                                canRecoverPassword ? 'justify-between' : 'justify-start'
+                            ]"
+                        >
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input
+                                        id="remember"
+                                        v-model="remember"
+                                        aria-describedby="remember"
+                                        type="checkbox"
+                                        class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800"
+                                    >
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label
+                                        for="remember"
+                                        class="text-sm font-medium text-gray-700 mb-1.5 select-none cursor-pointer"
+                                    >Remember me</label>
+                                </div>
+                            </div>
+
+                            <router-link
+                                v-if="canRecoverPassword"
+                                to="/password-recovery"
+                                class="text-sm font-medium text-red-600 hover:text-red-700 hover:underline"
+                            >
+                                Forgot password?
+                            </router-link>
+                        </div>
+
                         <!-- Submit -->
                         <button
                             type="submit"
-                            :disabled="loading"
+                            :disabled="loading || !isValidEmail(email)"
                             class="mt-2 w-full rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             <span v-if="loading" class="inline-flex items-center gap-2 justify-center">
@@ -159,6 +201,14 @@ const demoUsers = computed(() => [
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Footer -->
+            <div v-if="canRegister" class="text-center mt-6 text-sm text-gray-600">
+                Don't have an account?
+                <router-link to="/register" class="font-medium text-red-600 hover:text-red-700">
+                    Register
+                </router-link>
             </div>
         </div>
     </div>

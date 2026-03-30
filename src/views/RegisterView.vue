@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserRegistration } from '@/composables/useUserRegistration'
 import { useAuth } from '@/composables/useAuth'
+import { useAuthResources } from '@/composables/useAuthResources'
+import { isValidEmail } from '@/utils/data-helpers';
 
 const router = useRouter()
 const authStore = useAuth()
+const { canRegister, fetchAuthResources } = useAuthResources()
 
 const {
     currentStep,
@@ -68,6 +71,10 @@ function handleGoBack(): void {
         reset()
     }
 }
+
+onMounted(() => {
+    fetchAuthResources()
+})
 </script>
 
 <template>
@@ -80,7 +87,25 @@ function handleGoBack(): void {
             </div>
 
             <!-- Card -->
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
+            <div
+                v-if="!canRegister"
+                class="bg-white rounded-xl border border-gray-200 shadow-sm p-8"
+            >
+                <div class="text-center py-8">
+                    <Icon icon="heroicons:exclamation-circle" class="w-12 h-12 text-red-600 mx-auto mb-4" />
+                    <h2 class="text-lg font-semibold text-gray-900 mb-2">Registration Disabled</h2>
+                    <p class="text-gray-600 mb-6">
+                        User registration is currently not available. Please contact administrator for assistance.
+                    </p>
+                    <router-link to="/login">
+                        <CButton preset="outlined-black" class="w-full">
+                            Back to Login
+                        </CButton>
+                    </router-link>
+                </div>
+            </div>
+
+            <div v-else class="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
                 <!-- Step Indicator -->
                 <div class="flex items-center gap-2 mb-8">
                     <div
@@ -136,7 +161,7 @@ function handleGoBack(): void {
                         :disabled="isLoading"
                     />
 
-                    <CInput
+                    <CPasswodInput
                         v-model="password"
                         type="password"
                         label="Password"
@@ -144,7 +169,7 @@ function handleGoBack(): void {
                         :disabled="isLoading"
                     />
 
-                    <CInput
+                    <CPasswodInput
                         v-model="passwordConfirmation"
                         type="password"
                         label="Confirm Password"
@@ -164,7 +189,14 @@ function handleGoBack(): void {
                         </router-link>
                         <CButton
                             class="flex-1"
-                            :disabled="isLoading || !email || !name || !password || !passwordConfirmation"
+                            :disabled="isLoading ||
+                            !isValidEmail(email) ||
+                            !name ||
+                            !password ||
+                            !passwordConfirmation ||
+                            (String(password || '').length < 6) ||
+                            (String(passwordConfirmation || '').length < 6) ||
+                            (password !== passwordConfirmation)"
                             @click="handleStep1Submit"
                         >
                             <span v-if="!isLoading">Continue</span>
@@ -279,11 +311,12 @@ function handleGoBack(): void {
                     </div>
                 </div>
             </div>
+            </div>
 
             <!-- Footer -->
             <div class="text-center mt-6 text-sm text-gray-600">
                 Already have an account?
-                <router-link to="/login" class="font-medium text-red-600 hover:text-red-700">
+                <router-link to="/login" class="font-medium text-red-600 hover:text-red-700 hover:underline">
                     Sign in
                 </router-link>
             </div>
