@@ -3,12 +3,10 @@ import { ref, computed } from 'vue';
 import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
+import { IS_PRODUCTION, SHOW_DEV_HELPERS } from '@/configs/app';
 
 const router = useRouter();
 const { login, loading, error } = useAuth();
-
-const isProd = import.meta.env.VITE_APP_ENV === 'production';
-const showDevHelpers = Boolean(import.meta.env.VITE_SHOW_DEV_HELPERS) && !isProd;
 
 const email = ref('');
 const password = ref('');
@@ -143,7 +141,7 @@ const demoUsers = computed(() => [
                 </div>
 
                 <!-- Dev helpers -->
-                <div v-if="showDevHelpers" class="px-8 pb-6 pt-0">
+                <div v-if="!IS_PRODUCTION && SHOW_DEV_HELPERS" class="px-8 pb-6 pt-0">
                     <div class="border-t border-gray-100 pt-5">
                         <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
                             Quick access (dev only)

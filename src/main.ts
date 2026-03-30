@@ -13,6 +13,7 @@ import { Icon } from '@iconify/vue';
 import router from './router';
 import authPlugin from './plugins/auth';
 import ToastPlugin from '@/plugins/toast';
+import { SpeedInsights } from '@vercel/speed-insights/vue';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -26,6 +27,7 @@ const components = {
     CDropZone: CDropZone,
     CTypeahead: CTypeahead,
     UIPageHeader: UIPageHeader,
+    SpeedInsights: SpeedInsights,
     Icon: Icon,
     UIcon: Icon,
 };

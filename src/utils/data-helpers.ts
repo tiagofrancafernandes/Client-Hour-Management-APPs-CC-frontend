@@ -63,6 +63,59 @@ export function isBool(value: any): boolean {
     return typeof value === 'boolean';
 }
 
+export function toBool(value: any): boolean {
+    let valueType = typeof value;
+
+    if ([null, undefined, false, '', 0].includes(value)) {
+        return false;
+    }
+
+    if (isBool(value)) {
+        return Boolean(value);
+    }
+
+    if (valueType === 'boolean') {
+        return value;
+    }
+
+    if (valueType === 'string') {
+        switch (value.toLowerCase().trim()) {
+            case 'true':
+            case 't':
+            case 'on':
+            case 'yes':
+            case 'si':
+            case 'sim':
+            case 's':
+            case 'y':
+            case '1':
+                return true;
+
+            case 'false':
+            case 'f':
+            case 'off':
+            case 'no':
+            case 'nao':
+            case 'não':
+            case 'n':
+            case '0':
+                return false;
+        }
+
+        return String(value).trim().length > 0;
+    }
+
+    if (valueType === 'object') {
+        return Object.keys(value || []).length > 0;
+    }
+
+    if (valueType === 'number') {
+        return Boolean(value);
+    }
+
+    return Boolean(value);
+}
+
 export function isNullable(value: any, strict: boolean = false): boolean {
     /* strict: only 'null' and 'undefined' as nullable (ignore empty) */
     if (isNull(value) || isUndefined(value)) {
