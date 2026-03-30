@@ -2,11 +2,22 @@
 import { ref, computed } from 'vue';
 import { Icon } from '@iconify/vue';
 import { useAuth } from '@/composables/useAuth';
+import { useChangePassword } from '@/composables/useChangePassword';
 
 const { user, role, permissions } = useAuth();
+const {
+    currentPassword,
+    password,
+    passwordConfirmation,
+    isLoading: isChangingPassword,
+    error: changePasswordError,
+    success: changePasswordSuccess,
+    changePassword,
+    reset: resetChangePassword,
+} = useChangePassword();
 
 // Tabs
-type Tab = 'overview' | 'permissions';
+type Tab = 'overview' | 'permissions' | 'password';
 const activeTab = ref<Tab>('overview');
 
 // Edit mode
@@ -216,6 +227,20 @@ function resourceIcon(group: string): string {
                     {{ totalPermissions }}
                 </span>
             </button>
+
+            <button
+                :class="[
+                    'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150',
+                    {
+                        'bg-white text-gray-900 shadow-sm': activeTab === 'password',
+                        'text-gray-500 hover:text-gray-800': activeTab !== 'password',
+                    },
+                ]"
+                @click="activeTab = 'password'"
+            >
+                <Icon icon="heroicons:lock-closed" class="w-4 h-4" />
+                Password
+            </button>
         </div>
 
         <!-- Tab: Overview -->
@@ -350,6 +375,81 @@ function resourceIcon(group: string): string {
                                 <p class="text-sm font-bold text-gray-900">{{ roleLabel }}</p>
                                 <p class="text-xs text-gray-500 mt-0.5">System role</p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Password -->
+        <div v-if="activeTab === 'password'">
+            <div class="max-w-2xl">
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-6">
+                        Change Password
+                    </h2>
+
+                    <!-- Success Message -->
+                    <div
+                        v-if="changePasswordSuccess"
+                        class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg"
+                    >
+                        <p class="text-sm font-medium text-green-800">
+                            Password has been changed successfully
+                        </p>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div
+                        v-if="changePasswordError"
+                        class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg"
+                    >
+                        <p class="text-sm font-medium text-red-800">{{ changePasswordError }}</p>
+                    </div>
+
+                    <!-- Form -->
+                    <div class="space-y-5">
+                        <CInput
+                            v-model="currentPassword"
+                            type="password"
+                            label="Current Password"
+                            placeholder="••••••••"
+                            :disabled="isChangingPassword"
+                        />
+
+                        <CInput
+                            v-model="password"
+                            type="password"
+                            label="New Password"
+                            placeholder="••••••••"
+                            :disabled="isChangingPassword"
+                        />
+
+                        <CInput
+                            v-model="passwordConfirmation"
+                            type="password"
+                            label="Confirm New Password"
+                            placeholder="••••••••"
+                            :disabled="isChangingPassword"
+                        />
+
+                        <!-- Actions -->
+                        <div class="flex items-center gap-3 pt-2">
+                            <CButton
+                                :disabled="
+                                    isChangingPassword ||
+                                    !currentPassword ||
+                                    !password ||
+                                    !passwordConfirmation
+                                "
+                                @click="changePassword"
+                            >
+                                <span v-if="!isChangingPassword">Change Password</span>
+                                <span v-else>Changing...</span>
+                            </CButton>
+                            <CButton preset="outlined-black" @click="resetChangePassword">
+                                Clear
+                            </CButton>
                         </div>
                     </div>
                 </div>

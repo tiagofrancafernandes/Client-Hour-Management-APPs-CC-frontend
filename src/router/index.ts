@@ -26,6 +26,24 @@ const router = createRouter({
             },
         },
         {
+            path: '/register',
+            name: 'register',
+            component: () => import('@/views/RegisterView.vue'),
+            meta: {
+                title: 'Register',
+                requiresGuest: true,
+            },
+        },
+        {
+            path: '/password-recovery',
+            name: 'password-recovery',
+            component: () => import('@/views/PasswordRecoveryView.vue'),
+            meta: {
+                title: 'Reset Password',
+                requiresGuest: true,
+            },
+        },
+        {
             path: '/',
             name: 'home',
             redirect: (to) => {
