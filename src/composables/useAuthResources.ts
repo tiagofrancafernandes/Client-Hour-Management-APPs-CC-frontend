@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { useApi } from './useApi'
+import api from '@/services/api'
 
 const authResources = ref({
     self_register: false,
@@ -10,8 +10,6 @@ const isLoading = ref(false)
 const error = ref<string | null>(null)
 
 export function useAuthResources() {
-    const api = useApi()
-
     const canRegister = computed(() => authResources.value.self_register)
     const canRecoverPassword = computed(() => authResources.value.self_recovery_password)
 
@@ -20,10 +18,10 @@ export function useAuthResources() {
         error.value = null
 
         try {
-            const response = await api.get('/auth/resources')
-            authResources.value = response.data
-        } catch (err: any) {
-            error.value = err.message || 'Failed to fetch auth resources'
+            const response = await api.get<any>('/auth/resources')
+            authResources.value = response.data || response
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : 'Failed to fetch auth resources'
             console.error('Error fetching auth resources:', err)
         } finally {
             isLoading.value = false

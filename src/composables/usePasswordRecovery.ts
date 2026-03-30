@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { useApi } from './useApi'
+import api from '@/services/api'
 import { useToast } from './useToast'
 
 type RecoveryStep = 'request' | 'verify' | 'reset' | 'success'
@@ -14,7 +14,6 @@ const isLoading = ref(false)
 const error = ref<string | null>(null)
 
 export function usePasswordRecovery() {
-    const api = useApi()
     const toast = useToast()
 
     async function requestRecovery(): Promise<void> {
@@ -28,8 +27,8 @@ export function usePasswordRecovery() {
 
             currentStep.value = 'verify'
             toast.info('If the email exists, a recovery link will be sent')
-        } catch (err: any) {
-            error.value = err.response?.data?.message || 'Recovery request failed'
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : 'Recovery request failed'
             toast.error(error.value)
         } finally {
             isLoading.value = false
@@ -41,16 +40,16 @@ export function usePasswordRecovery() {
         error.value = null
 
         try {
-            const response = await api.post('/auth/password-recovery/verify', {
+            const response = await api.post<any>('/auth/password-recovery/verify', {
                 email: email.value,
                 code: verificationCode.value,
             })
 
-            verificationToken.value = response.data.token
+            verificationToken.value = response.token || response.data?.token
             currentStep.value = 'reset'
             toast.success('Token verified successfully')
-        } catch (err: any) {
-            error.value = err.response?.data?.message || 'Token verification failed'
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : 'Token verification failed'
             toast.error(error.value)
         } finally {
             isLoading.value = false
@@ -71,8 +70,8 @@ export function usePasswordRecovery() {
 
             currentStep.value = 'success'
             toast.success('Password has been reset successfully')
-        } catch (err: any) {
-            error.value = err.response?.data?.message || 'Password reset failed'
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : 'Password reset failed'
             toast.error(error.value)
             throw err
         } finally {

@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { useApi } from './useApi'
+import api from '@/services/api'
 import { useToast } from './useToast'
 
 type RegistrationStep = 'email' | 'verify' | 'complete' | 'success'
@@ -15,7 +15,6 @@ const isLoading = ref(false)
 const error = ref<string | null>(null)
 
 export function useUserRegistration() {
-    const api = useApi()
     const toast = useToast()
 
     async function requestRegistration(): Promise<void> {
@@ -32,8 +31,8 @@ export function useUserRegistration() {
 
             currentStep.value = 'verify'
             toast.info('Verification email has been sent')
-        } catch (err: any) {
-            error.value = err.response?.data?.message || 'Registration failed'
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : 'Registration failed'
             toast.error(error.value)
         } finally {
             isLoading.value = false
@@ -45,28 +44,28 @@ export function useUserRegistration() {
         error.value = null
 
         try {
-            const response = await api.post('/auth/register/verify', {
+            const response = await api.post<any>('/auth/register/verify', {
                 email: email.value,
                 code: verificationCode.value,
             })
 
-            verificationToken.value = response.data.token
+            verificationToken.value = response.token || response.data?.token
             currentStep.value = 'complete'
             toast.success('Email verified successfully')
-        } catch (err: any) {
-            error.value = err.response?.data?.message || 'Verification failed'
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : 'Verification failed'
             toast.error(error.value)
         } finally {
             isLoading.value = false
         }
     }
 
-    async function completeRegistration(): Promise<void> {
+    async function completeRegistration(): Promise<any> {
         isLoading.value = true
         error.value = null
 
         try {
-            const response = await api.post('/auth/register/complete', {
+            const response = await api.post<any>('/auth/register/complete', {
                 name: name.value,
                 email: email.value,
                 password: password.value,
@@ -77,11 +76,11 @@ export function useUserRegistration() {
             currentStep.value = 'success'
 
             return {
-                token: response.data.token,
-                user: response.data.user,
+                token: response.token || response.data?.token,
+                user: response.user || response.data?.user,
             }
-        } catch (err: any) {
-            error.value = err.response?.data?.message || 'Registration completion failed'
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : 'Registration completion failed'
             toast.error(error.value)
             throw err
         } finally {

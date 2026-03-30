@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { useApi } from './useApi'
+import api from '@/services/api'
 import { useToast } from './useToast'
 
 const currentPassword = ref('')
@@ -10,7 +10,6 @@ const error = ref<string | null>(null)
 const success = ref(false)
 
 export function useChangePassword() {
-    const api = useApi()
     const toast = useToast()
 
     async function changePassword(): Promise<void> {
@@ -28,8 +27,8 @@ export function useChangePassword() {
             success.value = true
             toast.success('Password has been changed successfully')
             reset()
-        } catch (err: any) {
-            error.value = err.response?.data?.message || 'Password change failed'
+        } catch (err) {
+            error.value = err instanceof Error ? err.message : 'Password change failed'
             toast.error(error.value)
         } finally {
             isLoading.value = false
