@@ -296,7 +296,6 @@ onMounted(() => {
                     </CButton>
                 </div>
             </div>
-            </div>
 
             <!-- Footer -->
             <div v-if="canRecoverPassword" class="text-center mt-6 text-sm text-gray-600">

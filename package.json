@@ -7,6 +7,9 @@
         "dev": "vite",
         "build": "vue-tsc -b && vite build",
         "preview": "vite preview",
+        "eslint:check": "eslint --config eslint.config.js",
+        "eslint:check:no-warn": "eslint --config eslint.config.js --no-warn-ignored",
+        "eslint:check:exit-on-fail": "eslint --exit-on-fatal-error",
         "try:open-on-editor": "curl \"http://host.docker.internal:3001/__open-in-editor?file=/app/src/main.ts:1:1\"",
         "try:open-on-editor2": "curl \"http://172.17.0.1:3001/__open-in-editor?file=/app/src/main.ts:1:1\"",
         "open-in-editor-server": "node open-in-editor-server.js"
@@ -25,18 +28,26 @@
         "vue3-toastify": "^0.2.8"
     },
     "devDependencies": {
+        "@eslint/js": "^10.0.1",
         "@iconify-json/heroicons": "^1.2.3",
         "@iconify-json/material-symbols": "^1.2.53",
         "@iconify-json/mdi": "^1.2.3",
         "@iconify-json/tabler": "^1.2.26",
         "@iconify/vue": "^5.0.0",
         "@types/node": "^24.10.13",
+        "@typescript-eslint/parser": "^8.58.0",
         "@vitejs/plugin-vue": "^6.0.1",
         "@vue/tsconfig": "^0.8.1",
-        "prettier": "^3.7.4",
+        "eslint": "^10.1.0",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-prettier": "^5.5.5",
+        "eslint-plugin-vue": "^10.8.0",
+        "globals": "^17.4.0",
+        "prettier": "^3.8.1",
         "typescript": "~5.9.3",
         "vite": "^7.2.4",
         "vite-plugin-vue-devtools": "^8.1.1",
+        "vue-eslint-parser": "^10.4.0",
         "vue-tsc": "^3.1.4"
     }
 }

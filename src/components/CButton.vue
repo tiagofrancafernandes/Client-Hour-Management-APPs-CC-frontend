@@ -9,7 +9,7 @@ const props = defineProps({
     },
     preset: {
         type: String,
-        default: 'blue',
+        default: 'primary',
     },
     icon: {
         type: String,

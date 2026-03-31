@@ -118,6 +118,7 @@ export interface AuthState {
 export interface LoginCredentials {
     email: string;
     password: string;
+    remember?: string|boolean|undefined;
 }
 
 export interface LoginResponse {

@@ -517,3 +517,15 @@ export function makeUrl(
 
     return asURL ? _url : _url?.toString();
 }
+
+export function isValidEmail(value: any) {
+    value = typeof value === 'string' ? value.trim() : '';
+
+    if (!value.length) {
+        return false;
+    }
+
+    let matches = value.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/) || [];
+
+    return Array.isArray(matches) ? matches?.length > 0 : false;
+}

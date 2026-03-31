@@ -50,6 +50,10 @@ const currencyCodes = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', '
 
 const newWalletValidationErrors = ref<Record<string, string>>({});
 
+function setNewWalletValidationErrors(value: any) {
+    newWalletValidationErrors.value = value;
+}
+
 const isNewWalletFormValid = computed(() => {
     const errors: Record<string, string> = {};
 
@@ -67,7 +71,7 @@ const isNewWalletFormValid = computed(() => {
         }
     }
 
-    newWalletValidationErrors.value = errors;
+    setNewWalletValidationErrors(errors);
 
     return Object.keys(errors).length === 0;
 });

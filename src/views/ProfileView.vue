@@ -409,24 +409,27 @@ function resourceIcon(group: string): string {
 
                     <!-- Form -->
                     <div class="space-y-5">
-                        <CInput
+                        <CPasswodInput
                             v-model="currentPassword"
+                            name="current_password"
                             type="password"
                             label="Current Password"
                             placeholder="••••••••"
                             :disabled="isChangingPassword"
                         />
 
-                        <CInput
+                        <CPasswodInput
                             v-model="password"
+                            name="password"
                             type="password"
                             label="New Password"
                             placeholder="••••••••"
                             :disabled="isChangingPassword"
                         />
 
-                        <CInput
+                        <CPasswodInput
                             v-model="passwordConfirmation"
+                            name="password_confirmation"
                             type="password"
                             label="Confirm New Password"
                             placeholder="••••••••"
@@ -439,8 +442,9 @@ function resourceIcon(group: string): string {
                                 :disabled="
                                     isChangingPassword ||
                                     !currentPassword ||
-                                    !password ||
-                                    !passwordConfirmation
+                                    (String(password || '').length < 6) ||
+                                    (String(passwordConfirmation || '').length < 6) ||
+                                    (password !== passwordConfirmation)
                                 "
                                 @click="changePassword"
                             >

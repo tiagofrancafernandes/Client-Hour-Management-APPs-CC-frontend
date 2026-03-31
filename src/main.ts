@@ -5,6 +5,7 @@ import App from './App.vue';
 import CButton from './components/CButton.vue';
 import CSelect from './components/CSelect.vue';
 import CInput from './components/CInput.vue';
+import CPasswodInput from './components/CPasswodInput.vue';
 import CTextarea from './components/CTextarea.vue';
 import CDropZone from './components/CDropZone.vue';
 import CTypeahead from './components/CTypeahead.vue';
@@ -27,6 +28,7 @@ const components = {
     CDropZone: CDropZone,
     CTypeahead: CTypeahead,
     UIPageHeader: UIPageHeader,
+    CPasswodInput: CPasswodInput,
     SpeedInsights: SpeedInsights,
     Icon: Icon,
     UIcon: Icon,

@@ -3,10 +3,18 @@ import vue from '@vitejs/plugin-vue';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import { fileURLToPath, URL } from 'node:url';
+import VueDevTools from 'vite-plugin-vue-devtools';
 
 // https://vite.dev/config/
 export default defineConfig({
-    plugins: [vue(), tailwindcss()],
+    plugins: [
+        vue(),
+        tailwindcss(),
+        VueDevTools({
+            launchEditor: 'vscode',
+        }),
+        //
+    ],
     build: {
         outDir: process.env.BUILD_OUT_DIR || 'dist',
     },

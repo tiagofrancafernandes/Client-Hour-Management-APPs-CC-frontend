@@ -16,9 +16,10 @@ export interface UserOptions {
 export function useUsers() {
     const users = ref<User[]>([]);
     const loading = ref(false);
+    const debugOn = ref(false);
     const error = ref<string | null>(null);
 
-    async function fetchUsers(params: Record<string, unknown> = {}): Promise<PaginatedResponse<User>> {
+    async function fetchUsers(params: Record<string, unknown> = {}): Promise<PaginatedResponse<User|undefined>|undefined> {
         loading.value = true;
         error.value = null;
 
@@ -30,23 +31,27 @@ export function useUsers() {
             return response;
         } catch (e) {
             error.value = e instanceof Error ? e.message : 'Failed to fetch users';
-            throw e;
+            if (debugOn.value) {
+                throw e;
+            }
         } finally {
             loading.value = false;
         }
     }
 
-    async function searchUsers(search: string, extra: Record<string, unknown> = {}): Promise<User[]> {
+    async function searchUsers(search: string, extra: Record<string, unknown> = {}): Promise<User[]|undefined> {
         try {
             const response = await api.get<PaginatedResponse<User>>('/users', { search, per_page: 10, ...extra });
 
             return response.data;
         } catch (e) {
-            throw e;
+            if (debugOn.value) {
+                throw e;
+            }
         }
     }
 
-    async function fetchUser(id: number): Promise<UserDetail> {
+    async function fetchUser(id: number): Promise<UserDetail|undefined> {
         loading.value = true;
         error.value = null;
 
@@ -56,13 +61,15 @@ export function useUsers() {
             return response;
         } catch (e) {
             error.value = e instanceof Error ? e.message : 'Failed to fetch user';
-            throw e;
+            if (debugOn.value) {
+                throw e;
+            }
         } finally {
             loading.value = false;
         }
     }
 
-    async function createUser(data: CreateUserForm): Promise<User> {
+    async function createUser(data: CreateUserForm): Promise<User|undefined> {
         loading.value = true;
         error.value = null;
 
@@ -74,13 +81,15 @@ export function useUsers() {
             return response.user;
         } catch (e) {
             error.value = e instanceof Error ? e.message : 'Failed to create user';
-            throw e;
+            if (debugOn.value) {
+                throw e;
+            }
         } finally {
             loading.value = false;
         }
     }
 
-    async function updateUser(id: number, data: { name: string; email: string }): Promise<User> {
+    async function updateUser(id: number, data: { name: string; email: string }): Promise<User|undefined> {
         loading.value = true;
         error.value = null;
 
@@ -90,13 +99,15 @@ export function useUsers() {
             return response.user;
         } catch (e) {
             error.value = e instanceof Error ? e.message : 'Failed to update user';
-            throw e;
+            if (debugOn.value) {
+                throw e;
+            }
         } finally {
             loading.value = false;
         }
     }
 
-    async function updateUserRole(id: number, role: string): Promise<User> {
+    async function updateUserRole(id: number, role: string): Promise<User|undefined> {
         loading.value = true;
         error.value = null;
 
@@ -106,13 +117,15 @@ export function useUsers() {
             return response.user;
         } catch (e) {
             error.value = e instanceof Error ? e.message : 'Failed to update role';
-            throw e;
+            if (debugOn.value) {
+                throw e;
+            }
         } finally {
             loading.value = false;
         }
     }
 
-    async function updateUserPermissions(id: number, permissions: string[]): Promise<string[]> {
+    async function updateUserPermissions(id: number, permissions: string[]): Promise<string[]|undefined> {
         loading.value = true;
         error.value = null;
 
@@ -124,23 +137,27 @@ export function useUsers() {
             return response.direct_permissions;
         } catch (e) {
             error.value = e instanceof Error ? e.message : 'Failed to update permissions';
-            throw e;
+            if (debugOn.value) {
+                throw e;
+            }
         } finally {
             loading.value = false;
         }
     }
 
-    async function fetchOptions(): Promise<UserOptions> {
+    async function fetchOptions(): Promise<UserOptions|undefined> {
         try {
             const response = await api.get<UserOptions>('/users/options');
 
             return response;
         } catch (e) {
-            throw e;
+            if (debugOn.value) {
+                throw e;
+            }
         }
     }
 
-    async function attachUserToClient(clientId: number, userId: number, role?: 'admin' | 'member'): Promise<User> {
+    async function attachUserToClient(clientId: number, userId: number, role?: 'admin' | 'member'): Promise<User|undefined> {
         try {
             const payload: Record<string, unknown> = { user_id: userId };
 
@@ -158,11 +175,13 @@ export function useUsers() {
 
             return response.user;
         } catch (e) {
-            throw e;
+            if (debugOn.value) {
+                throw e;
+            }
         }
     }
 
-    async function setUserClientAdmin(clientId: number, userId: number): Promise<User> {
+    async function setUserClientAdmin(clientId: number, userId: number): Promise<User|undefined> {
         try {
             const response = await api.put<{ user: User }>(`/clients/${clientId}/users/${userId}/set-admin`, {});
 
@@ -180,11 +199,14 @@ export function useUsers() {
 
             return response.user;
         } catch (e) {
-            throw e;
+            if (debugOn.value) {
+                throw e;
+            }
         }
     }
 
     return {
+        debugOn,
         users,
         loading,
         error,
