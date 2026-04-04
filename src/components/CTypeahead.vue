@@ -20,6 +20,7 @@ interface Props {
     typeahead?: boolean;
     clearable?: boolean;
     disabled?: boolean;
+    required?: boolean;
     initialOptionsMode?: 'on_mount' | 'on_click';
     initialOptions?: TypeaheadOption[] | (() => TypeaheadOption[] | Promise<TypeaheadOption[]>);
     refreshOptions?: ((params: RefreshOptionsParams) => TypeaheadOption[] | Promise<TypeaheadOption[]>) | null;
@@ -39,6 +40,7 @@ const props = withDefaults(defineProps<Props>(), {
     typeahead: true,
     clearable: false,
     disabled: false,
+    required: false,
     initialOptionsMode: 'on_mount',
     initialOptions: undefined,
     refreshOptions: null,
@@ -255,6 +257,7 @@ onMounted(async () => {
         <!-- Label -->
         <label v-if="label" class="block text-sm font-medium text-gray-700 mb-1.5">
             {{ label }}
+            <span v-if="required" class="text-red-500 font-bold italic">*</span>
         </label>
 
         <!-- Trigger -->

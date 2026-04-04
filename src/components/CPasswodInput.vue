@@ -115,6 +115,8 @@ const modelValue = defineModel<string | number | undefined>();
                 <template v-else>
                     {{ label || '' }}
                 </template>
+
+            <span v-if="required" class="text-red-500 font-bold italic">*</span>
             </label>
         </template>
 

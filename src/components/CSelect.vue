@@ -55,6 +55,8 @@ const modelValue = defineModel<string | number | undefined>();
             <template v-else>
                 {{ props?.label || '' }}
             </template>
+
+            <span v-if="required" class="text-red-500 font-bold italic">*</span>
         </label>
         <select
             :class="classes"

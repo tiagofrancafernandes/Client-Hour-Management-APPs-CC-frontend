@@ -6,6 +6,7 @@ import { useClients } from '@/composables/useClients';
 import { useWallets } from '@/composables/useWallets';
 import type { WalletWithBalance, Tag, TypeaheadOption } from '@/types';
 import TagInput from '@/components/TagInput.vue';
+import { allFilled, fieldIsFilled, getRequiredEmptyInputs, makeRequiredInputs } from '@/utils/data-helpers';
 
 const props = defineProps<{
     show: boolean;
@@ -27,12 +28,23 @@ const loadingWallets = ref(false);
 
 const selectedClientId = ref<number | null>(null);
 
+const requiredInputs = {
+    title: true,
+    wallet_id: true,
+    description: false,
+}
+
 const form = ref({
     wallet_id: null as number | null,
     title: '',
     description: '',
     tags: [] as number[],
 });
+
+// allRequiredFieldsIsFilled
+
+const requiredEmptyInputs = computed(() => getRequiredEmptyInputs(form.value, requiredInputs));
+const allRequiredIsFilled = computed(() => (requiredEmptyInputs.value || []).length <= 0)
 
 const selectedWallet = computed(() => {
     if (!form.value.wallet_id) {
@@ -45,6 +57,10 @@ const selectedWallet = computed(() => {
 });
 
 const canSubmit = computed(() => {
+    if (!allRequiredIsFilled.value) {
+        return false;
+    }
+
     return form.value.wallet_id !== null && !loading.value;
 });
 
@@ -212,7 +228,11 @@ watch(selectedClientId, () => {
 
                 <!-- Title -->
                 <div>
-                    <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <label for="title" class="block text-sm font-medium text-gray-700 mb-1">
+                        Title
+                        <span v-if="'title' in requiredInputs" class="text-red-500 font-bold italic">*</span>
+                    </label>
+
                     <input
                         id="title"
                         v-model="form.title"
@@ -220,6 +240,7 @@ watch(selectedClientId, () => {
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent"
                         placeholder="What are you working on?"
                         :disabled="loading"
+                        :required="requiredInputs?.title ?? false"
                     />
                 </div>
 

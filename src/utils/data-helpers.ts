@@ -1,5 +1,6 @@
 /** @ts-ignore */
 import type { URL as URLType } from 'node:url';
+import { type Ref } from 'vue';
 
 export type { URLType };
 
@@ -529,3 +530,105 @@ export function isValidEmail(value: any) {
 
     return Array.isArray(matches) ? matches?.length > 0 : false;
 }
+
+export const makeRequiredInputs = (rules: any) => {
+    /*
+    const requiredInputs = makeRequiredInputs(['abc', 'def']);
+    const requiredInputs = makeRequiredInputs({
+        title: true,
+        wallet_id: true,
+        description: false,
+        algo: true,
+    });
+    /* */
+
+    if (isArray(rules)) {
+        let _r: any = {};
+
+        for (let key of rules.filter((i: any) => isString(i))) {
+            _r[key] = true;
+        }
+
+        rules = _r;
+    }
+
+    rules = ifObjectOr(rules, {});
+
+    // ... talvez fazer alguma validação?
+
+    return rules;
+};
+
+export const fieldFillInfo = (value: any, key: string | null = null): { key: string|null; value: any; filled: boolean; } => {
+    let info = {
+        key,
+        value,
+        filled: true,
+    };
+
+    if (['', undefined, null].includes(value)) {
+        info.filled = false;
+    }
+
+    if (Array.isArray(value) && !value.length) {
+        info.filled = false;
+    }
+
+    if (value && typeof value === 'object' && !Object.keys(value || []).length) {
+        info.filled = false;
+    }
+
+    if (typeof value === 'string' && !(value?.trim()?.length)) {
+        info.filled = false;
+    }
+
+    return {
+        ...info,
+        key,
+        value,
+    };
+};
+
+export const fieldIsFilled = (value: any, key: string | null = null) => {
+    return Boolean(fieldFillInfo(value, key)?.filled)
+};
+
+export const getRequiredEmptyInputs = (form: any, requiredInputs: any) => {
+    if (!form || !isObject(form)) {
+        return [];
+    }
+
+    requiredInputs = makeRequiredInputs(requiredInputs);
+
+    let emptyItems: any[] = [];
+    let onlyRequired: any[] = Object.entries(requiredInputs || []).filter((i: any) => i && i[1]);
+
+    if (!onlyRequired.length) {
+        return [];
+    }
+
+    for (let item of onlyRequired) {
+        let [key, _] = item;
+
+        if (!(key in form)) {
+            continue;
+        }
+
+        let value = (form as any)[key];
+
+        if (!fieldIsFilled(value)) {
+            emptyItems.push(key);
+            continue;
+        }
+    }
+
+    return emptyItems;
+};
+
+export const allFilled = (form: any, requiredInputs: any) => {
+    return getRequiredEmptyInputs(form, requiredInputs).length <= 0;
+};
+
+export const allRequiredFieldsIsFilled = (form: any, requiredInputs: any) => {
+    return getRequiredEmptyInputs(form, requiredInputs).length <= 0;
+};
