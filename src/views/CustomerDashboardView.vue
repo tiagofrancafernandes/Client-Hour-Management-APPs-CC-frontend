@@ -6,14 +6,17 @@ import { useCustomerData } from '@/composables/useCustomerData';
 import { usePermissions } from '@/composables/usePermissions';
 import { useWallets } from '@/composables/useWallets';
 import { useToast } from '@/composables/useToast';
+import { useTimerStore } from '@/stores/timer';
 import { formatHoursDisplay } from '@/utils/timeFormatters';
 import type { Wallet } from '@/types';
 
 const router = useRouter();
 const toast = useToast();
+const timerStore = useTimerStore();
 const { canCreateWallets, canBuyCredits } = usePermissions();
 const { myClient, myWallets, loading, error, myWalletsSummary, fetchMyClient, fetchMyWallets } = useCustomerData();
 const { createWallet, loading: walletLoading } = useWallets();
+const startingTimerId = ref<number | null>(null);
 
 // ─── Create Wallet Modal ─────────────────────────────────────────────────────
 
@@ -72,6 +75,34 @@ async function handleCreateWallet(): Promise<void> {
         } else {
             toast.error('Failed to create wallet');
         }
+    }
+}
+
+// ─── Timer Management ────────────────────────────────────────────────────────
+
+async function handleStartTimer(wallet: Wallet, event: Event): Promise<void> {
+    event.stopPropagation();
+
+    startingTimerId.value = wallet.id;
+
+    try {
+        const success = await timerStore.startTimer({
+            wallet_id: wallet.id,
+        });
+
+        if (success) {
+            toast.success('Timer started successfully');
+        } else {
+            const errorMessage = timerStore.error || 'Failed to start timer';
+
+            toast.error(errorMessage);
+        }
+    } catch (err: any) {
+        const errorMessage = err?.response?.data?.message || err?.message || 'Failed to start timer';
+
+        toast.error(errorMessage);
+    } finally {
+        startingTimerId.value = null;
     }
 }
 
@@ -256,6 +287,16 @@ onMounted(async () => {
 
                         <!-- Card Actions -->
                         <div class="flex gap-2 border-t border-gray-100 px-4 py-3">
+                            <CButton
+                                preset="primary"
+                                class="flex-1 justify-center text-xs"
+                                icon="mdi:play-outline"
+                                :disabled="startingTimerId === wallet.id"
+                                @click="handleStartTimer(wallet, $event)"
+                            >
+                                {{ startingTimerId === wallet.id ? 'Starting...' : 'Start Timer' }}
+                            </CButton>
+
                             <CButton
                                 v-if="canBuyCredits && wallet.credit_purchase_allowed"
                                 preset="outlined-red"

@@ -8,14 +8,17 @@ import { useClientUsers } from '@/composables/useClientUsers';
 import { useUsers } from '@/composables/useUsers';
 import { usePermissions } from '@/composables/usePermissions';
 import { useToast } from '@/composables/useToast';
+import { useTimerStore } from '@/stores/timer';
 import type { User, WalletWithBalance, ClientUserForm, UpdateClientUserForm } from '@/types';
 
 const route = useRoute();
 const router = useRouter();
 const clientId = Number(route.params.id);
+const timerStore = useTimerStore();
 
 const { client, loading: clientLoading, error: clientError, fetchClient } = useClients();
 const { createWallet, updateWallet } = useWallets();
+const startingTimerId = ref<number | null>(null);
 const {
     users: clientUsers,
     loading: usersLoading,
@@ -185,6 +188,34 @@ function getBalanceColor(balance: string): string {
     return 'text-gray-600';
 }
 
+// ─── Timer Management ────────────────────────────────────────────────────────
+
+async function handleStartTimer(wallet: WalletWithBalance, event: Event): Promise<void> {
+    event.stopPropagation();
+
+    startingTimerId.value = wallet.id;
+
+    try {
+        const success = await timerStore.startTimer({
+            wallet_id: wallet.id,
+        });
+
+        if (success) {
+            toast.success('Timer started successfully');
+        } else {
+            const errorMessage = timerStore.error || 'Failed to start timer';
+
+            toast.error(errorMessage);
+        }
+    } catch (err: any) {
+        const errorMessage = err?.response?.data?.message || err?.message || 'Failed to start timer';
+
+        toast.error(errorMessage);
+    } finally {
+        startingTimerId.value = null;
+    }
+}
+
 const hasClientUsers = computed(() => {
     return clientUsers.value.length > 0;
 });
@@ -215,6 +246,10 @@ async function searchAttachableUsers({ searchTerm }: { searchTerm: string }) {
     }
 
     const results = await searchUsers(searchTerm.trim(), { without_client: 1, role: 'customer' });
+
+    if (!results || !results.length) {
+        return;
+    }
 
     results.forEach((u) => {
         attachUserCache.set(u.id, u);
@@ -419,17 +454,27 @@ async function handleDeleteUser(userId: number) {
                             </p>
                         </div>
                     </div>
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
                         <div v-if="wallet.hourly_rate_reference" class="text-sm text-gray-500">
                             Rate: ${{ wallet.hourly_rate_reference }}/h
                         </div>
-                        <button
-                            v-if="canManageWallets"
-                            class="ml-auto inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-                            @click="handleEditWallet(wallet, $event)"
-                        >
-                            Edit
-                        </button>
+                        <div class="ml-auto flex items-center gap-2">
+                            <CButton
+                                class="inline-flex items-center gap-1 text-sm"
+                                icon="mdi:play-outline"
+                                :disabled="startingTimerId === wallet.id"
+                                @click="handleStartTimer(wallet, $event)"
+                            >
+                                {{ startingTimerId === wallet.id ? 'Starting...' : 'Start Timer' }}
+                            </CButton>
+                            <button
+                                v-if="canManageWallets"
+                                class="inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                                @click="handleEditWallet(wallet, $event)"
+                            >
+                                Edit
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

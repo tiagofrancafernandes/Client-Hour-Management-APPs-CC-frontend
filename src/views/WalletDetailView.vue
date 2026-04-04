@@ -11,7 +11,10 @@ import { formatHoursDisplay, splitDecimalHours, combineDualTimeInput } from '@/u
 import TagInput from '@/components/TagInput.vue';
 import WalletEditModal from '@/components/WalletEditModal.vue';
 import CCreditPurchaseModal from '@/components/CCreditPurchaseModal.vue';
-import type { LedgerEntryForm } from '@/types';
+import type { LedgerEntryForm, User, WalletWithBalance, ClientUserForm, UpdateClientUserForm } from '@/types';
+import { useTimerStore } from '@/stores/timer';
+const timerStore = useTimerStore();
+const startingTimerId = ref<number | null>(null);
 
 const route = useRoute();
 const router = useRouter();
@@ -34,7 +37,15 @@ const {
 
 const { createEntry, loading: entryLoading } = useLedger();
 const { fetchTags } = useTags();
-const { canBuyCredits, canAddCredits, canAddDebits, canAddAdjustments } = usePermissions();
+const {
+    canBuyCredits,
+    canAddCredits,
+    canAddDebits,
+    canAddAdjustments,
+    canManageWallets,
+    canManageClients,
+    hasPermission,
+} = usePermissions();
 
 const canAddEntry = computed(() => {
     return canAddCredits.value || canAddDebits.value || canAddAdjustments.value;
@@ -198,6 +209,34 @@ function getBalanceColor(balance: string): string {
     }
 
     return 'text-gray-600';
+}
+
+// ─── Timer Management ────────────────────────────────────────────────────────
+
+async function handleStartTimer(wallet: WalletWithBalance, event: Event): Promise<void> {
+    event.stopPropagation();
+
+    startingTimerId.value = wallet.id;
+
+    try {
+        const success = await timerStore.startTimer({
+            wallet_id: wallet.id,
+        });
+
+        if (success) {
+            toast.success('Timer started successfully');
+        } else {
+            const errorMessage = timerStore.error || 'Failed to start timer';
+
+            toast.error(errorMessage);
+        }
+    } catch (err: any) {
+        const errorMessage = err?.response?.data?.message || err?.message || 'Failed to start timer';
+
+        toast.error(errorMessage);
+    } finally {
+        startingTimerId.value = null;
+    }
 }
 
 function formatHours(hours: string): string {
@@ -394,14 +433,25 @@ function onValueFormMinutes(event: Event) {
                     </div>
                     <div class="text-right">
                         <div class="mb-4 flex justify-end gap-2">
-                            <CButton
-                                v-if="canEditWallet"
-                                preset="gray"
-                                @click="showEditModal = true"
-                                icon="hugeicons:pencil-edit-01"
-                            >
-                                Edit
-                            </CButton>
+                            <div class="ml-auto flex items-center gap-2">
+                                <CButton
+                                    class="inline-flex items-center gap-1 text-sm"
+                                    icon="mdi:play-outline"
+                                    :disabled="startingTimerId === wallet.id"
+                                    @click="handleStartTimer(wallet, $event)"
+                                >
+                                    {{ startingTimerId === wallet.id ? 'Starting...' : 'Start Timer' }}
+                                </CButton>
+
+                                <CButton
+                                    v-if="canEditWallet || canManageWallets"
+                                    preset="gray"
+                                    @click="showEditModal = true"
+                                    icon="hugeicons:pencil-edit-01"
+                                >
+                                    Edit
+                                </CButton>
+                            </div>
                             <CButton
                                 v-if="wallet?.credit_purchase_allowed && canBuyCredits"
                                 preset="green"
