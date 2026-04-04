@@ -321,3 +321,89 @@ export type TypeaheadOption = {
     value: unknown;
     label: string;
 };
+
+export interface ProductService {
+    id: number;
+    name: string;
+    description: string | null;
+    type: 'product' | 'service';
+    unit: string;
+    default_price: string;
+    default_quantity: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface InvoiceItem {
+    id?: number;
+    invoice_id?: number;
+    line_number: number;
+    description: string;
+    unit: string;
+    quantity: string;
+    unit_price: string;
+    line_total: string;
+    product_service_id: number | null;
+    product_service?: ProductService;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface Invoice {
+    id: number;
+    client_id: number;
+    invoice_number: number;
+    client_invoice_number: number;
+    issue_date: string;
+    due_date: string | null;
+    currency: string;
+    subtotal: string;
+    tax_amount: string;
+    tax_percentage: string;
+    discount_amount: string;
+    total: string;
+    status: 'draft' | 'sent' | 'paid' | 'cancelled';
+    hidden: boolean;
+    notes: string | null;
+    issued_by: Record<string, unknown> | null;
+    bill_to: Record<string, unknown> | null;
+    client?: Client;
+    items?: InvoiceItem[];
+    created_at: string;
+    updated_at: string;
+}
+
+export interface InvoiceForm {
+    client_id: number;
+    issue_date: string;
+    due_date?: string | null;
+    currency: string;
+    tax_percentage?: number;
+    discount_amount?: number;
+    status?: 'draft' | 'sent' | 'paid' | 'cancelled';
+    hidden?: boolean;
+    notes?: string | null;
+    issued_by?: Record<string, unknown> | null;
+    bill_to?: Record<string, unknown> | null;
+    items: InvoiceItemForm[];
+}
+
+export interface InvoiceItemForm {
+    id?: number;
+    description: string;
+    unit?: string;
+    quantity: number;
+    unit_price: number;
+    product_service_id?: number | null;
+}
+
+export interface ProductServiceForm {
+    name: string;
+    description?: string | null;
+    type: 'product' | 'service';
+    unit?: string;
+    default_price: number;
+    default_quantity?: number;
+    is_active?: boolean;
+}

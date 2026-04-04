@@ -189,6 +189,56 @@ const router = createRouter({
                 permissions: ['user.view_any'],
             },
         },
+        {
+            path: '/invoices',
+            name: 'invoices',
+            component: () => import('@/views/InvoicesView.vue'),
+            meta: {
+                title: 'Invoices',
+                requiresAuth: true,
+                permissions: ['invoice.view'],
+            },
+        },
+        {
+            path: '/invoices/new',
+            name: 'invoice-create',
+            component: () => import('@/views/InvoiceFormView.vue'),
+            meta: {
+                title: 'New Invoice',
+                requiresAuth: true,
+                permissions: ['invoice.create'],
+            },
+        },
+        {
+            path: '/invoices/:id',
+            name: 'invoice-detail',
+            component: () => import('@/views/InvoiceDetailView.vue'),
+            meta: {
+                title: 'Invoice Details',
+                requiresAuth: true,
+                permissions: ['invoice.view'],
+            },
+        },
+        {
+            path: '/invoices/:id/edit',
+            name: 'invoice-edit',
+            component: () => import('@/views/InvoiceFormView.vue'),
+            meta: {
+                title: 'Edit Invoice',
+                requiresAuth: true,
+                permissions: ['invoice.update'],
+            },
+        },
+        {
+            path: '/products-services',
+            name: 'products-services',
+            component: () => import('@/views/ProductsServicesView.vue'),
+            meta: {
+                title: 'Products & Services',
+                requiresAuth: true,
+                permissions: ['product_service.view_any'],
+            },
+        },
     ],
 });
 
@@ -218,7 +268,17 @@ router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormal
 
     // Redirect customers away from admin routes
     if (isAuthenticated && auth.isCustomer.value) {
-        const adminRoutes = ['clients', 'tags', 'timers', 'imports', 'imports-upload', 'imports-review'];
+        const adminRoutes = [
+            'clients',
+            'tags',
+            'timers',
+            'imports',
+            'imports-upload',
+            'imports-review',
+            'invoice-create',
+            'invoice-edit',
+            'products-services',
+        ];
 
         if (adminRoutes.includes(to.name as string)) {
             next({ name: 'customer-dashboard' });
