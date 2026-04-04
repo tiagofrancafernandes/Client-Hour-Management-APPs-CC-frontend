@@ -43,6 +43,25 @@ const navItems = computed((): NavItem[] => {
             show: permissions.canViewClients.value,
         },
         {
+            key: 'invoices',
+            label: 'Invoices',
+            icon: 'heroicons:document-text',
+            basePath: '/invoices',
+            show: permissions.hasPermission('invoice.view') || permissions.hasPermission('invoice.view_any'),
+            children: [
+                {
+                    label: 'All Invoices',
+                    to: '/invoices',
+                    icon: 'heroicons:document-text',
+                },
+                {
+                    label: 'Products & Services',
+                    to: '/products-services',
+                    icon: 'heroicons:cube',
+                },
+            ],
+        },
+        {
             key: 'reports',
             label: 'Reports',
             icon: 'heroicons:chart-bar',

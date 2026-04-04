@@ -1,257 +1,60 @@
-<template>
-    <div class="container mx-auto px-4 py-8">
-        <div class="mb-6 flex items-center justify-between">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Invoices</h1>
-            <router-link
-                v-if="canCreate"
-                :to="{ name: 'invoice-create' }"
-                class="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-            >
-                <span>New Invoice</span>
-            </router-link>
-        </div>
-
-        <div class="mb-6 rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <div v-if="canViewAny">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Client
-                    </label>
-                    <select
-                        v-model="filters.client_id"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
-                    >
-                        <option :value="undefined">All Clients</option>
-                        <option v-for="client in clients" :key="client.id" :value="client.id">
-                            {{ client.name }}
-                        </option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Status
-                    </label>
-                    <select
-                        v-model="filters.status"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
-                    >
-                        <option :value="undefined">All Status</option>
-                        <option value="draft">Draft</option>
-                        <option value="sent">Sent</option>
-                        <option value="paid">Paid</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        From Date
-                    </label>
-                    <input
-                        v-model="filters.from_date"
-                        type="date"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
-                    />
-                </div>
-
-                <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        To Date
-                    </label>
-                    <input
-                        v-model="filters.to_date"
-                        type="date"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
-                    />
-                </div>
-            </div>
-
-            <div class="mt-4 flex gap-2">
-                <button
-                    type="button"
-                    class="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-                    @click="handleSearch"
-                >
-                    Search
-                </button>
-                <button
-                    type="button"
-                    class="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
-                    @click="handleClearFilters"
-                >
-                    Clear
-                </button>
-            </div>
-        </div>
-
-        <div v-if="loading" class="text-center">
-            <p class="text-gray-600 dark:text-gray-400">Loading invoices...</p>
-        </div>
-
-        <div v-else-if="error" class="rounded-lg bg-red-50 p-4 text-red-800 dark:bg-red-900 dark:text-red-200">
-            {{ error }}
-        </div>
-
-        <div v-else-if="invoices.length === 0" class="rounded-lg bg-gray-50 p-8 text-center dark:bg-gray-800">
-            <p class="text-gray-600 dark:text-gray-400">No invoices found</p>
-        </div>
-
-        <div v-else class="overflow-x-auto rounded-lg bg-white shadow dark:bg-gray-800">
-            <table class="w-full">
-                <thead class="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-700 dark:text-gray-300">
-                            Invoice #
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-700 dark:text-gray-300">
-                            Client
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-700 dark:text-gray-300">
-                            Date
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-700 dark:text-gray-300">
-                            Total
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-700 dark:text-gray-300">
-                            Status
-                        </th>
-                        <th class="px-6 py-3 text-right text-xs font-medium uppercase text-gray-700 dark:text-gray-300">
-                            Actions
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    <tr
-                        v-for="invoice in invoices"
-                        :key="invoice.id"
-                        class="hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                        <td class="whitespace-nowrap px-6 py-4">
-                            <span class="font-medium text-gray-900 dark:text-white">
-                                #{{ invoice.invoice_number }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="text-gray-900 dark:text-white">
-                                {{ invoice.client?.name || 'N/A' }}
-                            </span>
-                        </td>
-                        <td class="whitespace-nowrap px-6 py-4">
-                            <span class="text-gray-600 dark:text-gray-400">
-                                {{ formatDate(invoice.issue_date) }}
-                            </span>
-                        </td>
-                        <td class="whitespace-nowrap px-6 py-4">
-                            <span class="font-medium text-gray-900 dark:text-white">
-                                {{ invoice.currency }} {{ invoice.total }}
-                            </span>
-                        </td>
-                        <td class="whitespace-nowrap px-6 py-4">
-                            <span
-                                :class="[
-                                    'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
-                                    {
-                                        'bg-gray-100 text-gray-800': invoice.status === 'draft',
-                                        'bg-blue-100 text-blue-800': invoice.status === 'sent',
-                                        'bg-green-100 text-green-800': invoice.status === 'paid',
-                                        'bg-red-100 text-red-800': invoice.status === 'cancelled',
-                                    },
-                                ]"
-                            >
-                                {{ invoice.status }}
-                            </span>
-                        </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-right">
-                            <router-link
-                                :to="{ name: 'invoice-detail', params: { id: invoice.id } }"
-                                class="text-red-600 hover:text-red-800"
-                            >
-                                View
-                            </router-link>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div v-if="pagination.lastPage > 1" class="mt-6 flex items-center justify-between">
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-                Showing {{ (pagination.currentPage - 1) * pagination.perPage + 1 }} to
-                {{ Math.min(pagination.currentPage * pagination.perPage, pagination.total) }} of
-                {{ pagination.total }} results
-            </p>
-            <div class="flex gap-2">
-                <button
-                    type="button"
-                    :disabled="pagination.currentPage === 1"
-                    class="rounded-lg border border-gray-300 px-4 py-2 disabled:opacity-50"
-                    @click="goToPage(pagination.currentPage - 1)"
-                >
-                    Previous
-                </button>
-                <button
-                    type="button"
-                    :disabled="pagination.currentPage === pagination.lastPage"
-                    class="rounded-lg border border-gray-300 px-4 py-2 disabled:opacity-50"
-                    @click="goToPage(pagination.currentPage + 1)"
-                >
-                    Next
-                </button>
-            </div>
-        </div>
-    </div>
-</template>
-
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { Icon } from '@iconify/vue';
 import { useInvoices } from '@/composables/useInvoices';
 import { useClients } from '@/composables/useClients';
+import { useRouter } from 'vue-router';
+import type { Invoice } from '@/types';
 
-const { invoices, loading, error, pagination, canViewAny, canCreate, fetchInvoices } = useInvoices();
+const router = useRouter();
+
+const { invoices, loading, error, pagination, canViewAny, canCreate, canViewDraft, fetchInvoices } = useInvoices();
 const { clients, fetchClients } = useClients();
 
+// ─── Filters ────────────────────────────────────────────────────────────────
+
+const showFilters = ref(true);
+
 const filters = ref({
-    client_id: undefined as number | undefined,
-    status: undefined as string | undefined,
-    from_date: undefined as string | undefined,
-    to_date: undefined as string | undefined,
+    client_id: null as number | null,
+    status: null as string | null,
+    from_date: '',
+    to_date: '',
 });
 
-function formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
+const activeFiltersCount = computed(() => {
+    let count = 0;
 
-async function handleSearch() {
-    await fetchInvoices({
-        client_id: filters.value.client_id,
-        status: filters.value.status,
-        from_date: filters.value.from_date,
-        to_date: filters.value.to_date,
-        page: 1,
-    });
-}
+    if (filters.value.client_id) count++;
+    if (filters.value.status) count++;
+    if (filters.value.from_date) count++;
+    if (filters.value.to_date) count++;
 
-function handleClearFilters() {
-    filters.value = {
-        client_id: undefined,
-        status: undefined,
-        from_date: undefined,
-        to_date: undefined,
-    };
-    handleSearch();
-}
+    return count;
+});
 
-async function goToPage(page: number) {
-    await fetchInvoices({
-        client_id: filters.value.client_id,
-        status: filters.value.status,
-        from_date: filters.value.from_date,
-        to_date: filters.value.to_date,
-        page,
-    });
-}
+const clientOptions = computed(() => {
+    return clients.value.map((c) => ({
+        value: c.id,
+        label: c.name,
+    }));
+});
+
+const statusOptions = computed(() => {
+    const options = [
+        { value: 'sent', label: 'Sent' },
+        { value: 'paid', label: 'Paid' },
+        { value: 'cancelled', label: 'Cancelled' },
+    ];
+
+    if (canViewDraft.value) {
+        options.unshift({ value: 'draft', label: 'Draft' });
+    }
+
+    return options;
+});
+
+// ─── List State ────────────────────────────────────────────────────────────
 
 onMounted(async () => {
     await fetchInvoices();
@@ -260,4 +63,275 @@ onMounted(async () => {
         await fetchClients();
     }
 });
+
+function formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function getStatusBadgeClass(status: string): string {
+    const classes: Record<string, string> = {
+        draft: 'bg-gray-100 text-gray-700',
+        sent: 'bg-blue-100 text-blue-700',
+        paid: 'bg-green-100 text-green-700',
+        cancelled: 'bg-red-100 text-red-700',
+    };
+
+    return classes[status] || 'bg-gray-100 text-gray-700';
+}
+
+function handleClearFilters(): void {
+    filters.value = {
+        client_id: null,
+        status: null,
+        from_date: '',
+        to_date: '',
+    };
+
+    handleSearch();
+}
+
+async function handleSearch(): Promise<void> {
+    await fetchInvoices({
+        client_id: filters.value.client_id || undefined,
+        status: filters.value.status || undefined,
+        from_date: filters.value.from_date || undefined,
+        to_date: filters.value.to_date || undefined,
+        page: 1,
+    });
+}
+
+async function goToPage(page: number): Promise<void> {
+    await fetchInvoices({
+        client_id: filters.value.client_id || undefined,
+        status: filters.value.status || undefined,
+        from_date: filters.value.from_date || undefined,
+        to_date: filters.value.to_date || undefined,
+        page,
+    });
+}
+
+function goToInvoice(invoice: Invoice): void {
+    router.push({ name: 'invoice-detail', params: { id: invoice.id } });
+}
+
+function goToCreate(): void {
+    router.push({ name: 'invoice-create' });
+}
 </script>
+
+<template>
+    <div class="flex flex-col h-full">
+        <!-- Header -->
+        <div class="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-red-100">
+                    <Icon icon="heroicons:document-text" class="text-red-600" />
+                </div>
+                <h1 class="text-lg font-semibold text-gray-900">Invoices</h1>
+            </div>
+
+            <CButton v-if="canCreate" preset="primary-md" icon="heroicons:plus" @click="goToCreate">
+                New Invoice
+            </CButton>
+        </div>
+
+        <!-- Filters Card -->
+        <div class="flex-shrink-0 px-6 py-4 border-b border-gray-100 bg-gray-50">
+            <div class="flex items-center justify-between mb-3">
+                <button
+                    class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                    @click="showFilters = !showFilters"
+                >
+                    <Icon
+                        icon="heroicons:funnel"
+                        class="w-4 h-4 transition-transform"
+                        :class="{ 'rotate-180': !showFilters }"
+                    />
+                    <span>Filters</span>
+                    <span
+                        v-if="activeFiltersCount > 0"
+                        class="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-red-600 text-white text-[10px] font-bold"
+                    >
+                        {{ activeFiltersCount }}
+                    </span>
+                </button>
+
+                <button
+                    v-if="activeFiltersCount > 0"
+                    class="text-xs text-red-600 hover:text-red-700 font-medium transition-colors"
+                    @click="handleClearFilters"
+                >
+                    Clear all
+                </button>
+            </div>
+
+            <div v-if="showFilters" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <CTypeahead
+                    v-if="canViewAny"
+                    label="Client"
+                    v-model="filters.client_id"
+                    :initialOptions="clientOptions"
+                    placeholder="All Clients"
+                    clearable
+                />
+
+                <CSelect label="Status" v-model="filters.status">
+                    <option :value="null">All Status</option>
+                    <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">
+                        {{ opt.label }}
+                    </option>
+                </CSelect>
+
+                <CInput label="From Date" v-model="filters.from_date" type="date" />
+
+                <CInput label="To Date" v-model="filters.to_date" type="date" />
+            </div>
+
+            <div v-if="showFilters" class="flex gap-2 mt-3">
+                <CButton preset="primary-sm" @click="handleSearch">Search</CButton>
+                <CButton preset="lightgray-sm" @click="handleClearFilters">Clear</CButton>
+            </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="flex-1 overflow-auto px-6 py-4">
+            <!-- Loading State -->
+            <div v-if="loading" class="flex items-center justify-center py-12">
+                <div class="text-center">
+                    <Icon icon="heroicons:arrow-path" class="w-8 h-8 text-gray-400 mx-auto mb-2 animate-spin" />
+                    <p class="text-sm text-gray-500">Loading invoices...</p>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div
+                v-else-if="error"
+                class="flex items-center justify-center py-12 px-4 rounded-lg bg-red-50 border border-red-200"
+            >
+                <div class="text-center">
+                    <Icon icon="heroicons:exclamation-circle" class="w-8 h-8 text-red-500 mx-auto mb-2" />
+                    <p class="text-sm font-medium text-red-800">{{ error }}</p>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div v-else class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                            >
+                                Invoice #
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                            >
+                                Client
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                            >
+                                Date
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                            >
+                                Total
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                            >
+                                Status
+                            </th>
+                            <th
+                                class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                            >
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr
+                            v-for="invoice in invoices"
+                            :key="invoice.id"
+                            class="hover:bg-gray-50 transition-colors cursor-pointer"
+                            @click="goToInvoice(invoice)"
+                        >
+                            <td class="px-4 py-3">
+                                <span class="text-sm font-medium text-gray-900">#{{ invoice.invoice_number }}</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="text-sm text-gray-900">
+                                    {{ invoice.client?.name || 'N/A' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="text-sm text-gray-600">
+                                    {{ formatDate(invoice.issue_date) }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="text-sm font-medium text-gray-900">
+                                    {{ invoice.currency }} {{ invoice.total }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span
+                                    :class="[
+                                        'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold',
+                                        getStatusBadgeClass(invoice.status),
+                                    ]"
+                                >
+                                    {{ invoice.status }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <button
+                                    class="text-sm text-red-600 hover:text-red-700 font-medium transition-colors"
+                                    @click.stop="goToInvoice(invoice)"
+                                >
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Empty state -->
+                        <tr v-if="!invoices.length">
+                            <td colspan="6" class="px-6 py-12 text-center">
+                                <Icon icon="heroicons:document-text" class="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                                <p class="text-sm font-medium text-gray-500">No invoices found</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div v-if="pagination.lastPage > 1" class="flex-shrink-0 px-6 py-4 border-t border-gray-100">
+            <div class="flex items-center justify-center gap-2">
+                <button
+                    :disabled="pagination.currentPage === 1"
+                    class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    @click="goToPage(pagination.currentPage - 1)"
+                >
+                    <Icon icon="heroicons:chevron-left" class="w-4 h-4" />
+                    Previous
+                </button>
+                <span class="text-sm text-gray-500">
+                    Page {{ pagination.currentPage }} of {{ pagination.lastPage }}
+                </span>
+                <button
+                    :disabled="pagination.currentPage === pagination.lastPage"
+                    class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    @click="goToPage(pagination.currentPage + 1)"
+                >
+                    Next
+                    <Icon icon="heroicons:chevron-right" class="w-4 h-4" />
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
