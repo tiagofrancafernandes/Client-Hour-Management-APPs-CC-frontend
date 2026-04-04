@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { Icon } from '@iconify/vue'
-import { usePasswordRecovery } from '@/composables/usePasswordRecovery'
-import { useAuthResources } from '@/composables/useAuthResources'
+import { computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { Icon } from '@iconify/vue';
+import { usePasswordRecovery } from '@/composables/usePasswordRecovery';
+import { useAuthResources } from '@/composables/useAuthResources';
 import { isValidEmail } from '@/utils/data-helpers';
 
-const router = useRouter()
+const router = useRouter();
 
-const { canRecoverPassword, fetchAuthResources } = useAuthResources()
+const { canRecoverPassword, fetchAuthResources } = useAuthResources();
 
 const {
     currentStep,
@@ -22,38 +22,38 @@ const {
     verifyToken,
     resetPassword,
     reset,
-} = usePasswordRecovery()
+} = usePasswordRecovery();
 
-const isStep1 = computed(() => currentStep.value === 'request')
-const isStep2 = computed(() => currentStep.value === 'verify')
-const isStep3 = computed(() => currentStep.value === 'reset')
-const isStep4 = computed(() => currentStep.value === 'success')
+const isStep1 = computed(() => currentStep.value === 'request');
+const isStep2 = computed(() => currentStep.value === 'verify');
+const isStep3 = computed(() => currentStep.value === 'reset');
+const isStep4 = computed(() => currentStep.value === 'success');
 
-const hasErrors = computed(() => error.value !== null)
+const hasErrors = computed(() => error.value !== null);
 
 async function handleStep1Submit(): Promise<void> {
     if (!email.value) {
-        return
+        return;
     }
 
-    await requestRecovery()
+    await requestRecovery();
 }
 
 async function handleStep2Submit(): Promise<void> {
     if (!verificationCode.value) {
-        return
+        return;
     }
 
-    await verifyToken()
+    await verifyToken();
 }
 
 async function handleStep3Submit(): Promise<void> {
     if (!password.value || !passwordConfirmation.value) {
-        return
+        return;
     }
 
     try {
-        await resetPassword()
+        await resetPassword();
     } catch (err) {
         // Error is already handled in composable
     }
@@ -61,17 +61,17 @@ async function handleStep3Submit(): Promise<void> {
 
 function handleGoBack(): void {
     if (isStep2.value || isStep3.value) {
-        reset()
+        reset();
     }
 }
 
 function handleLoginRedirect(): void {
-    router.push('/login')
+    router.push('/login');
 }
 
 onMounted(() => {
-    fetchAuthResources()
-})
+    fetchAuthResources();
+});
 </script>
 
 <template>
@@ -84,10 +84,7 @@ onMounted(() => {
             </div>
 
             <!-- Card -->
-            <div
-                v-if="!canRecoverPassword"
-                class="bg-white rounded-xl border border-gray-200 shadow-sm p-8"
-            >
+            <div v-if="!canRecoverPassword" class="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
                 <div class="text-center py-8">
                     <Icon icon="heroicons:exclamation-circle" class="w-12 h-12 text-red-600 mx-auto mb-4" />
                     <h2 class="text-lg font-semibold text-gray-900 mb-2">Password Recovery Disabled</h2>
@@ -95,9 +92,7 @@ onMounted(() => {
                         Password recovery is currently not available. Please contact administrator for assistance.
                     </p>
                     <router-link to="/login">
-                        <CButton preset="outlined-black" class="w-full">
-                            Back to Login
-                        </CButton>
+                        <CButton preset="outlined-black" class="w-full">Back to Login</CButton>
                     </router-link>
                 </div>
             </div>
@@ -108,9 +103,7 @@ onMounted(() => {
                     <div
                         :class="[
                             'flex-1 h-2 rounded-full transition-colors',
-                            isStep1 || isStep2 || isStep3 || isStep4
-                                ? 'bg-red-600'
-                                : 'bg-gray-200',
+                            isStep1 || isStep2 || isStep3 || isStep4 ? 'bg-red-600' : 'bg-gray-200',
                         ]"
                     />
                     <div
@@ -128,10 +121,7 @@ onMounted(() => {
                 </div>
 
                 <!-- Error Message -->
-                <div
-                    v-if="hasErrors"
-                    class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg"
-                >
+                <div v-if="hasErrors" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                     <p class="text-sm font-medium text-red-800">{{ error }}</p>
                 </div>
 
@@ -143,8 +133,7 @@ onMounted(() => {
                     </div>
 
                     <p class="text-sm text-gray-600">
-                        Enter the email address associated with your account, and we'll send you a
-                        recovery code.
+                        Enter the email address associated with your account, and we'll send you a recovery code.
                     </p>
 
                     <CInput
@@ -157,11 +146,7 @@ onMounted(() => {
 
                     <div class="flex gap-3 pt-4">
                         <router-link to="/login" class="flex-1">
-                            <CButton
-                                preset="outlined-black"
-                                class="w-full"
-                                :disabled="isLoading"
-                            >
+                            <CButton preset="outlined-black" class="w-full" :disabled="isLoading">
                                 Back to Login
                             </CButton>
                         </router-link>
@@ -199,19 +184,10 @@ onMounted(() => {
                     />
 
                     <div class="flex gap-3 pt-4">
-                        <CButton
-                            preset="outlined-black"
-                            class="flex-1"
-                            :disabled="isLoading"
-                            @click="handleGoBack"
-                        >
+                        <CButton preset="outlined-black" class="flex-1" :disabled="isLoading" @click="handleGoBack">
                             Back
                         </CButton>
-                        <CButton
-                            class="flex-1"
-                            :disabled="isLoading || !verificationCode"
-                            @click="handleStep2Submit"
-                        >
+                        <CButton class="flex-1" :disabled="isLoading || !verificationCode" @click="handleStep2Submit">
                             <span v-if="!isLoading">Verify</span>
                             <span v-else>Verifying...</span>
                         </CButton>
@@ -246,12 +222,7 @@ onMounted(() => {
                     />
 
                     <div class="flex gap-3 pt-4">
-                        <CButton
-                            preset="outlined-black"
-                            class="flex-1"
-                            :disabled="isLoading"
-                            @click="handleGoBack"
-                        >
+                        <CButton preset="outlined-black" class="flex-1" :disabled="isLoading" @click="handleGoBack">
                             Back
                         </CButton>
                         <CButton
@@ -268,41 +239,26 @@ onMounted(() => {
                 <!-- Step 4: Success -->
                 <div v-if="isStep4" class="space-y-6 text-center">
                     <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-                        <svg
-                            class="w-8 h-8 text-green-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M5 13l4 4L19 7"
-                            />
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
 
                     <div>
                         <h2 class="text-2xl font-bold text-gray-900 mb-2">Password Reset!</h2>
                         <p class="text-gray-600 mb-6">
-                            Your password has been successfully reset. You can now log in with your
-                            new password.
+                            Your password has been successfully reset. You can now log in with your new password.
                         </p>
                     </div>
 
-                    <CButton class="w-full" @click="handleLoginRedirect">
-                        Go to Login
-                    </CButton>
+                    <CButton class="w-full" @click="handleLoginRedirect">Go to Login</CButton>
                 </div>
             </div>
 
             <!-- Footer -->
             <div v-if="canRecoverPassword" class="text-center mt-6 text-sm text-gray-600">
                 Don't have an account?
-                <router-link to="/register" class="font-medium text-red-600 hover:text-red-700">
-                    Register
-                </router-link>
+                <router-link to="/register" class="font-medium text-red-600 hover:text-red-700">Register</router-link>
             </div>
         </div>
     </div>

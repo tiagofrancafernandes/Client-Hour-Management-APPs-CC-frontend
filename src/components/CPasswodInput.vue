@@ -49,8 +49,13 @@ const props = defineProps({
     },
 });
 
-const inputId = props?.id || 'password_' + btoa(props?.name || Math.random().toString().slice(2, 8))
-    .trim().toLowerCase().replaceAll('=', '');
+const inputId =
+    props?.id ||
+    'password_' +
+        btoa(props?.name || Math.random().toString().slice(2, 8))
+            .trim()
+            .toLowerCase()
+            .replaceAll('=', '');
 
 const showPassword = ref(false);
 
@@ -60,8 +65,8 @@ const classes = computed(() => {
     let _classes: any = [
         props.class,
         props.inputClasses,
-        props.preset ? presets[props.preset] ?? presets.default : null,
-        "w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors",
+        props.preset ? (presets[props.preset] ?? presets.default) : null,
+        'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors',
     ];
 
     return _classes;
@@ -135,10 +140,7 @@ const modelValue = defineModel<string | number | undefined>();
                 tabindex="-1"
                 aria-pressed="false"
             >
-                <Icon
-                    :icon="showPassword ? 'heroicons:eye-slash' : 'heroicons:eye'"
-                    class="w-4 h-4"
-                />
+                <Icon :icon="showPassword ? 'heroicons:eye-slash' : 'heroicons:eye'" class="w-4 h-4" />
             </button>
         </div>
     </div>

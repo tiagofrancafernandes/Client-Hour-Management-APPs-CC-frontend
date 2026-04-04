@@ -385,25 +385,15 @@ function resourceIcon(group: string): string {
         <div v-if="activeTab === 'password'">
             <div class="max-w-2xl">
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-6">
-                        Change Password
-                    </h2>
+                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-6">Change Password</h2>
 
                     <!-- Success Message -->
-                    <div
-                        v-if="changePasswordSuccess"
-                        class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg"
-                    >
-                        <p class="text-sm font-medium text-green-800">
-                            Password has been changed successfully
-                        </p>
+                    <div v-if="changePasswordSuccess" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <p class="text-sm font-medium text-green-800">Password has been changed successfully</p>
                     </div>
 
                     <!-- Error Message -->
-                    <div
-                        v-if="changePasswordError"
-                        class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg"
-                    >
+                    <div v-if="changePasswordError" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                         <p class="text-sm font-medium text-red-800">{{ changePasswordError }}</p>
                     </div>
 
@@ -442,18 +432,16 @@ function resourceIcon(group: string): string {
                                 :disabled="
                                     isChangingPassword ||
                                     !currentPassword ||
-                                    (String(password || '').length < 6) ||
-                                    (String(passwordConfirmation || '').length < 6) ||
-                                    (password !== passwordConfirmation)
+                                    String(password || '').length < 6 ||
+                                    String(passwordConfirmation || '').length < 6 ||
+                                    password !== passwordConfirmation
                                 "
                                 @click="changePassword"
                             >
                                 <span v-if="!isChangingPassword">Change Password</span>
                                 <span v-else>Changing...</span>
                             </CButton>
-                            <CButton preset="outlined-black" @click="resetChangePassword">
-                                Clear
-                            </CButton>
+                            <CButton preset="outlined-black" @click="resetChangePassword">Clear</CButton>
                         </div>
                     </div>
                 </div>

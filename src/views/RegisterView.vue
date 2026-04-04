@@ -95,9 +95,7 @@ onMounted(() => {
                         User registration is currently not available. Please contact administrator for assistance.
                     </p>
                     <router-link to="/login">
-                        <CButton preset="outlined-black" class="w-full">
-Back to Login
-</CButton>
+                        <CButton preset="outlined-black" class="w-full">Back to Login</CButton>
                     </router-link>
                 </div>
             </div>
@@ -175,13 +173,13 @@ Back to Login
                             class="flex-1"
                             :disabled="
                                 isLoading ||
-                                    !isValidEmail(email) ||
-                                    !name ||
-                                    !password ||
-                                    !passwordConfirmation ||
-                                    String(password || '').length < 6 ||
-                                    String(passwordConfirmation || '').length < 6 ||
-                                    password !== passwordConfirmation
+                                !isValidEmail(email) ||
+                                !name ||
+                                !password ||
+                                !passwordConfirmation ||
+                                String(password || '').length < 6 ||
+                                String(passwordConfirmation || '').length < 6 ||
+                                password !== passwordConfirmation
                             "
                             @click="handleStep1Submit"
                         >

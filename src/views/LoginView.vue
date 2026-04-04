@@ -134,12 +134,7 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <div
-                            :class="[
-                                'flex items-center',
-                                canRecoverPassword ? 'justify-between' : 'justify-start'
-                            ]"
-                        >
+                        <div :class="['flex items-center', canRecoverPassword ? 'justify-between' : 'justify-start']">
                             <div class="flex items-start">
                                 <div class="flex items-center h-5">
                                     <input
@@ -148,13 +143,15 @@ onMounted(() => {
                                         aria-describedby="remember"
                                         type="checkbox"
                                         class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800"
-                                    >
+                                    />
                                 </div>
                                 <div class="ml-3 text-sm">
                                     <label
                                         for="remember"
                                         class="text-sm font-medium text-gray-700 mb-1.5 select-none cursor-pointer"
-                                    >Remember me</label>
+                                    >
+                                        Remember me
+                                    </label>
                                 </div>
                             </div>
 
@@ -206,9 +203,7 @@ onMounted(() => {
             <!-- Footer -->
             <div v-if="canRegister" class="text-center mt-6 text-sm text-gray-600">
                 Don't have an account?
-                <router-link to="/register" class="font-medium text-red-600 hover:text-red-700">
-                    Register
-                </router-link>
+                <router-link to="/register" class="font-medium text-red-600 hover:text-red-700">Register</router-link>
             </div>
         </div>
     </div>

@@ -19,7 +19,9 @@ export function useUsers() {
     const debugOn = ref(false);
     const error = ref<string | null>(null);
 
-    async function fetchUsers(params: Record<string, unknown> = {}): Promise<PaginatedResponse<User|undefined>|undefined> {
+    async function fetchUsers(
+        params: Record<string, unknown> = {}
+    ): Promise<PaginatedResponse<User | undefined> | undefined> {
         loading.value = true;
         error.value = null;
 
@@ -39,7 +41,7 @@ export function useUsers() {
         }
     }
 
-    async function searchUsers(search: string, extra: Record<string, unknown> = {}): Promise<User[]|undefined> {
+    async function searchUsers(search: string, extra: Record<string, unknown> = {}): Promise<User[] | undefined> {
         try {
             const response = await api.get<PaginatedResponse<User>>('/users', { search, per_page: 10, ...extra });
 
@@ -51,7 +53,7 @@ export function useUsers() {
         }
     }
 
-    async function fetchUser(id: number): Promise<UserDetail|undefined> {
+    async function fetchUser(id: number): Promise<UserDetail | undefined> {
         loading.value = true;
         error.value = null;
 
@@ -69,7 +71,7 @@ export function useUsers() {
         }
     }
 
-    async function createUser(data: CreateUserForm): Promise<User|undefined> {
+    async function createUser(data: CreateUserForm): Promise<User | undefined> {
         loading.value = true;
         error.value = null;
 
@@ -89,7 +91,7 @@ export function useUsers() {
         }
     }
 
-    async function updateUser(id: number, data: { name: string; email: string }): Promise<User|undefined> {
+    async function updateUser(id: number, data: { name: string; email: string }): Promise<User | undefined> {
         loading.value = true;
         error.value = null;
 
@@ -107,7 +109,7 @@ export function useUsers() {
         }
     }
 
-    async function updateUserRole(id: number, role: string): Promise<User|undefined> {
+    async function updateUserRole(id: number, role: string): Promise<User | undefined> {
         loading.value = true;
         error.value = null;
 
@@ -125,7 +127,7 @@ export function useUsers() {
         }
     }
 
-    async function updateUserPermissions(id: number, permissions: string[]): Promise<string[]|undefined> {
+    async function updateUserPermissions(id: number, permissions: string[]): Promise<string[] | undefined> {
         loading.value = true;
         error.value = null;
 
@@ -145,7 +147,7 @@ export function useUsers() {
         }
     }
 
-    async function fetchOptions(): Promise<UserOptions|undefined> {
+    async function fetchOptions(): Promise<UserOptions | undefined> {
         try {
             const response = await api.get<UserOptions>('/users/options');
 
@@ -157,7 +159,11 @@ export function useUsers() {
         }
     }
 
-    async function attachUserToClient(clientId: number, userId: number, role?: 'admin' | 'member'): Promise<User|undefined> {
+    async function attachUserToClient(
+        clientId: number,
+        userId: number,
+        role?: 'admin' | 'member'
+    ): Promise<User | undefined> {
         try {
             const payload: Record<string, unknown> = { user_id: userId };
 
@@ -181,7 +187,7 @@ export function useUsers() {
         }
     }
 
-    async function setUserClientAdmin(clientId: number, userId: number): Promise<User|undefined> {
+    async function setUserClientAdmin(clientId: number, userId: number): Promise<User | undefined> {
         try {
             const response = await api.put<{ user: User }>(`/clients/${clientId}/users/${userId}/set-admin`, {});
 
