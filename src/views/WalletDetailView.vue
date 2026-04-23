@@ -537,6 +537,7 @@ function refreshTzListOptions({ searchTerm }: { searchTerm: string | null }): Ty
                                 <!-- {{ formatDate(entry.reference_date) }} -->
                                 <DateDisplay
                                     :value="entry.reference_date"
+                                    :pattern="!true ? 'br-date' : 'iso-date'"
                                     :format="{
                                         year: 'numeric',
                                         month: '2-digit',
