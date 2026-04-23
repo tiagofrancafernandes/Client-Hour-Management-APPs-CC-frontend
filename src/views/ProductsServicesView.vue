@@ -14,11 +14,7 @@
 
         <div class="mb-6 rounded-lg bg-white p-4 shadow dark:bg-gray-800">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <CInput
-                    v-model="filters.search"
-                    label="Search"
-                    placeholder="Search by name or description..."
-                />
+                <CInput v-model="filters.search" label="Search" placeholder="Search by name or description..." />
 
                 <CSelect v-model="filters.type" label="Type">
                     <option :value="undefined">All Types</option>
@@ -67,7 +63,9 @@
                         <th class="px-6 py-3 text-right text-xs font-medium uppercase text-gray-700 dark:text-gray-300">
                             Price
                         </th>
-                        <th class="px-6 py-3 text-center text-xs font-medium uppercase text-gray-700 dark:text-gray-300">
+                        <th
+                            class="px-6 py-3 text-center text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
+                        >
                             Status
                         </th>
                         <th class="px-6 py-3 text-right text-xs font-medium uppercase text-gray-700 dark:text-gray-300">
@@ -76,11 +74,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    <tr
-                        v-for="item in productsServices"
-                        :key="item.id"
-                        class="hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
+                    <tr v-for="item in productsServices" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td class="px-6 py-4">
                             <div>
                                 <div class="font-medium text-gray-900 dark:text-white">{{ item.name }}</div>

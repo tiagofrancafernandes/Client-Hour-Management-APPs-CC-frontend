@@ -10,6 +10,7 @@ import CTextarea from './components/CTextarea.vue';
 import CDropZone from './components/CDropZone.vue';
 import CTypeahead from './components/CTypeahead.vue';
 import UIPageHeader from './components/UIPageHeader.vue';
+import DateDisplay from './components/DateDisplay.vue';
 import { Icon } from '@iconify/vue';
 import router from './router';
 import authPlugin from './plugins/auth';
@@ -30,6 +31,7 @@ const components = {
     UIPageHeader: UIPageHeader,
     CPasswodInput: CPasswodInput,
     SpeedInsights: SpeedInsights,
+    DateDisplay: DateDisplay,
     Icon: Icon,
     UIcon: Icon,
 };

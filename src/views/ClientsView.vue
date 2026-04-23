@@ -189,7 +189,7 @@ async function handleCreateClientUser(): Promise<void> {
 
 const showAttachInline = ref(false);
 const attachSearch = ref('');
-const attachResults = ref<User[]>([]);
+const attachResults = ref<User[] | undefined>([]);
 const attachSearchLoading = ref(false);
 const attachSelected = ref<User | null>(null);
 const attachRole = ref<'admin' | 'member'>('member');
@@ -627,7 +627,7 @@ async function handleRemoveClientUser(userId: number): Promise<void> {
 
                                 <!-- Dropdown results -->
                                 <div
-                                    v-if="attachResults.length > 0"
+                                    v-if="(attachResults || []).length > 0"
                                     class="max-h-36 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-md"
                                 >
                                     <button

@@ -183,7 +183,9 @@ watch(() => route.path, syncExpandedGroups, { immediate: true });
 <template>
     <aside
         :class="[
-            'flex flex-col h-full bg-gray-900 text-white transition-all duration-300 ease-in-out flex-shrink-0 select-none',
+            'flex flex-col h-full transition-all duration-300 ease-in-out flex-shrink-0 select-none',
+            // 'bg-white dark:bg-gray-800/30 text-gray-700 dark:text-white', // bg muda com o schema
+            'bg-gray-900 text-white', // bg muda com o schema
             { 'w-64': !collapsed, 'w-16': collapsed },
         ]"
     >
@@ -199,7 +201,9 @@ watch(() => route.path, syncExpandedGroups, { immediate: true });
                     <Icon icon="heroicons:clock" class="w-4 h-4 text-white" />
                 </div>
 
-                <span v-if="!collapsed" class="text-sm font-bold text-white truncate tracking-tight">Hours Ledger</span>
+                <span v-if="!collapsed" class="text-sm font-bold text-gray-200 dark:text-white truncate tracking-tight">
+                    Hours Ledger
+                </span>
             </RouterLink>
         </div>
 
@@ -214,8 +218,9 @@ watch(() => route.path, syncExpandedGroups, { immediate: true });
                     :class="[
                         'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150',
                         {
-                            'bg-red-600 text-white shadow-sm': isDirectActive(item.to),
-                            'text-gray-300 hover:bg-white/10 hover:text-white': !isDirectActive(item.to),
+                            'bg-red-600 dark:text-white shadow-sm': isDirectActive(item.to),
+                            'text-gray-100 dark:hover:text-white hover:bg-gray-600/40 dark:hover:bg-white/10':
+                                !isDirectActive(item.to),
                             'justify-center': collapsed,
                         },
                     ]"
@@ -232,8 +237,9 @@ watch(() => route.path, syncExpandedGroups, { immediate: true });
                         :class="[
                             'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150',
                             {
-                                'bg-white/10 text-white': isGroupActive(item),
-                                'text-gray-300 hover:bg-white/10 hover:text-white': !isGroupActive(item),
+                                // dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-white
+                                'dark:bg-white/10 dark:text-white': isGroupActive(item),
+                                'dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-white': !isGroupActive(item),
                                 'justify-center': collapsed,
                             },
                         ]"
@@ -267,8 +273,11 @@ watch(() => route.path, syncExpandedGroups, { immediate: true });
                             :class="[
                                 'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150',
                                 {
-                                    'text-red-400 font-medium bg-red-500/10': isChildActive(child.to),
-                                    'text-gray-400 hover:text-white hover:bg-white/10': !isChildActive(child.to),
+                                    'text-red-400 font-medium bg-red-400/10 dark:bg-red-500/10': isChildActive(
+                                        child.to
+                                    ),
+                                    'text-gray-100 dark:hover:text-white hover:bg-gray-600/40 dark:hover:bg-white/10':
+                                        !isChildActive(child.to),
                                 },
                             ]"
                         >

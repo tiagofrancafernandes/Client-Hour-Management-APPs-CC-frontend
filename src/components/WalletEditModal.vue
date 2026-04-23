@@ -29,33 +29,33 @@ const form = ref({
 
 const isSubmitting = computed(() => updating.value);
 
-// Common currency codes
 const currencyCodes = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'MXN', 'BRL'];
 
 watch(
     () => props.wallet,
     (newWallet) => {
-        if (newWallet) {
-            form.value = {
-                name: newWallet.name,
-                description: newWallet.description || '',
-                hourly_rate_reference: newWallet.hourly_rate_reference ? String(newWallet.hourly_rate_reference) : '',
-                currency_code: newWallet.currency_code || 'USD',
-                credit_purchase_allowed: newWallet.credit_purchase_allowed ?? false,
-                internal_note: newWallet.internal_note || '',
-            };
-        }
+        if (!newWallet) return;
+
+        form.value = {
+            name: newWallet.name,
+            description: newWallet.description || '',
+            hourly_rate_reference: newWallet.hourly_rate_reference ? String(newWallet.hourly_rate_reference) : '',
+            currency_code: newWallet.currency_code || 'USD',
+            credit_purchase_allowed: newWallet.credit_purchase_allowed ?? false,
+            internal_note: newWallet.internal_note || '',
+        };
     },
     { immediate: true }
 );
 
 const { hasPermission } = usePermissions();
+
 const canViewInternalNote = computed(() => hasPermission('wallet.view_internal_note'));
 const canUpdateRules = computed(() => hasPermission('wallet.update_rules'));
 
 const validationErrors = ref<Record<string, string>>({});
 
-const isFormValid = computed(() => {
+const computedErrors = computed(() => {
     const errors: Record<string, string> = {};
 
     if (!form.value.name.trim()) {
@@ -72,10 +72,20 @@ const isFormValid = computed(() => {
         }
     }
 
-    validationErrors.value = errors;
-
-    return Object.keys(errors).length === 0;
+    return errors;
 });
+
+const isFormValid = computed(() => {
+    return Object.keys(computedErrors.value).length === 0;
+});
+
+watch(
+    computedErrors,
+    (errors) => {
+        validationErrors.value = errors;
+    },
+    { immediate: true }
+);
 
 async function handleSubmit() {
     if (!props.wallet || !isFormValid.value) {

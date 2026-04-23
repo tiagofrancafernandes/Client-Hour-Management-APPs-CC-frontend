@@ -559,7 +559,10 @@ export const makeRequiredInputs = (rules: any) => {
     return rules;
 };
 
-export const fieldFillInfo = (value: any, key: string | null = null): { key: string|null; value: any; filled: boolean; } => {
+export const fieldFillInfo = (
+    value: any,
+    key: string | null = null
+): { key: string | null; value: any; filled: boolean } => {
     let info = {
         key,
         value,
@@ -578,7 +581,7 @@ export const fieldFillInfo = (value: any, key: string | null = null): { key: str
         info.filled = false;
     }
 
-    if (typeof value === 'string' && !(value?.trim()?.length)) {
+    if (typeof value === 'string' && !value?.trim()?.length) {
         info.filled = false;
     }
 
@@ -590,7 +593,7 @@ export const fieldFillInfo = (value: any, key: string | null = null): { key: str
 };
 
 export const fieldIsFilled = (value: any, key: string | null = null) => {
-    return Boolean(fieldFillInfo(value, key)?.filled)
+    return Boolean(fieldFillInfo(value, key)?.filled);
 };
 
 export const getRequiredEmptyInputs = (form: any, requiredInputs: any) => {
@@ -614,7 +617,7 @@ export const getRequiredEmptyInputs = (form: any, requiredInputs: any) => {
             continue;
         }
 
-        let value = (form as any)[key];
+        let value = form[key];
 
         if (!fieldIsFilled(value)) {
             emptyItems.push(key);

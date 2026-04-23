@@ -11,8 +11,18 @@ import { formatHoursDisplay, splitDecimalHours, combineDualTimeInput } from '@/u
 import TagInput from '@/components/TagInput.vue';
 import WalletEditModal from '@/components/WalletEditModal.vue';
 import CCreditPurchaseModal from '@/components/CCreditPurchaseModal.vue';
-import type { LedgerEntryForm, User, WalletWithBalance, ClientUserForm, UpdateClientUserForm } from '@/types';
+import type {
+    LedgerEntryForm,
+    User,
+    WalletWithBalance,
+    ClientUserForm,
+    UpdateClientUserForm,
+    TimezoneConfig,
+    TypeaheadOption,
+} from '@/types';
 import { useTimerStore } from '@/stores/timer';
+import { useDate } from '@/composables/useDate';
+import { getTimezoneList, TZ_DEFAULT } from '@/utils/date-helpers';
 const timerStore = useTimerStore();
 const startingTimerId = ref<number | null>(null);
 
@@ -63,6 +73,8 @@ const canEditWallet = computed(() => {
 const showEntryModal = ref(false);
 const showEditModal = ref(false);
 const showBuyCreditsModal = ref(false);
+// getTimezone -> useAuth
+const { targetTimezone, resolveTimezone } = useDate();
 const entryForm = ref<LedgerEntryForm>({
     wallet_id: walletId,
     type: 'debit',
@@ -70,6 +82,7 @@ const entryForm = ref<LedgerEntryForm>({
     title: '',
     description: '',
     reference_date: new Date().toISOString().split('T')[0],
+    reference_date_timezone: targetTimezone.value || TZ_DEFAULT,
     tags: [],
 });
 
@@ -344,6 +357,32 @@ function onValueFormMinutes(event: Event) {
     /** @ts-ignore */
     event.target.value = entryFormMinutes.value;
 }
+
+const timezoneList = computed(() => {
+    return getTimezoneList((tzList: Record<string, TimezoneConfig>): { label: string; value: string }[] => {
+        // return [{label: 'string', value: 'string'}];
+
+        return Object.entries(tzList)
+            .map((i) => i[1])
+            .map((i) => ({
+                ...i,
+                label: `${i.label} (${i.offset})`,
+                value: i.timezone_id,
+            }));
+    });
+});
+
+function refreshTzListOptions({ searchTerm }: { searchTerm: string | null }): TypeaheadOption[] {
+    const items = (timezoneList.value || []) as TypeaheadOption[];
+
+    searchTerm = typeof searchTerm === 'string' ? searchTerm.trim().toLowerCase() : '';
+
+    return searchTerm
+        ? items.filter((i: any) => {
+              return JSON.stringify(i, null, 0).toLowerCase().includes(searchTerm);
+          })
+        : items;
+}
 </script>
 
 <template>
@@ -495,7 +534,18 @@ function onValueFormMinutes(event: Event) {
                     <tbody class="divide-y divide-gray-200 bg-white">
                         <tr v-for="entry in entries" :key="entry.id">
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                                {{ formatDate(entry.reference_date) }}
+                                <!-- {{ formatDate(entry.reference_date) }} -->
+                                <DateDisplay
+                                    :value="entry.reference_date"
+                                    :format="{
+                                        year: 'numeric',
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        // hour: '2-digit',
+                                        // minute: '2-digit',
+                                        // second: '2-digit',
+                                    }"
+                                />
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900">
                                 <div>{{ entry.title || '-' }}</div>
@@ -684,6 +734,28 @@ function onValueFormMinutes(event: Event) {
                                 />
                             </div>
 
+                            <div v-if="0" class="mb-4 w-full">
+                                <CSelect label="Type" v-model="entryForm.reference_date_timezone">
+                                    <option :value="null">Timezone</option>
+                                    <option value="credit">Credits Only</option>
+                                    <option value="debit">Debits Only</option>
+                                </CSelect>
+                            </div>
+
+                            <CTypeahead
+                                containerClasses="mb-4 w-full"
+                                v-model="entryForm.reference_date_timezone"
+                                label="Filter by Client"
+                                placeholder="Search client..."
+                                clearable
+                                :initial-options="timezoneList"
+                                :refresh-options="refreshTzListOptions"
+                                empty-text="No clients found"
+                                loading-text="Loading clients..."
+                            />
+                        </div>
+
+                        <div class="flex flex-col md:flex-row gap-3 mb-4">
                             <div class="mb-4 w-full">
                                 <label class="mb-2 block text-sm font-medium text-gray-700">Time</label>
                                 <div class="flex gap-3">

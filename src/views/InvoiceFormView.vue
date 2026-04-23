@@ -6,34 +6,13 @@
 
         <form class="space-y-6 rounded-lg bg-white p-6 shadow dark:bg-gray-800" @submit.prevent="handleSubmit">
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <CInput
-                    v-model="form.client_id"
-                    label="Client"
-                    type="number"
-                    required
-                    :disabled="isEditing"
-                />
+                <CInput v-model="form.client_id" label="Client" type="number" required :disabled="isEditing" />
 
-                <CInput
-                    v-model="form.issue_date"
-                    label="Issue Date"
-                    type="date"
-                    required
-                />
+                <CInput v-model="form.issue_date" label="Issue Date" type="date" required />
 
-                <CInput
-                    v-model="form.due_date"
-                    label="Due Date"
-                    type="date"
-                />
+                <CInput v-model="form.due_date" label="Due Date" type="date" />
 
-                <CInput
-                    v-model="form.currency"
-                    label="Currency"
-                    maxlength="3"
-                    placeholder="USD"
-                    required
-                />
+                <CInput v-model="form.currency" label="Currency" maxlength="3" placeholder="USD" required />
 
                 <CInput
                     v-model.number="form.tax_percentage"
@@ -60,23 +39,12 @@
                 </CSelect>
 
                 <div v-if="canHide" class="flex items-center gap-2">
-                    <input
-                        id="hidden"
-                        v-model="form.hidden"
-                        type="checkbox"
-                        class="h-4 w-4 rounded border-gray-300"
-                    />
-                    <label for="hidden" class="text-sm text-gray-700 dark:text-gray-300">
-                        Hidden from customer
-                    </label>
+                    <input id="hidden" v-model="form.hidden" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+                    <label for="hidden" class="text-sm text-gray-700 dark:text-gray-300">Hidden from customer</label>
                 </div>
             </div>
 
-            <CTextarea
-                v-model="form.notes"
-                label="Notes"
-                rows="3"
-            />
+            <CTextarea v-model="form.notes" label="Notes" rows="3" />
 
             <div class="border-t pt-6">
                 <div class="mb-4 flex items-center justify-between">
@@ -105,18 +73,10 @@
 
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <div class="lg:col-span-2">
-                            <CInput
-                                v-model="item.description"
-                                label="Description"
-                                required
-                            />
+                            <CInput v-model="item.description" label="Description" required />
                         </div>
 
-                        <CInput
-                            v-model="item.unit"
-                            label="Unit"
-                            placeholder="unit"
-                        />
+                        <CInput v-model="item.unit" label="Unit" placeholder="unit" />
 
                         <CInput
                             v-model.number="item.quantity"
@@ -143,9 +103,7 @@
                 <CButton type="submit" :disabled="loading">
                     {{ isEditing ? 'Update Invoice' : 'Create Invoice' }}
                 </CButton>
-                <CButton preset="outlined-black" type="button" @click="handleCancel">
-                    Cancel
-                </CButton>
+                <CButton preset="outlined-black" type="button" @click="handleCancel">Cancel</CButton>
             </div>
         </form>
     </div>
@@ -167,7 +125,7 @@ const isEditing = computed(() => !!route.params.id);
 
 const form = ref<InvoiceForm>({
     client_id: 0,
-    issue_date: new Date().toISOString().split('T')[0],
+    issue_date: new Date().toISOString().split('T')[0] as string,
     due_date: null,
     currency: 'USD',
     tax_percentage: 0,
@@ -233,14 +191,15 @@ onMounted(async () => {
                 status: invoice.value.status,
                 hidden: invoice.value.hidden,
                 notes: invoice.value.notes,
-                items: invoice.value.items?.map((item) => ({
-                    id: item.id,
-                    description: item.description,
-                    unit: item.unit,
-                    quantity: parseFloat(item.quantity),
-                    unit_price: parseFloat(item.unit_price),
-                    product_service_id: item.product_service_id,
-                })) || [],
+                items:
+                    invoice.value.items?.map((item) => ({
+                        id: item.id,
+                        description: item.description,
+                        unit: item.unit,
+                        quantity: parseFloat(item.quantity),
+                        unit_price: parseFloat(item.unit_price),
+                        product_service_id: item.product_service_id,
+                    })) || [],
             };
         }
     }

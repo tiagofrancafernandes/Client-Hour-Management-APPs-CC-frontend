@@ -3,6 +3,7 @@ import js from '@eslint/js';
 import vue from 'eslint-plugin-vue';
 import vueParser from 'vue-eslint-parser';
 import tsParser from '@typescript-eslint/parser';
+import tseslint from '@typescript-eslint/eslint-plugin';
 import globals from 'globals';
 import prettier from 'eslint-config-prettier';
 
@@ -15,7 +16,13 @@ export default [
 
     // Project-specific configuration
     {
-        files: ['**/*.vue', '**/*.js', '**/*.ts'],
+        files: [
+            '**/*.vue',
+            '**/*.js',
+            '**/*.ts',
+            'open-in-editor-server.js',
+            //
+        ],
 
         languageOptions: {
             // Use Vue parser to properly handle .vue files
@@ -26,13 +33,29 @@ export default [
                 parser: tsParser,
                 ecmaVersion: 'latest',
                 sourceType: 'module',
+                // project: './tsconfig.json',
+                project: './tsconfig.app.json',
+                // project: './tsconfig.eslint.json',
+                extraFileExtensions: ['.vue'],
             },
 
             // Define browser globals (window, localStorage, etc.)
-            globals: globals.browser,
+            globals: {
+                ...globals.node,
+                ...globals.browser,
+            },
+        },
+
+        plugins: {
+            '@typescript-eslint': tseslint,
         },
 
         rules: {
+            '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
+            '@typescript-eslint/prefer-nullish-coalescing': 'off',
+            'vue/require-default-prop': 'off',
+            'preserve-caught-error': 'warn',
+
             'no-useless-escape': 'off',
 
             /**
@@ -73,6 +96,23 @@ export default [
             // Enforce 4-space indentation
             indent: ['error', 4],
         },
+
+        ignores: [
+            '**/no-commit/**',
+            'eslint.config.js',
+            'vite.config.ts',
+            '*-no*commit*',
+            '.vite',
+            '**/.vite/**',
+            '**/node_modules/**',
+            '**/no-commit/**',
+            'dist',
+            '**/dist/**',
+            'open-in-editor-server.js',
+            'tailwind.config.*',
+            '**/open-in-editor-server.js',
+            //
+        ],
     },
 
     /**

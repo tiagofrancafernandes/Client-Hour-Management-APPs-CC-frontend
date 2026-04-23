@@ -200,9 +200,7 @@ export const useTimerStore = defineStore('timer', () => {
     }
 
     async function confirmTimer(cycles?: TimerCycleForm[]): Promise<boolean> {
-        console.log('aaaa');
         if (!activeTimer.value) {
-            console.log('aaaa');
             return false;
         }
 
@@ -210,7 +208,6 @@ export const useTimerStore = defineStore('timer', () => {
         error.value = null;
 
         try {
-            console.log('aaaa');
             const payload = cycles ? { cycles } : {};
             const response = await api.post<Timer>(`/timers/${activeTimer.value.id}/confirm`, payload);
 
@@ -231,7 +228,7 @@ export const useTimerStore = defineStore('timer', () => {
                 cycles,
             });
 
-            throw new Error(errorMessage);
+            throw new Error(errorMessage, { cause: err });
         } finally {
             loading.value = false;
         }
@@ -305,7 +302,7 @@ export const useTimerStore = defineStore('timer', () => {
 
             error.value = errorMessage;
 
-            throw new Error(errorMessage);
+            throw new Error(errorMessage, { cause: err });
         } finally {
             loading.value = false;
         }

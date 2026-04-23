@@ -32,7 +32,7 @@ const requiredInputs = {
     title: true,
     wallet_id: true,
     description: false,
-}
+};
 
 const form = ref({
     wallet_id: null as number | null,
@@ -44,7 +44,7 @@ const form = ref({
 // allRequiredFieldsIsFilled
 
 const requiredEmptyInputs = computed(() => getRequiredEmptyInputs(form.value, requiredInputs));
-const allRequiredIsFilled = computed(() => (requiredEmptyInputs.value || []).length <= 0)
+const allRequiredIsFilled = computed(() => (requiredEmptyInputs.value || []).length <= 0);
 
 const selectedWallet = computed(() => {
     if (!form.value.wallet_id) {

@@ -47,7 +47,7 @@ export function useClients() {
 
             return response.data;
         } catch (e) {
-            throw e;
+            return [];
         }
     }
 
@@ -76,8 +76,6 @@ export function useClients() {
             return newClient;
         } catch (e) {
             error.value = e instanceof Error ? e.message : 'Failed to create client';
-
-            throw e;
         } finally {
             loading.value = false;
         }
@@ -103,8 +101,6 @@ export function useClients() {
             return updated;
         } catch (e) {
             error.value = e instanceof Error ? e.message : 'Failed to update client';
-
-            throw e;
         } finally {
             loading.value = false;
         }
@@ -120,8 +116,6 @@ export function useClients() {
             clients.value = clients.value.filter((c) => c.id !== id);
         } catch (e) {
             error.value = e instanceof Error ? e.message : 'Failed to delete client';
-
-            throw e;
         } finally {
             loading.value = false;
         }

@@ -46,10 +46,26 @@ export interface LedgerEntry {
     title: string | null;
     description: string | null;
     reference_date: string | null;
+    reference_date_timezone?: string | null;
     wallet?: Wallet;
     tags?: Tag[];
     created_at: string;
     updated_at: string;
+}
+
+/*
+const response = await api.post<GenericResponse<ProductService>>('/endpoint', data);
+notArrayValue = response.data as ProductService;
+// ------
+const response = await api.post<GenericResponse<ProductService[]>>('/endpoint', data);
+anArrayValue = response.data as ProductService[];
+*/
+export interface GenericResponse<T> {
+    data:
+        | T
+        | {
+              data: T;
+          };
 }
 
 export interface PaginatedResponse<T> {
@@ -85,6 +101,7 @@ export interface LedgerEntryForm {
     title?: string;
     description?: string;
     reference_date?: string;
+    reference_date_timezone?: string | null;
     tags?: number[];
 }
 
@@ -102,6 +119,7 @@ export interface User {
     client_role?: 'admin' | 'member' | null;
     client?: Client | null;
     role?: string;
+    timezone?: string | null | undefined;
     roles?: Role[];
     created_at?: string;
     updated_at?: string;
@@ -306,7 +324,7 @@ export interface CreateUserForm {
     password_confirmation: string;
     role: string;
     customer_id?: number | null;
-    client_role?: 'admin' | 'member' | null;
+    client_role?: 'admin' | 'member' | null | undefined;
 }
 
 export interface UpdateClientUserForm {
@@ -376,7 +394,7 @@ export interface Invoice {
 
 export interface InvoiceForm {
     client_id: number;
-    issue_date: string;
+    issue_date: string | null | undefined;
     due_date?: string | null;
     currency: string;
     tax_percentage?: number;
@@ -407,3 +425,10 @@ export interface ProductServiceForm {
     default_quantity?: number;
     is_active?: boolean;
 }
+
+export type TimezoneConfig = {
+    offset: number;
+    label: string;
+    timezone_id: string;
+    country: string;
+};

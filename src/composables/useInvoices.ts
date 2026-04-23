@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import api from '@/services/api';
-import type { Invoice, InvoiceForm, PaginatedResponse } from '@/types';
+import type { GenericResponse, Invoice, InvoiceForm, PaginatedResponse } from '@/types';
 import { useAuth } from './useAuth';
 
 export function useInvoices() {
@@ -25,13 +25,35 @@ export function useInvoices() {
     const canViewDraft = computed(() => hasPermission('invoice.view_draft'));
     const canHide = computed(() => hasPermission('invoice.hide'));
 
-    async function fetchInvoices(filters: {
-        client_id?: number;
-        status?: string;
-        from_date?: string;
-        to_date?: string;
-        page?: number;
-    } = {}) {
+    function isGenericInvoiceResponse(
+        response: Invoice | GenericResponse<Invoice>
+    ): response is GenericResponse<Invoice> {
+        return typeof response === 'object' && response !== null && 'data' in response;
+    }
+
+    function unwrapInvoiceResponse(response: Invoice | GenericResponse<Invoice>): Invoice {
+        if (!isGenericInvoiceResponse(response)) {
+            return response;
+        }
+
+        const responseData = response.data;
+
+        if (typeof responseData === 'object' && responseData !== null && 'data' in responseData) {
+            return responseData.data as Invoice;
+        }
+
+        return responseData as Invoice;
+    }
+
+    async function fetchInvoices(
+        filters: {
+            client_id?: number;
+            status?: string;
+            from_date?: string;
+            to_date?: string;
+            page?: number;
+        } = {}
+    ) {
         loading.value = true;
         error.value = null;
 
@@ -58,19 +80,17 @@ export function useInvoices() {
                 params.append('page', filters.page.toString());
             }
 
-            const response = await api.get<PaginatedResponse<Invoice>>(
-                `/invoices?${params.toString()}`
-            );
+            const response = await api.get<PaginatedResponse<Invoice>>(`/invoices?${params.toString()}`);
 
-            invoices.value = response.data.data;
+            invoices.value = response.data;
             pagination.value = {
-                currentPage: response.data.current_page,
-                lastPage: response.data.last_page,
-                perPage: response.data.per_page,
-                total: response.data.total,
+                currentPage: response.current_page,
+                lastPage: response.last_page,
+                perPage: response.per_page,
+                total: response.total,
             };
 
-            return response.data;
+            return response;
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to fetch invoices';
             error.value = message;
@@ -87,9 +107,9 @@ export function useInvoices() {
 
         try {
             const response = await api.get<Invoice>(`/invoices/${id}`);
-            invoice.value = response.data;
+            invoice.value = response;
 
-            return response.data;
+            return response;
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to fetch invoice';
             error.value = message;
@@ -106,9 +126,9 @@ export function useInvoices() {
 
         try {
             const response = await api.post<Invoice>('/invoices', data);
-            invoice.value = response.data;
+            invoice.value = response;
 
-            return response.data;
+            return response;
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to create invoice';
             error.value = message;
@@ -124,10 +144,12 @@ export function useInvoices() {
         error.value = null;
 
         try {
-            const response = await api.put<Invoice>(`/invoices/${id}`, data);
-            invoice.value = response.data;
+            const response = await api.put<Invoice | GenericResponse<Invoice>>(`/invoices/${id}`, data);
+            const updatedInvoice = unwrapInvoiceResponse(response);
 
-            return response.data;
+            invoice.value = updatedInvoice;
+
+            return updatedInvoice;
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to update invoice';
             error.value = message;
@@ -169,11 +191,9 @@ export function useInvoices() {
         error.value = null;
 
         try {
-            const response = await api.get<{ markdown: string }>(
-                `/invoices/${id}/download-markdown`
-            );
+            const response = await api.get<{ markdown: string }>(`/invoices/${id}/download-markdown`);
 
-            return response.data.markdown;
+            return response.markdown;
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to download markdown';
             error.value = message;

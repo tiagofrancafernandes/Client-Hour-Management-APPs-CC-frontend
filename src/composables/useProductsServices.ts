@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import api from '@/services/api';
-import type { ProductService, ProductServiceForm, PaginatedResponse } from '@/types';
+import type { ProductService, ProductServiceForm, PaginatedResponse, GenericResponse } from '@/types';
 import { useAuth } from './useAuth';
 
 export function useProductsServices() {
@@ -22,12 +22,14 @@ export function useProductsServices() {
     const canUpdate = computed(() => hasPermission('product_service.update'));
     const canDelete = computed(() => hasPermission('product_service.delete'));
 
-    async function fetchProductsServices(filters: {
-        search?: string;
-        type?: 'product' | 'service';
-        is_active?: boolean;
-        page?: number;
-    } = {}) {
+    async function fetchProductsServices(
+        filters: {
+            search?: string;
+            type?: 'product' | 'service';
+            is_active?: boolean;
+            page?: number;
+        } = {}
+    ) {
         loading.value = true;
         error.value = null;
 
@@ -54,18 +56,19 @@ export function useProductsServices() {
                 `/products-services?${params.toString()}`
             );
 
-            productsServices.value = response.data.data;
+            productsServices.value = (
+                'data' in response.data ? response.data?.data : response.data
+            ) as ProductService[];
             pagination.value = {
-                currentPage: response.data.current_page,
-                lastPage: response.data.last_page,
-                perPage: response.data.per_page,
-                total: response.data.total,
+                currentPage: response.current_page,
+                lastPage: response.last_page,
+                perPage: response.per_page,
+                total: response.total,
             };
 
             return response.data;
         } catch (err: unknown) {
-            const message =
-                err instanceof Error ? err.message : 'Failed to fetch products/services';
+            const message = err instanceof Error ? err.message : 'Failed to fetch products/services';
             error.value = message;
 
             throw err;
@@ -79,13 +82,12 @@ export function useProductsServices() {
         error.value = null;
 
         try {
-            const response = await api.get<ProductService>(`/products-services/${id}`);
-            productService.value = response.data;
+            const response = await api.get<GenericResponse<ProductService>>(`/products-services/${id}`);
+            productService.value = 'data' in response.data ? response.data?.data : response.data;
 
             return response.data;
         } catch (err: unknown) {
-            const message =
-                err instanceof Error ? err.message : 'Failed to fetch product/service';
+            const message = err instanceof Error ? err.message : 'Failed to fetch product/service';
             error.value = message;
 
             throw err;
@@ -99,13 +101,12 @@ export function useProductsServices() {
         error.value = null;
 
         try {
-            const response = await api.post<ProductService>('/products-services', data);
-            productService.value = response.data;
+            const response = await api.post<GenericResponse<ProductService>>('/products-services', data);
+            productService.value = response.data as ProductService;
 
-            return response.data;
+            return response.data as ProductService;
         } catch (err: unknown) {
-            const message =
-                err instanceof Error ? err.message : 'Failed to create product/service';
+            const message = err instanceof Error ? err.message : 'Failed to create product/service';
             error.value = message;
 
             throw err;
@@ -119,10 +120,10 @@ export function useProductsServices() {
         error.value = null;
 
         try {
-            const response = await api.put<ProductService>(`/products-services/${id}`, data);
-            productService.value = response.data;
+            const response = await api.put<GenericResponse<ProductService>>(`/products-services/${id}`, data);
+            productService.value = 'data' in response.data ? response.data?.data : response.data;
 
-            return response.data;
+            return productService.value;
         } finally {
             loading.value = false;
         }
@@ -145,8 +146,7 @@ export function useProductsServices() {
                 productService.value = null;
             }
         } catch (err: unknown) {
-            const message =
-                err instanceof Error ? err.message : 'Failed to delete product/service';
+            const message = err instanceof Error ? err.message : 'Failed to delete product/service';
             error.value = message;
 
             throw err;

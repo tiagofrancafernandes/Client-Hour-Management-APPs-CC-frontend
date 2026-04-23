@@ -26,7 +26,7 @@ watch(() => route.path, closeMobile);
 </script>
 
 <template>
-    <div class="flex h-screen bg-gray-50 overflow-hidden">
+    <div class="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
         <!-- Mobile Backdrop -->
         <Transition
             enter-active-class="transition-opacity duration-300"

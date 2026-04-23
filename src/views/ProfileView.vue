@@ -71,9 +71,7 @@ const groupedPermissions = computed(() => {
             return groups;
         }
 
-        if (!groups[group]) {
-            groups[group] = [];
-        }
+        groups[group] ??= [];
 
         groups[group].push(permission);
 

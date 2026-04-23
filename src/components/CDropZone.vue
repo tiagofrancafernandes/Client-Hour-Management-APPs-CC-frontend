@@ -122,7 +122,7 @@ const accept = computed(() => {
 
     if (typeof props?.accept === 'string') {
         _accept.push(
-            ...props?.accept
+            ...String(props?.accept)
                 .trim()
                 .split(',')
                 .map((i: string) => i.trim())
@@ -164,7 +164,7 @@ const acceptAttribute = computed<string | undefined>(() => {
                 .replaceAll(/^([\.]){0,}/gi, '')
         )
         .map((v: any) => '.' + v.trim().replaceAll(/^([\.\ ]){0,}/gi, ''))
-        .join(',') as string;
+        .join(',');
 });
 
 const modelValue = defineModel<File | undefined>();

@@ -32,6 +32,7 @@ interface Props {
     placeholder?: string;
     emptyText?: string;
     loadingText?: string;
+    containerClasses?: any;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -253,7 +254,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="relative">
+    <div class="relative" :class="containerClasses || []">
         <!-- Label -->
         <label v-if="label" class="block text-sm font-medium text-gray-700 mb-1.5">
             {{ label }}

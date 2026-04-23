@@ -34,6 +34,18 @@ export function useAuth() {
         return customerId !== null && wallet.client_id === customerId;
     };
 
+    const getTimezone = (defaultValue: any = null): string | null => {
+        if (defaultValue && typeof defaultValue === 'string' && defaultValue) {
+            return defaultValue;
+        }
+
+        if (user.value && typeof user.value?.timezone === 'string' && user.value?.timezone) {
+            return user.value?.timezone;
+        }
+
+        return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    };
+
     return {
         // Reactive state
         user,
@@ -63,6 +75,7 @@ export function useAuth() {
         getCustomerId,
         isOwnClient,
         canAccessWallet,
+        getTimezone,
 
         // Aliases for backwards compatibility
         can: authStore.can,

@@ -10,9 +10,7 @@
 
         <div v-else-if="invoice" class="space-y-6">
             <div class="flex items-center justify-between">
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-                    Invoice #{{ invoice.invoice_number }}
-                </h1>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Invoice #{{ invoice.invoice_number }}</h1>
                 <div class="flex gap-2">
                     <button
                         v-if="canEditInvoice(invoice)"
@@ -35,9 +33,7 @@
             <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
                 <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div>
-                        <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                            Invoice Details
-                        </h2>
+                        <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Invoice Details</h2>
                         <dl class="space-y-2">
                             <div>
                                 <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Client</dt>
@@ -77,17 +73,23 @@
                         <dl class="space-y-2">
                             <div class="flex justify-between">
                                 <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Subtotal</dt>
-                                <dd class="text-gray-900 dark:text-white">{{ invoice.currency }} {{ invoice.subtotal }}</dd>
+                                <dd class="text-gray-900 dark:text-white">
+                                    {{ invoice.currency }} {{ invoice.subtotal }}
+                                </dd>
                             </div>
                             <div class="flex justify-between">
                                 <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">
                                     Tax ({{ invoice.tax_percentage }}%)
                                 </dt>
-                                <dd class="text-gray-900 dark:text-white">{{ invoice.currency }} {{ invoice.tax_amount }}</dd>
+                                <dd class="text-gray-900 dark:text-white">
+                                    {{ invoice.currency }} {{ invoice.tax_amount }}
+                                </dd>
                             </div>
                             <div v-if="parseFloat(invoice.discount_amount) > 0" class="flex justify-between">
                                 <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Discount</dt>
-                                <dd class="text-gray-900 dark:text-white">-{{ invoice.currency }} {{ invoice.discount_amount }}</dd>
+                                <dd class="text-gray-900 dark:text-white">
+                                    -{{ invoice.currency }} {{ invoice.discount_amount }}
+                                </dd>
                             </div>
                             <div class="flex justify-between border-t pt-2">
                                 <dt class="text-lg font-bold text-gray-900 dark:text-white">Total</dt>
@@ -111,19 +113,29 @@
                     <table class="w-full">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th class="px-4 py-2 text-left text-xs font-medium uppercase text-gray-700 dark:text-gray-300">
+                                <th
+                                    class="px-4 py-2 text-left text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
+                                >
                                     Description
                                 </th>
-                                <th class="px-4 py-2 text-left text-xs font-medium uppercase text-gray-700 dark:text-gray-300">
+                                <th
+                                    class="px-4 py-2 text-left text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
+                                >
                                     Unit
                                 </th>
-                                <th class="px-4 py-2 text-right text-xs font-medium uppercase text-gray-700 dark:text-gray-300">
+                                <th
+                                    class="px-4 py-2 text-right text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
+                                >
                                     Quantity
                                 </th>
-                                <th class="px-4 py-2 text-right text-xs font-medium uppercase text-gray-700 dark:text-gray-300">
+                                <th
+                                    class="px-4 py-2 text-right text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
+                                >
                                     Unit Price
                                 </th>
-                                <th class="px-4 py-2 text-right text-xs font-medium uppercase text-gray-700 dark:text-gray-300">
+                                <th
+                                    class="px-4 py-2 text-right text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
+                                >
                                     Total
                                 </th>
                             </tr>

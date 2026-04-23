@@ -4,7 +4,7 @@ import { Icon } from '@iconify/vue';
 import { useUsers } from '@/composables/useUsers';
 import { useClients } from '@/composables/useClients';
 import { useToast } from '@/composables/useToast';
-import type { User, Client } from '@/types';
+import type { User, Client, CreateUserForm } from '@/types';
 import type { UserDetail, UserOptions } from '@/composables/useUsers';
 
 const toast = useToast();
@@ -445,14 +445,14 @@ const createClientResults = ref<Client[]>([]);
 const createClientSearchLoading = ref(false);
 const createClientSelected = ref<Client | null>(null);
 
-const createForm = ref({
+const createForm = ref<CreateUserForm>({
     name: '',
     email: '',
     password: '',
     password_confirmation: '',
     role: 'customer',
     customer_id: null as number | null,
-    client_role: 'member' as 'admin' | 'member',
+    client_role: 'member',
 });
 
 function resetCreateForm(): void {

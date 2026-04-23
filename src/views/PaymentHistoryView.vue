@@ -33,9 +33,9 @@ const showFilters = ref(true);
 const filters = ref({
     dateFrom: '',
     dateTo: '',
-    purchaseStatus: '' as '' | 'pending' | 'approved' | 'rejected' | 'cancelled',
-    paymentStatus: '' as '' | 'pending' | 'approved' | 'rejected' | 'completed',
-    paymentMethod: '' as '' | 'pix_offline' | 'bank_transfer' | 'none',
+    purchaseStatus: '',
+    paymentStatus: '',
+    paymentMethod: '',
     walletId: null as number | null,
     clientId: null as number | null,
 });

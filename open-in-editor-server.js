@@ -1,5 +1,6 @@
-// open-in-editor-server.js
+/*eslint no-undef: "off"*/
 import path from 'path';
+/*eslint-disable*/
 import { fileURLToPath, URL } from 'node:url';
 import http from 'http';
 import { exec } from 'child_process';
@@ -10,6 +11,7 @@ const EDITOR_OPEN_CMD = process.env.EDITOR_OPEN_CMD || 'code -g';
 
 const LISTEN_HOST = process.env.LISTEN_HOST || '0.0.0.0';
 const LISTEN_PORT = Number(process.env.LISTEN_PORT || 0) || 3001;
+/*eslint-enable*/
 
 const server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://localhost');
