@@ -1127,7 +1127,7 @@ onMounted(async () => {
                     </div>
 
                     <!-- ── Permissions ── -->
-                    <div v-else class="space-y-5">
+                    <div v-else-if="activeTab === 'permissions'" class="space-y-5">
                         <!-- Info banner -->
                         <div
                             class="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700"
@@ -1280,9 +1280,7 @@ onMounted(async () => {
 
                     <!-- ── Password ── -->
                     <form v-if="activeTab === 'password'" class="space-y-4" @submit.prevent="handleSavePassword">
-                        <p class="text-sm text-gray-500">
-                            Update the password for this user.
-                        </p>
+                        <p class="text-sm text-gray-500">Update the password for this user.</p>
 
                         <div>
                             <label class="mb-1 block text-sm font-medium text-gray-700">
@@ -1413,42 +1411,28 @@ onMounted(async () => {
                         </div>
 
                         <!-- Password -->
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-gray-700">
-                                Password
-                                <span class="text-red-500">*</span>
-                            </label>
-
-                            <CInput
-                                v-model="createForm.password"
-                                type="password"
-                                placeholder="Min. 8 characters"
-                                :class="{ 'border-red-500': createErrors.password }"
-                            />
-
-                            <p v-if="createErrors.password" class="mt-1 text-xs text-red-600">
-                                {{ createErrors.password }}
-                            </p>
-                        </div>
+                        <CPasswodInput
+                            v-model="createForm.password"
+                            name="password"
+                            type="password"
+                            :class="{ 'border-red-500': createErrors.password }"
+                            label="Password"
+                            placeholder="••••••••"
+                            :error="createErrors.password"
+                            required
+                        />
 
                         <!-- Confirm Password -->
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-gray-700">
-                                Confirm Password
-                                <span class="text-red-500">*</span>
-                            </label>
-
-                            <CInput
-                                v-model="createForm.password_confirmation"
-                                type="password"
-                                placeholder="Repeat password"
-                                :class="{ 'border-red-500': createErrors.password_confirmation }"
-                            />
-
-                            <p v-if="createErrors.password_confirmation" class="mt-1 text-xs text-red-600">
-                                {{ createErrors.password_confirmation }}
-                            </p>
-                        </div>
+                        <CPasswodInput
+                            v-model="createForm.password_confirmation"
+                            name="password_confirmation"
+                            type="password"
+                            :class="{ 'border-red-500': createErrors.password_confirmation }"
+                            label="Confirm New Password"
+                            placeholder="••••••••"
+                            :error="createErrors.password_confirmation"
+                            required
+                        />
 
                         <!-- Role -->
                         <div>

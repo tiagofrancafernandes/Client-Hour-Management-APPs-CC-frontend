@@ -17,6 +17,10 @@ export function usePermissions() {
         return auth.hasPermission('client.create');
     });
 
+    const canCreateTimers = computed(() => {
+        return auth.hasPermission('timer.create');
+    });
+
     const canUpdateClients = computed(() => {
         return auth.hasPermission('client.update');
     });
@@ -171,6 +175,7 @@ export function usePermissions() {
         canAddDebits,
         canAddAdjustments,
         canAddEntry,
+        canCreateTimers,
 
         // Tags
         canViewTags,

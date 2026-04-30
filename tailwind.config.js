@@ -11,13 +11,15 @@ export default {
         './components/**/*.{vue,js,ts,jsx,tsx}',
         './node_modules/tw-elements/js/**/*.js',
     ],
-    darkMode: 'class',
+
+    /** @see https://v3.tailwindcss.com/docs/dark-mode */
+    // darkMode: 'selector',
+    darkMode: ['variant', '&:not(.light *)'],
+
     theme: {
         extend: {
             //
         },
     },
-    plugins: [
-        forms,
-    ],
+    plugins: [forms],
 };

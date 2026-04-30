@@ -13,7 +13,7 @@ import type { Wallet } from '@/types';
 const router = useRouter();
 const toast = useToast();
 const timerStore = useTimerStore();
-const { canCreateWallets, canBuyCredits } = usePermissions();
+const { canCreateWallets, canBuyCredits, canAddEntry, canCreateTimers } = usePermissions();
 const { myClient, myWallets, loading, error, myWalletsSummary, fetchMyClient, fetchMyWallets } = useCustomerData();
 const { createWallet, loading: walletLoading } = useWallets();
 const startingTimerId = ref<number | null>(null);
@@ -108,16 +108,37 @@ async function handleStartTimer(wallet: Wallet, event: Event): Promise<void> {
 
 // ─── Navigation ─────────────────────────────────────────────────────────────
 
-function goToWallet(wallet: Wallet): void {
-    router.push({ name: 'wallet-detail', params: { id: wallet.id } });
+function goToWallet(wallet: Wallet, query: any = undefined): void {
+    router.push({ name: 'wallet-detail', query: query || {}, params: { id: wallet.id } });
 }
 
 function goToReports(): void {
     router.push({ name: 'reports' });
 }
 
+function goPaymentHistory(wallet: Wallet | null, query: any = undefined): void {
+    query = query || {};
+
+    router.push({
+        name: 'payment-history',
+        query,
+    });
+}
+
 function goBuyCredits(wallet: Wallet): void {
-    router.push({ name: 'payment-history', query: { wallet_id: wallet.id } });
+    if (!wallet?.id) {
+        toast.error('Invalid wallet');
+        return;
+    }
+
+    if (!wallet?.credit_purchase_allowed) {
+        toast.error('This wallet does not allow the purchase of credits');
+        return;
+    }
+
+    let query = { action: 'buy_credits' };
+
+    goToWallet(wallet, query);
 }
 
 // ─── Formatters ─────────────────────────────────────────────────────────────
@@ -288,6 +309,7 @@ onMounted(async () => {
                         <!-- Card Actions -->
                         <div class="flex gap-2 border-t border-gray-100 px-4 py-3">
                             <CButton
+                                v-if="canCreateTimers"
                                 preset="primary"
                                 class="flex-1 justify-center text-xs"
                                 icon="mdi:play-outline"

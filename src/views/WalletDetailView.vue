@@ -31,6 +31,7 @@ const router = useRouter();
 const toast = useToast();
 const auth = useAuth();
 const walletId = Number(route.params.id);
+const routeAction: any = route.query?.action || null;
 
 const {
     wallet,
@@ -112,6 +113,8 @@ onMounted(async () => {
         }
 
         await Promise.all([fetchWalletEntries(walletId), fetchTags()]);
+
+        handleRouteAction();
     } catch (e) {
         toast.error('Failed to load wallet');
     }
@@ -274,6 +277,19 @@ function formatDate(date: string | null): string {
     }
 
     return new Date(date).toLocaleDateString();
+}
+
+function handleRouteAction(): void {
+    let _routeAction: any = typeof routeAction === 'string' ? routeAction?.trim() : null;
+
+    if (!_routeAction) {
+        return;
+    }
+
+    if (['buy_credits'].includes(_routeAction)) {
+        showBuyCreditsModal.value = Boolean(wallet.value?.credit_purchase_allowed && canBuyCredits.value);
+        return;
+    }
 }
 
 function handleWalletUpdated(): void {

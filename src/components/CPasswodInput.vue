@@ -47,6 +47,9 @@ const props = defineProps({
         type: String,
         // default: 'default',
     },
+    error: {
+        type: String,
+    },
 });
 
 const inputId =
@@ -59,6 +62,10 @@ const inputId =
 
 const showPassword = ref(false);
 
+const error = computed(() => {
+    return typeof props?.error === 'string' ? props?.error?.trim() : '';
+});
+
 const classes = computed(() => {
     const presets: any = selectPresets();
 
@@ -69,11 +76,15 @@ const classes = computed(() => {
         'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors',
     ];
 
+    if (error.value) {
+        _classes.push('border-red-500');
+    }
+
     return _classes;
 });
 
 const label = computed(() => {
-    return props?.label || props?.name;
+    return props?.label || '';
 });
 
 const labelClasses = computed(() => {
@@ -145,5 +156,9 @@ const modelValue = defineModel<string | number | undefined>();
                 <Icon :icon="showPassword ? 'heroicons:eye-slash' : 'heroicons:eye'" class="w-4 h-4" />
             </button>
         </div>
+
+        <p v-if="error" class="mt-1 text-xs text-red-600">
+            {{ error }}
+        </p>
     </div>
 </template>
