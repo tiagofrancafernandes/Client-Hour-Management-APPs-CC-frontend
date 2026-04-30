@@ -21,7 +21,7 @@ const {
     rejectPayment,
 } = useCreditPurchases();
 
-const { canApprovePayments, canViewAnyReports, isCustomer } = usePermissions();
+const { canApprovePayments, canViewAnyReports, isCustomer, canViewClients } = usePermissions();
 const { clients, fetchClients } = useClients();
 const { wallets, fetchWallets } = useWallets();
 const toast = useToast();
@@ -30,19 +30,37 @@ const toast = useToast();
 
 const showFilters = ref(true);
 
-const filters = ref({
+type FiltersType = {
+    dateFrom: string | number | Date;
+    dateTo: string | number | Date;
+    purchaseStatus: string;
+    paymentStatus: string;
+    paymentMethod: string;
+    walletId: number | null;
+    clientId: number | null;
+};
+
+const filters = ref<FiltersType>({
     dateFrom: '',
     dateTo: '',
     purchaseStatus: '',
     paymentStatus: '',
     paymentMethod: '',
-    walletId: null as number | null,
-    clientId: null as number | null,
+    walletId: null,
+    clientId: null,
 });
 
 // ─── Debounced filter watch ───────────────────────────────────────────────────
 
 let filterDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+async function fetchPurchasesXd() {
+    let params: any = Object.fromEntries(
+        Object.entries(filters.value || {}).filter((i: any) => ![null, '', undefined].includes(i[1]))
+    );
+
+    return await fetchPurchases(params);
+}
 
 watch(
     filters,
@@ -52,7 +70,7 @@ watch(
         }
 
         filterDebounceTimer = setTimeout(async () => {
-            await fetchPurchases();
+            await fetchPurchasesXd();
         }, 400);
     },
     { deep: true }
@@ -81,6 +99,10 @@ async function refreshWalletOptions({ searchTerm }: { searchTerm: string }): Pro
 }
 
 async function refreshClientOptions({ searchTerm }: { searchTerm: string }): Promise<TypeaheadOption[]> {
+    if (!canViewClients.value) {
+        return;
+    }
+
     await fetchClients(1, searchTerm || '');
 
     return clientOptions.value;
@@ -334,10 +356,10 @@ function resetModalForms(): void {
 }
 
 async function reloadPurchase(): Promise<void> {
-    await fetchPurchases();
+    await fetchPurchasesXd();
 
     if (selectedPurchase.value) {
-        const refreshed = purchases.value.find((p) => p.id === selectedPurchase.value!.id);
+        const refreshed = purchases.value.find((p) => p.id === selectedPurchase.value?.id);
 
         if (refreshed) {
             selectedPurchase.value = refreshed;
@@ -423,7 +445,7 @@ function formatExpiresAt(expiresAt: string): string {
 // ─── Lifecycle ───────────────────────────────────────────────────────────────
 
 onMounted(async () => {
-    await Promise.all([fetchPurchases(), fetchClients(1, ''), fetchWallets()]);
+    await Promise.all([fetchPurchasesXd(), fetchClients(1, ''), fetchWallets()]);
 });
 </script>
 
@@ -660,6 +682,16 @@ onMounted(async () => {
                             <th
                                 class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
                             >
+                                Tags
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                            >
+                                Receipt
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                            >
                                 Payment
                             </th>
                             <th
@@ -723,6 +755,41 @@ onMounted(async () => {
                                     Not selected
                                 </span>
                                 <span v-else class="text-xs text-gray-300">—</span>
+                            </td>
+
+                            <!-- Payment tags -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span
+                                    v-if="purchase.payments?.[0]?.payment_method"
+                                    class="inline-flex items-center gap-1 text-xs font-medium text-gray-700"
+                                >
+                                    {{
+                                        [
+                                            purchase.payments[0].payment_method.key,
+                                            purchase.payments[0].payment_method.is_offline ? 'offline' : '',
+                                            purchase.payments[0].payment_method.currency,
+                                        ]
+                                            .filter(Boolean)
+                                            .join('|')
+                                    }}
+                                </span>
+                            </td>
+
+                            <!-- Payment receipt -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span
+                                    v-if="purchase.payments?.[0]?.payment_method"
+                                    class="inline-flex items-center gap-1 text-xs font-medium text-gray-700"
+                                >
+                                    <template
+                                        v-if="
+                                            purchase.payments[0].payment_method.is_offline &&
+                                            purchase.payments[0].pix_receipt_path
+                                        "
+                                    >
+                                        <Icon icon="flowbite:file-check-solid" class="w-3.5 h-3.5 text-gray-400" />
+                                    </template>
+                                </span>
                             </td>
 
                             <!-- Payment status -->

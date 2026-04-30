@@ -19,7 +19,9 @@ import type {
     UpdateClientUserForm,
     TimezoneConfig,
     TypeaheadOption,
+    Wallet,
 } from '@/types';
+
 import { useTimerStore } from '@/stores/timer';
 import { useDate } from '@/composables/useDate';
 import { getTimezoneList, TZ_DEFAULT } from '@/utils/date-helpers';
@@ -297,11 +299,33 @@ function handleWalletUpdated(): void {
     fetchWallet(walletId);
 }
 
+// ─── Navigation ─────────────────────────────────────────────────────────────
+
+function goToWallet(wallet: Wallet, query: any = undefined): void {
+    router.push({ name: 'wallet-detail', query: query || {}, params: { id: wallet.id } });
+}
+
+function goToReports(): void {
+    router.push({ name: 'reports' });
+}
+
+function goPaymentHistory(wallet: Wallet | null, query: any = undefined): void {
+    query = query || {};
+
+    router.push({
+        name: 'payment-history',
+        query,
+    });
+}
+
 function handleCreditPurchaseSuccess(): void {
     // Refresh wallet data and entries after credit purchase
     fetchWallet(walletId);
     fetchWalletEntries(walletId);
     toast.success('Credit purchase created successfully!');
+    // router.push()
+
+    goPaymentHistory(null, { wallet_id: walletId });
 }
 
 function onValueFormHours(event: Event) {

@@ -6,12 +6,15 @@ import { useCreditPurchases } from '@/composables/useCreditPurchases';
 import { useClients } from '@/composables/useClients';
 import { useToast } from '@/composables/useToast';
 
+const expandedPaymentIds = ref<Set<number>>(new Set());
+
 type TypeaheadOption = {
     value: unknown;
     label: string;
 };
 
-const { purchases, loading, error, fetchPurchases, downloadReceipt } = useCreditPurchases();
+const { purchases, loading, error, fetchPurchases, downloadReceipt, approvePayment, rejectPayment } =
+    useCreditPurchases();
 const toast = useToast();
 const { searchClients } = useClients();
 
@@ -53,7 +56,7 @@ function isOfflinePaymentMethod(method: CreditPurchasePayment['payment_method'])
 async function loadPendingPayments(filters: Record<string, unknown> = {}): Promise<void> {
     const params: Record<string, unknown> = { ...filters };
 
-    await fetchPurchases(params);
+    await fetchPurchases({ ...params, pending_approvals: true });
 
     // Extract pending offline payments
     const pending: PendingPayment[] = [];
@@ -160,7 +163,7 @@ async function ensurePurchasesLoaded(): Promise<void> {
     }
 
     if (!loading.value) {
-        await fetchPurchases();
+        await fetchPurchases({ pending_approvals: true });
         return;
     }
 
@@ -320,40 +323,24 @@ async function handleApprovalSubmit(): Promise<void> {
     isSubmitting.value = true;
 
     try {
-        // Call API endpoint based on action
-        const endpoint =
-            approvalAction.value === 'approve'
-                ? `/payments/${selectedPayment.value.id}/approve`
-                : `/payments/${selectedPayment.value.id}/reject`;
+        const approvalActionIsApprove = approvalAction.value === 'approve';
 
-        const method = 'POST';
-        const body = {
-            notes: approvalNotes.value || undefined,
-        };
+        const responseData: any = approvalActionIsApprove
+            ? await approvePayment(selectedPayment.value.id, approvalNotes.value || '')
+            : await rejectPayment(selectedPayment.value.id, approvalNotes.value || '');
 
-        // Make the request through the API
-        const response = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
-            },
-            body: JSON.stringify(body),
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to process approval');
-        }
+        console.log('responseData', responseData);
+        responseData?.payment_status === 'rejected';
 
         const message =
             approvalAction.value === 'approve' ? 'Payment approved and credits applied!' : 'Payment rejected';
-
-        toast.success(message);
 
         showApprovalModal.value = false;
         selectedPayment.value = null;
         approvalNotes.value = '';
         approvalAction.value = null;
+
+        toast.success(message);
 
         // Reload pending payments
         await loadPendingPayments(backendFilters.value);
@@ -382,26 +369,6 @@ function formatCurrency(amount: string | number, currencyCode: string = 'USD'): 
         style: 'currency',
         currency: currencyCode,
     }).format(typeof amount === 'string' ? parseFloat(amount) : amount);
-}
-
-function formatDate(date: string): string {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-}
-
-function getPaymentBadgeColor(status: string): string {
-    const colors: Record<string, string> = {
-        pending: 'bg-yellow-100 text-yellow-800',
-        approved: 'bg-green-100 text-green-800',
-        rejected: 'bg-red-100 text-red-800',
-    };
-
-    return colors[status] || 'bg-gray-100 text-gray-800';
 }
 
 const backendFilters = computed<Record<string, unknown>>(() => {
@@ -437,13 +404,46 @@ watch(selectedClientId, (clientId, oldClientId) => {
 
     refreshWalletOptions(clientId ?? null);
 });
+
+function togglePaymentExpansion(paymentId: number): void {
+    const newSet = new Set(expandedPaymentIds.value);
+
+    if (newSet.has(paymentId)) {
+        newSet.delete(paymentId);
+    } else {
+        newSet.add(paymentId);
+    }
+
+    expandedPaymentIds.value = newSet;
+}
+
+function isPaymentExpanded(paymentId: number): boolean {
+    return expandedPaymentIds.value.has(paymentId);
+}
+
+async function handleRefreshList(): Promise<void> {
+    expandedPaymentIds.value.clear();
+    await loadPendingPayments(backendFilters.value);
+}
 </script>
 
 <template>
     <div class="container mx-auto px-4 py-8">
-        <div class="mb-6">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Payment Approvals</h1>
-            <p class="text-gray-600">Review and approve offline payments</p>
+        <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Approval Workflow</h1>
+                <p class="text-sm text-gray-600">Manage and review pending purchase requests for client accounts.</p>
+            </div>
+
+            <button
+                @click="handleRefreshList"
+                :disabled="loading"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap"
+                aria-label="Refresh list"
+            >
+                <Icon icon="heroicons:arrow-path" :class="['w-4 h-4', loading && 'animate-spin']" />
+                <span>{{ loading ? 'Refreshing...' : 'Refresh' }}</span>
+            </button>
         </div>
 
         <!-- Error State -->
@@ -530,45 +530,91 @@ watch(selectedClientId, (clientId, oldClientId) => {
         </div>
 
         <!-- Pending Payments List -->
-        <div v-else class="space-y-3">
+        <div v-else class="space-y-4">
             <div
                 v-for="payment in filteredPendingPayments"
                 :key="payment.id"
-                class="rounded-lg border border-yellow-200 bg-yellow-50 p-6"
+                class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md"
             >
-                <div v-if="payment.creditPurchase" class="space-y-4">
-                    <!-- Header -->
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-2">
-                                <Icon icon="mdi:alert-circle" class="w-5 h-5 text-yellow-600" />
-                                <h3 class="font-semibold text-gray-900">
-                                    {{ payment.creditPurchase.total_hours }}h Purchase
-                                </h3>
-
-                                <span
-                                    :class="[
-                                        'px-2 py-1 rounded-full text-xs font-medium',
-                                        getPaymentBadgeColor(payment.payment_status),
-                                    ]"
-                                >
-                                    Pending
-                                </span>
-                            </div>
-
-                            <p class="text-sm text-gray-600">
-                                <strong>Customer:</strong>
-                                {{ payment.creditPurchase.customer?.name }}
-                            </p>
-
-                            <p class="text-sm text-gray-600 mt-1">
-                                <strong>Submitted:</strong>
-                                {{ formatDate(payment.created_at) }}
-                            </p>
+                <!-- Collapsed State -->
+                <div
+                    v-if="!isPaymentExpanded(payment.id)"
+                    @click="togglePaymentExpansion(payment.id)"
+                    class="cursor-pointer p-6 flex items-center justify-between gap-4 hover:bg-gray-50 transition-colors group"
+                >
+                    <div class="flex items-center gap-4 flex-1 min-w-0">
+                        <!-- Icon Badge -->
+                        <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                            <Icon icon="heroicons:shopping-cart" class="w-6 h-6 text-red-600" />
                         </div>
 
-                        <div class="text-right">
-                            <p class="text-2xl font-bold text-yellow-700">
+                        <!-- Purchase Info -->
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-gray-900 truncate">
+                                {{ payment.creditPurchase.total_hours }}h Purchase
+                            </p>
+                            <p class="text-xs text-gray-600 truncate">{{ payment.creditPurchase.customer?.name }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="flex-shrink-0 text-right">
+                        <p class="text-lg font-bold text-gray-900">
+                            {{
+                                formatCurrency(payment.creditPurchase.total_price, payment.creditPurchase.currency_code)
+                            }}
+                        </p>
+                    </div>
+
+                    <!-- Quick Action Icons -->
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button
+                            @click.stop="openApprovalModal(payment, 'reject')"
+                            class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                            aria-label="Reject request"
+                        >
+                            <Icon icon="heroicons:x-mark" class="w-5 h-5" />
+                        </button>
+
+                        <button
+                            @click.stop="openApprovalModal(payment, 'approve')"
+                            class="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                            aria-label="Approve request"
+                        >
+                            <Icon icon="heroicons:check-circle" class="w-5 h-5" />
+                        </button>
+
+                        <button
+                            @click.stop="togglePaymentExpansion(payment.id)"
+                            class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                            aria-label="Expand details"
+                        >
+                            <Icon icon="heroicons:chevron-down" class="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Expanded State -->
+                <div v-if="isPaymentExpanded(payment.id)">
+                    <!-- Header with Collapse -->
+                    <div
+                        class="p-6 bg-gradient-to-r from-red-50 to-orange-50 border-b border-gray-200 flex items-center justify-between gap-4"
+                    >
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                                <Icon icon="heroicons:shopping-cart" class="w-6 h-6 text-red-600" />
+                            </div>
+
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-lg font-bold text-gray-900">
+                                    {{ payment.creditPurchase.total_hours }}h Purchase
+                                </h3>
+                                <p class="text-sm text-gray-600">{{ payment.creditPurchase.customer?.name }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4 flex-shrink-0">
+                            <p class="text-2xl font-bold text-gray-900">
                                 {{
                                     formatCurrency(
                                         payment.creditPurchase.total_price,
@@ -577,70 +623,98 @@ watch(selectedClientId, (clientId, oldClientId) => {
                                 }}
                             </p>
 
-                            <p class="text-xs text-gray-600 mt-1">
-                                {{ payment.payment_method?.label ?? 'Offline' }}
-                            </p>
+                            <button
+                                @click="togglePaymentExpansion(payment.id)"
+                                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                                aria-label="Collapse details"
+                            >
+                                <Icon icon="heroicons:chevron-up" class="w-5 h-5" />
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Details -->
-                    <div class="border-t border-yellow-200 pt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <p class="text-gray-600 mb-1">Wallet</p>
-                            <p class="font-semibold text-gray-900">
-                                {{ payment.creditPurchase.wallet?.name }}
-                            </p>
+                    <!-- Details Section -->
+                    <div class="p-6 space-y-6 bg-red-50">
+                        <!-- Project & Consultancy Details -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                    Project Details
+                                </p>
+                                <p class="text-sm font-semibold text-gray-900">
+                                    {{ payment.creditPurchase.wallet?.name }}
+                                </p>
+                                <p class="text-sm text-gray-600">Consultancy Work</p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                    Consultancy Rate
+                                </p>
+                                <p class="text-sm text-gray-900">
+                                    {{
+                                        formatCurrency(
+                                            (Number(payment.creditPurchase.total_price) || 0) /
+                                                (Number(payment.creditPurchase.total_hours) || 1),
+                                            payment.creditPurchase.currency_code
+                                        )
+                                    }}
+                                    / hour
+                                </p>
+                            </div>
                         </div>
 
-                        <div>
-                            <p class="text-gray-600 mb-1">Hours to Credit</p>
-                            <p class="font-semibold text-gray-900">{{ payment.creditPurchase.total_hours }}h</p>
-                        </div>
+                        <!-- Billing Wallet & Attachments -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2 border-t border-red-200">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                    Billing Wallet
+                                </p>
+                                <div class="flex items-center gap-2">
+                                    <Icon icon="heroicons:credit-card" class="w-4 h-4 text-gray-600" />
+                                    <p class="text-sm text-gray-900 font-medium">
+                                        {{ payment.creditPurchase.wallet?.name }}
+                                    </p>
+                                </div>
+                            </div>
 
-                        <div>
-                            <p class="text-gray-600 mb-1">Hourly Rate</p>
-                            <p class="font-semibold text-gray-900">
-                                {{
-                                    formatCurrency(
-                                        payment.creditPurchase.wallet?.hourly_rate_reference || 0,
-                                        payment.creditPurchase.currency_code
-                                    )
-                                }}/h
-                            </p>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                    Attachments
+                                </p>
+                                <div v-if="payment.pix_receipt_path" class="flex items-center gap-2">
+                                    <Icon icon="heroicons:document-arrow-down" class="w-4 h-4 text-red-600" />
+                                    <button
+                                        @click="
+                                            selectedPayment = payment;
+                                            handleDownloadReceipt();
+                                        "
+                                        class="text-sm text-red-600 hover:text-red-700 font-medium"
+                                    >
+                                        View Receipt
+                                    </button>
+                                </div>
+                                <div v-else class="text-sm text-gray-500">No attachments</div>
+                            </div>
                         </div>
-
-                        <div>
-                            <p class="text-gray-600 mb-1">Currency</p>
-                            <p class="font-semibold text-gray-900">
-                                {{ payment.creditPurchase.currency_code }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Receipt Link -->
-                    <div v-if="payment.pix_receipt_path" class="border-t border-yellow-200 pt-4">
-                        <button
-                            @click="
-                                selectedPayment = payment;
-                                handleDownloadReceipt();
-                            "
-                            class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
-                        >
-                            <Icon icon="mdi:file-pdf-box" class="w-4 h-4" />
-                            View Receipt
-                        </button>
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="border-t border-yellow-200 pt-4 flex gap-2 justify-end">
-                        <CButton preset="danger" @click="openApprovalModal(payment, 'reject')" icon="mdi:close-circle">
+                    <div class="p-6 bg-white border-t border-gray-200 flex flex-col sm:flex-row gap-3">
+                        <CButton
+                            preset="outlined-black"
+                            @click="openApprovalModal(payment, 'reject')"
+                            icon="heroicons:x-mark"
+                            class="flex-1"
+                        >
                             Reject
                         </CButton>
 
                         <CButton
                             preset="success"
                             @click="openApprovalModal(payment, 'approve')"
-                            icon="mdi:check-circle"
+                            icon="heroicons:check-circle"
+                            class="flex-1"
                         >
                             Approve & Apply Credits
                         </CButton>
