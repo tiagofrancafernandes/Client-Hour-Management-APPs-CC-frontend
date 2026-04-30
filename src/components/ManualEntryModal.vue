@@ -96,8 +96,9 @@ const isStep2Valid = computed(() => {
 });
 
 onMounted(() => {
-    entryForm.value.reference_date_timezone = entryForm.value.reference_date_timezone || targetTimezone.value || TZ_DEFAULT;
-})
+    entryForm.value.reference_date_timezone =
+        entryForm.value.reference_date_timezone || targetTimezone.value || TZ_DEFAULT;
+});
 
 // Watchers
 watch([entryFormHours, entryFormMinutes], ([h, m]) => {

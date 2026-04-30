@@ -4,7 +4,6 @@ import type { LedgerEntry, LedgerEntryForm } from '@/types';
 import { useDate } from '@/composables/useDate';
 import { getTimezoneList, TZ_DEFAULT } from '@/utils/date-helpers';
 
-
 interface CreateEntryResponse {
     entry: LedgerEntry;
     new_balance: string;
@@ -20,7 +19,7 @@ export function useLedger() {
         error.value = null;
 
         if (!data.reference_date_timezone) {
-            data.reference_date_timezone = targetTimezone.value || TZ_DEFAULT
+            data.reference_date_timezone = targetTimezone.value || TZ_DEFAULT;
         }
 
         try {

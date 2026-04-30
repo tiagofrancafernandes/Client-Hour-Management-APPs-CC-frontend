@@ -539,82 +539,37 @@ async function handleRefreshList(): Promise<void> {
                 <!-- Collapsed State -->
                 <div
                     v-if="!isPaymentExpanded(payment.id)"
+                    class="cursor-pointer px-5 sm:px-6 py-4 sm:py-5 flex items-center justify-between gap-3 sm:gap-4 hover:bg-gradient-to-r hover:from-gray-50 hover:to-transparent transition-all duration-200 group"
                     @click="togglePaymentExpansion(payment.id)"
-                    class="cursor-pointer p-6 flex items-center justify-between gap-4 hover:bg-gray-50 transition-colors group"
                 >
-                    <div class="flex items-center gap-4 flex-1 min-w-0">
+                    <!-- Left Section: Icon + Info -->
+                    <div class="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                         <!-- Icon Badge -->
-                        <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-                            <Icon icon="heroicons:shopping-cart" class="w-6 h-6 text-red-600" />
+                        <div
+                            class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center border border-red-200 shadow-sm"
+                        >
+                            <Icon icon="heroicons:shopping-cart" class="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
                         </div>
 
                         <!-- Purchase Info -->
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm font-semibold text-gray-900 truncate">
-                                {{ payment.creditPurchase.total_hours }}h Purchase
+                            <div class="flex items-baseline gap-1.5 flex-wrap">
+                                <p class="text-sm sm:text-base font-bold text-gray-900 tabular-nums">
+                                    {{ payment.creditPurchase.total_hours }}h
+                                </p>
+                                <p class="text-xs sm:text-sm text-gray-500 font-medium">Purchase</p>
+                            </div>
+                            <p class="text-xs sm:text-sm text-gray-600 truncate mt-1">
+                                {{ payment.creditPurchase.customer?.name }}
                             </p>
-                            <p class="text-xs text-gray-600 truncate">{{ payment.creditPurchase.customer?.name }}</p>
                         </div>
                     </div>
 
-                    <!-- Price -->
-                    <div class="flex-shrink-0 text-right">
-                        <p class="text-lg font-bold text-gray-900">
-                            {{
-                                formatCurrency(payment.creditPurchase.total_price, payment.creditPurchase.currency_code)
-                            }}
-                        </p>
-                    </div>
-
-                    <!-- Quick Action Icons -->
-                    <div class="flex items-center gap-2 flex-shrink-0">
-                        <button
-                            @click.stop="openApprovalModal(payment, 'reject')"
-                            class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                            aria-label="Reject request"
-                        >
-                            <Icon icon="heroicons:x-mark" class="w-5 h-5" />
-                        </button>
-
-                        <button
-                            @click.stop="openApprovalModal(payment, 'approve')"
-                            class="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                            aria-label="Approve request"
-                        >
-                            <Icon icon="heroicons:check-circle" class="w-5 h-5" />
-                        </button>
-
-                        <button
-                            @click.stop="togglePaymentExpansion(payment.id)"
-                            class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                            aria-label="Expand details"
-                        >
-                            <Icon icon="heroicons:chevron-down" class="w-5 h-5" />
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Expanded State -->
-                <div v-if="isPaymentExpanded(payment.id)">
-                    <!-- Header with Collapse -->
-                    <div
-                        class="p-6 bg-gradient-to-r from-red-50 to-orange-50 border-b border-gray-200 flex items-center justify-between gap-4"
-                    >
-                        <div class="flex items-center gap-4 flex-1">
-                            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-                                <Icon icon="heroicons:shopping-cart" class="w-6 h-6 text-red-600" />
-                            </div>
-
-                            <div class="flex-1 min-w-0">
-                                <h3 class="text-lg font-bold text-gray-900">
-                                    {{ payment.creditPurchase.total_hours }}h Purchase
-                                </h3>
-                                <p class="text-sm text-gray-600">{{ payment.creditPurchase.customer?.name }}</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-4 flex-shrink-0">
-                            <p class="text-2xl font-bold text-gray-900">
+                    <!-- Right Section: Price + Actions -->
+                    <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                        <!-- Price Display - Desktop -->
+                        <div class="text-right hidden sm:block pr-2 border-r border-gray-200">
+                            <p class="text-lg sm:text-xl font-bold text-gray-900 tabular-nums">
                                 {{
                                     formatCurrency(
                                         payment.creditPurchase.total_price,
@@ -622,15 +577,109 @@ async function handleRefreshList(): Promise<void> {
                                     )
                                 }}
                             </p>
+                        </div>
+
+                        <!-- Action Buttons - Desktop -->
+                        <div class="hidden sm:flex items-center gap-0.5">
+                            <button
+                                @click.stop="openApprovalModal(payment, 'reject')"
+                                class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                                title="Reject request"
+                                aria-label="Reject request"
+                            >
+                                <Icon icon="heroicons:x-mark" class="w-5 h-5" />
+                            </button>
+
+                            <button
+                                @click.stop="openApprovalModal(payment, 'approve')"
+                                class="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                                title="Approve request"
+                                aria-label="Approve request"
+                            >
+                                <Icon icon="heroicons:check-circle" class="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <!-- Expand Button -->
+                        <button
+                            @click.stop="togglePaymentExpansion(payment.id)"
+                            class="p-2 sm:p-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 border border-transparent hover:border-blue-200"
+                            title="View details"
+                            aria-label="Expand details"
+                        >
+                            <Icon
+                                icon="heroicons:chevron-down"
+                                class="w-5 h-5 sm:w-5 sm:h-5 group-hover:translate-y-0.5 transition-transform duration-200"
+                            />
+                        </button>
+                    </div>
+
+                    <!-- Price Display - Mobile -->
+                    <div class="sm:hidden text-right -mr-1">
+                        <p class="text-sm font-bold text-gray-900 tabular-nums">
+                            {{
+                                formatCurrency(payment.creditPurchase.total_price, payment.creditPurchase.currency_code)
+                            }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Expanded State -->
+                <div v-if="isPaymentExpanded(payment.id)">
+                    <!-- Header with Collapse -->
+                    <div
+                        class="px-5 sm:px-6 py-4 sm:py-5 bg-gradient-to-r from-red-50 via-red-50 to-orange-50 border-b border-red-100 flex items-center justify-between gap-4 sm:gap-6"
+                    >
+                        <div class="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                            <div
+                                class="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center border border-red-200 shadow-sm"
+                            >
+                                <Icon icon="heroicons:shopping-cart" class="w-6 h-6 text-red-600" />
+                            </div>
+
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-base sm:text-lg font-bold text-gray-900">
+                                    {{ payment.creditPurchase.total_hours }}h Purchase
+                                </h3>
+                                <p class="text-xs sm:text-sm text-gray-600 truncate mt-0.5">
+                                    {{ payment.creditPurchase.customer?.name }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+                            <div class="text-right hidden sm:block pr-3 border-r border-red-200">
+                                <p class="text-xl sm:text-2xl font-bold text-gray-900 tabular-nums">
+                                    {{
+                                        formatCurrency(
+                                            payment.creditPurchase.total_price,
+                                            payment.creditPurchase.currency_code
+                                        )
+                                    }}
+                                </p>
+                            </div>
 
                             <button
                                 @click="togglePaymentExpansion(payment.id)"
-                                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                                class="p-2 sm:p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 border border-transparent hover:border-red-200"
+                                title="Collapse details"
                                 aria-label="Collapse details"
                             >
-                                <Icon icon="heroicons:chevron-up" class="w-5 h-5" />
+                                <Icon
+                                    icon="heroicons:chevron-up"
+                                    class="w-5 h-5 sm:w-6 sm:h-6 group-hover:-translate-y-0.5 transition-transform duration-200"
+                                />
                             </button>
                         </div>
+                    </div>
+
+                    <!-- Price Display - Mobile -->
+                    <div class="sm:hidden px-5 py-3 bg-red-50 border-b border-red-100 text-right">
+                        <p class="text-lg font-bold text-gray-900 tabular-nums">
+                            {{
+                                formatCurrency(payment.creditPurchase.total_price, payment.creditPurchase.currency_code)
+                            }}
+                        </p>
                     </div>
 
                     <!-- Details Section -->
