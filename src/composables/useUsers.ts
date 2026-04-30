@@ -211,6 +211,27 @@ export function useUsers() {
         }
     }
 
+    async function updateUserPassword(
+        id: number,
+        data: { password: string; password_confirmation: string }
+    ): Promise<User | undefined> {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.put<{ user: User }>(`/users/${id}/password`, data);
+
+            return response.user;
+        } catch (e) {
+            error.value = e instanceof Error ? e.message : 'Failed to update password';
+            if (debugOn.value) {
+                throw e;
+            }
+        } finally {
+            loading.value = false;
+        }
+    }
+
     return {
         debugOn,
         users,
@@ -226,5 +247,6 @@ export function useUsers() {
         fetchOptions,
         attachUserToClient,
         setUserClientAdmin,
+        updateUserPassword,
     };
 }

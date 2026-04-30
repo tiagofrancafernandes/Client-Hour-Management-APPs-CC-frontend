@@ -20,6 +20,7 @@ const {
     fetchOptions,
     attachUserToClient,
     setUserClientAdmin,
+    updateUserPassword,
 } = useUsers();
 const { searchClients } = useClients();
 
@@ -75,7 +76,7 @@ const permissionGroups = computed(() => {
 
 // ─── Modal State ─────────────────────────────────────────────────────────────
 
-type ModalTab = 'info' | 'role' | 'permissions' | 'client';
+type ModalTab = 'info' | 'role' | 'permissions' | 'client' | 'password';
 
 const showModal = ref(false);
 const activeTab = ref<ModalTab | string>('info');
@@ -88,6 +89,9 @@ const infoErrors = ref<Record<string, string>>({});
 const roleForm = ref('');
 
 const selectedPermissions = ref<string[]>([]);
+
+const passwordForm = ref({ password: '', password_confirmation: '' });
+const passwordErrors = ref<Record<string, string>>({});
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -161,6 +165,8 @@ async function openModal(user: User): Promise<void> {
     modalLoading.value = true;
     selectedUserDetail.value = null;
     infoErrors.value = {};
+    passwordErrors.value = {};
+    passwordForm.value = { password: '', password_confirmation: '' };
 
     try {
         const detail = await fetchUser(user.id);
@@ -322,6 +328,58 @@ async function handleSavePermissions(): Promise<void> {
     }
 }
 
+// ─── Save Password ─────────────────────────────────────────────────────────────
+
+async function handleSavePassword(): Promise<void> {
+    if (!selectedUserDetail.value) {
+        return;
+    }
+
+    passwordErrors.value = {};
+
+    if (!passwordForm.value.password.trim()) {
+        passwordErrors.value.password = 'Password is required';
+
+        return;
+    }
+
+    if (passwordForm.value.password.length < 8) {
+        passwordErrors.value.password = 'Password must be at least 8 characters';
+
+        return;
+    }
+
+    if (passwordForm.value.password !== passwordForm.value.password_confirmation) {
+        passwordErrors.value.password_confirmation = 'Passwords do not match';
+
+        return;
+    }
+
+    modalLoading.value = true;
+
+    try {
+        await updateUserPassword(selectedUserDetail.value.user.id, {
+            password: passwordForm.value.password,
+            password_confirmation: passwordForm.value.password_confirmation,
+        });
+
+        passwordForm.value = { password: '', password_confirmation: '' };
+        toast.success('Password updated successfully');
+    } catch (e: any) {
+        const errors = e?.response?.data?.errors;
+
+        if (errors) {
+            Object.keys(errors).forEach((field) => {
+                passwordErrors.value[field] = errors[field][0];
+            });
+        } else {
+            toast.error('Failed to update password');
+        }
+    } finally {
+        modalLoading.value = false;
+    }
+}
+
 // ─── Edit Modal: Client Tab ───────────────────────────────────────────────────
 
 const editClientSearch = ref('');
@@ -451,7 +509,7 @@ const createForm = ref<CreateUserForm>({
     password: '',
     password_confirmation: '',
     role: 'customer',
-    customer_id: null as number | null,
+    customer_id: null,
     client_role: 'member',
 });
 
@@ -555,6 +613,9 @@ const allowedTabs = computed(() => {
     if (_currentSelectedRole && ['customer'].includes(_currentSelectedRole)) {
         tabs.push('client');
     }
+
+    // Always show password tab (authorization check is done on backend)
+    tabs.push('password');
 
     return tabs;
 });
@@ -776,6 +837,7 @@ onMounted(async () => {
                         <span v-if="tab === 'info'">Basic Info</span>
                         <span v-else-if="tab === 'role'">Role</span>
                         <span v-else-if="tab === 'client'">Client</span>
+                        <span v-else-if="tab === 'password'">Password</span>
                         <span v-else>Permissions</span>
                     </button>
                 </div>
@@ -1215,6 +1277,59 @@ onMounted(async () => {
                             </CButton>
                         </div>
                     </div>
+
+                    <!-- ── Password ── -->
+                    <form v-if="activeTab === 'password'" class="space-y-4" @submit.prevent="handleSavePassword">
+                        <p class="text-sm text-gray-500">
+                            Update the password for this user.
+                        </p>
+
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-gray-700">
+                                New Password
+                                <span class="text-red-500">*</span>
+                            </label>
+
+                            <CPasswodInput
+                                v-model="passwordForm.password"
+                                name="password"
+                                type="password"
+                                placeholder="••••••••"
+                                :disabled="modalLoading"
+                                :class="{ 'border-red-500': passwordErrors.password }"
+                            />
+
+                            <p v-if="passwordErrors.password" class="mt-1 text-xs text-red-600">
+                                {{ passwordErrors.password }}
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-gray-700">
+                                Confirm Password
+                                <span class="text-red-500">*</span>
+                            </label>
+
+                            <CPasswodInput
+                                v-model="passwordForm.password_confirmation"
+                                name="password_confirmation"
+                                type="password"
+                                placeholder="••••••••"
+                                :disabled="modalLoading"
+                                :class="{ 'border-red-500': passwordErrors.password_confirmation }"
+                            />
+
+                            <p v-if="passwordErrors.password_confirmation" class="mt-1 text-xs text-red-600">
+                                {{ passwordErrors.password_confirmation }}
+                            </p>
+                        </div>
+
+                        <div class="flex justify-end pt-2">
+                            <CButton type="submit" preset="primary" :disabled="modalLoading" icon="mdi:check">
+                                {{ modalLoading ? 'Saving...' : 'Save Password' }}
+                            </CButton>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
