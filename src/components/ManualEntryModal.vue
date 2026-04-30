@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useClients } from '@/composables/useClients';
 import { useWallets } from '@/composables/useWallets';
 import { useLedger } from '@/composables/useLedger';
@@ -7,7 +8,12 @@ import { usePermissions } from '@/composables/usePermissions';
 import { useToast } from '@/composables/useToast';
 import { splitDecimalHours, combineDualTimeInput } from '@/utils/timeFormatters';
 import { extractErrorMessage } from '@/utils/errorHelpers';
-import type { TypeaheadOption, LedgerEntryForm } from '@/types';
+import type { TypeaheadOption, LedgerEntryForm, TimezoneConfig } from '@/types';
+
+import { useTimerStore } from '@/stores/timer';
+import { useDate } from '@/composables/useDate';
+import { getTimezoneList, TZ_DEFAULT } from '@/utils/date-helpers';
+const timerStore = useTimerStore();
 
 interface Props {
     show: boolean;
@@ -25,6 +31,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>();
 
+const route = useRoute();
 const toast = useToast();
 
 // Composables
@@ -33,6 +40,8 @@ const { wallets, fetchWallets } = useWallets();
 const { createEntry, loading: entryLoading } = useLedger();
 const { canAddCredits, canAddDebits, canAddAdjustments } = usePermissions();
 
+const { targetTimezone, resolveTimezone } = useDate();
+
 // Step state
 const currentStep = ref(1);
 
@@ -40,15 +49,18 @@ const currentStep = ref(1);
 const selectedClientId = ref<number | null>(null);
 const selectedWalletId = ref<number | null>(null);
 
+const walletId = props?.walletId || Number(route.params.id) || 0;
+
 // Form state - Step 2
 const entryForm = ref<LedgerEntryForm>({
-    wallet_id: 0,
+    wallet_id: walletId,
     type: 'debit',
     hours: 0,
-    tags: [],
-    reference_date: new Date().toISOString().split('T')[0],
     title: '',
     description: '',
+    reference_date: new Date().toISOString().split('T')[0],
+    reference_date_timezone: targetTimezone.value || TZ_DEFAULT,
+    tags: [],
 });
 
 const entryFormHours = ref(0);
@@ -82,6 +94,10 @@ const isStep1Valid = computed(() => {
 const isStep2Valid = computed(() => {
     return entryForm.value.type && entryForm.value.hours > 0;
 });
+
+onMounted(() => {
+    entryForm.value.reference_date_timezone = entryForm.value.reference_date_timezone || targetTimezone.value || TZ_DEFAULT;
+})
 
 // Watchers
 watch([entryFormHours, entryFormMinutes], ([h, m]) => {
@@ -204,6 +220,32 @@ function handleEntryFormMinutesChange(event: Event): void {
     target.value = String(entryFormMinutes.value);
 }
 
+const timezoneList = computed(() => {
+    return getTimezoneList((tzList: Record<string, TimezoneConfig>): { label: string; value: string }[] => {
+        // return [{label: 'string', value: 'string'}];
+
+        return Object.entries(tzList)
+            .map((i) => i[1])
+            .map((i) => ({
+                ...i,
+                label: `${i.label} (${i.offset})`,
+                value: i.timezone_id,
+            }));
+    });
+});
+
+function refreshTzListOptions({ searchTerm }: { searchTerm: string | null }): TypeaheadOption[] {
+    const items = (timezoneList.value || []) as TypeaheadOption[];
+
+    searchTerm = typeof searchTerm === 'string' ? searchTerm.trim().toLowerCase() : '';
+
+    return searchTerm
+        ? items.filter((i: any) => {
+              return JSON.stringify(i, null, 0).toLowerCase().includes(searchTerm);
+          })
+        : items;
+}
+
 function closeModal(): void {
     emit('close');
 }
@@ -215,7 +257,7 @@ function closeModal(): void {
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6"
         @click.self="closeModal"
     >
-        <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl" @click.stop>
+        <div class="w-full max-w-4xl rounded-2xl bg-white p-6 shadow-xl" @click.stop>
             <!-- Step 1: Wallet Selection -->
             <div v-if="currentStep === 1">
                 <div class="flex items-center justify-between">
@@ -237,10 +279,11 @@ function closeModal(): void {
 
                 <p class="mt-2 text-sm text-gray-500">Use the client to reduce wallet options before continuing.</p>
 
-                <div class="mt-6 space-y-4">
+                <div class="mt-6 space-y-4 flex gap-3">
                     <CTypeahead
                         v-model="selectedClientId"
                         label="Client"
+                        class="w-full"
                         placeholder="Search by name or notes"
                         clearable
                         :initial-options="manualClientOptions"
@@ -252,6 +295,7 @@ function closeModal(): void {
                     <CTypeahead
                         v-model="selectedWalletId"
                         label="Wallet"
+                        class="w-full"
                         placeholder="Choose wallet"
                         clearable
                         :initial-options="manualWalletOptions"
@@ -399,7 +443,6 @@ function closeModal(): void {
                             <TagInput v-model="entryForm.tags" placeholder="Add tags..." :allow-create="true" />
                         </div>
 
-                        <!-- Date and Time -->
                         <div class="flex flex-col md:flex-row gap-3 mb-4">
                             <div class="mb-4 w-full flex flex-col justify-around">
                                 <label class="mb-1 block text-sm font-medium text-gray-700">Reference Date</label>
@@ -410,6 +453,22 @@ function closeModal(): void {
                                 />
                             </div>
 
+                            <CTypeahead
+                                containerClasses="mb-4 w-full"
+                                v-model="entryForm.reference_date_timezone"
+                                :initialValue="entryForm.reference_date_timezone || targetTimezone || TZ_DEFAULT"
+                                label="Timezone"
+                                placeholder="Search timezone..."
+                                clearable
+                                :initial-options="timezoneList"
+                                :refresh-options="refreshTzListOptions"
+                                empty-text="No clients found"
+                                loading-text="Loading clients..."
+                            />
+                        </div>
+
+                        <!-- Date and Time -->
+                        <div class="flex flex-col md:flex-row gap-3 mb-4">
                             <div class="mb-4 w-full">
                                 <label class="mb-2 block text-sm font-medium text-gray-700">Time</label>
                                 <div class="flex gap-3">

@@ -775,19 +775,12 @@ function refreshTzListOptions({ searchTerm }: { searchTerm: string | null }): Ty
                                 />
                             </div>
 
-                            <div v-if="0" class="mb-4 w-full">
-                                <CSelect label="Type" v-model="entryForm.reference_date_timezone">
-                                    <option :value="null">Timezone</option>
-                                    <option value="credit">Credits Only</option>
-                                    <option value="debit">Debits Only</option>
-                                </CSelect>
-                            </div>
-
                             <CTypeahead
                                 containerClasses="mb-4 w-full"
                                 v-model="entryForm.reference_date_timezone"
-                                label="Filter by Client"
-                                placeholder="Search client..."
+                                :initialValue="entryForm.reference_date_timezone || targetTimezone || TZ_DEFAULT"
+                                label="Timezone"
+                                placeholder="Search timezone..."
                                 clearable
                                 :initial-options="timezoneList"
                                 :refresh-options="refreshTzListOptions"

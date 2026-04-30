@@ -1,6 +1,9 @@
 import { ref } from 'vue';
 import api from '@/services/api';
 import type { LedgerEntry, LedgerEntryForm } from '@/types';
+import { useDate } from '@/composables/useDate';
+import { getTimezoneList, TZ_DEFAULT } from '@/utils/date-helpers';
+
 
 interface CreateEntryResponse {
     entry: LedgerEntry;
@@ -8,12 +11,17 @@ interface CreateEntryResponse {
 }
 
 export function useLedger() {
+    const { targetTimezone, resolveTimezone } = useDate();
     const loading = ref(false);
     const error = ref<string | null>(null);
 
     async function createEntry(data: LedgerEntryForm): Promise<CreateEntryResponse> {
         loading.value = true;
         error.value = null;
+
+        if (!data.reference_date_timezone) {
+            data.reference_date_timezone = targetTimezone.value || TZ_DEFAULT
+        }
 
         try {
             const response = await api.post<CreateEntryResponse>('/ledger-entries', data);
