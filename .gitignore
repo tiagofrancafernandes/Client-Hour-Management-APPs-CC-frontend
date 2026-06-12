@@ -38,6 +38,7 @@ dist_tmp_build/
 
 *.env*
 .env
+.env.local
 .env.backup
 .env.production
 !.env.example
@@ -48,6 +49,7 @@ dist_tmp_build/
 *No*Commit*
 *NO*COMMIT*
 *.bkp.*
+*.del*
 *.localonly.*
 *.bkp
 *.log
