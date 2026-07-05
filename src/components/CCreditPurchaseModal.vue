@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { Icon } from '@iconify/vue';
 import { decimalToTimeFormat } from '@/utils/timeFormatters';
 import type { WalletWithBalance } from '@/types';
@@ -20,6 +21,7 @@ const emit = defineEmits<{
     success: [];
 }>();
 
+const router = useRouter();
 const { createPurchase, createPayment, uploadReceipt, loading } = useCreditPurchases();
 const toast = useToast();
 const { activeMethods, fetchMethods } = usePaymentMethodConfigs();
@@ -236,6 +238,17 @@ async function handleSubmit(): Promise<void> {
         toast.success('Credit purchase created successfully!');
         emit('success');
         emit('close');
+
+        const purchaseId = createdPurchaseId.value;
+        if (purchaseId) {
+            router.push({
+                path: '/payments/history',
+                query: {
+                    ids: String(purchaseId),
+                    to_open: String(purchaseId),
+                },
+            });
+        }
     } catch (error) {
         toast.error(error instanceof Error ? error.message : 'Failed to process purchase');
     }

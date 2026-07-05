@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { Icon } from '@iconify/vue';
 import type { CreditPurchase, CreditPurchasePayment, PaymentMethod } from '@/types';
 import { useCreditPurchases } from '@/composables/useCreditPurchases';
@@ -21,10 +22,15 @@ const {
     rejectPayment,
 } = useCreditPurchases();
 
+const route = useRoute();
+const router = useRouter();
 const { canApprovePayments, canViewAnyReports, isCustomer, canViewClients } = usePermissions();
 const { clients, fetchClients } = useClients();
 const { wallets, fetchWallets } = useWallets();
 const toast = useToast();
+
+// ─── Auto-open item on mount ────────────────────────────────────────────────
+const itemToOpen = ref<number | null>(null);
 
 // ─── Filters ────────────────────────────────────────────────────────────────
 
@@ -65,6 +71,8 @@ async function fetchPurchasesXd() {
 watch(
     filters,
     () => {
+        updateUrlFromFilters();
+
         if (filterDebounceTimer !== null) {
             clearTimeout(filterDebounceTimer);
         }
@@ -445,8 +453,45 @@ function formatExpiresAt(expiresAt: string): string {
 // ─── Lifecycle ───────────────────────────────────────────────────────────────
 
 onMounted(async () => {
+    // Check for auto-open item from query params
+    const toOpenParam = route.query.to_open;
+    if (toOpenParam) {
+        itemToOpen.value = Number(toOpenParam);
+    }
+
+    // Update URL with current filters
+    updateUrlFromFilters();
+
     await Promise.all([fetchPurchasesXd(), fetchClients(1, ''), fetchWallets()]);
+
+    // Auto-open item if specified
+    if (itemToOpen.value && purchases.value.length > 0) {
+        const item = purchases.value.find((p) => p.id === itemToOpen.value);
+        if (item) {
+            selectedPurchase.value = item;
+        }
+    }
 });
+
+// ─── URL Synchronization ────────────────────────────────────────────────────
+
+function updateUrlFromFilters(): void {
+    const query: Record<string, any> = {};
+
+    if (filters.value.dateFrom) query.dateFrom = filters.value.dateFrom;
+    if (filters.value.dateTo) query.dateTo = filters.value.dateTo;
+    if (filters.value.purchaseStatus) query.purchaseStatus = filters.value.purchaseStatus;
+    if (filters.value.paymentStatus) query.paymentStatus = filters.value.paymentStatus;
+    if (filters.value.paymentMethod) query.paymentMethod = filters.value.paymentMethod;
+    if (filters.value.walletId) query.walletId = filters.value.walletId;
+    if (filters.value.clientId) query.clientId = filters.value.clientId;
+    if (itemToOpen.value) {
+        query.to_open = itemToOpen.value;
+        query.ids = itemToOpen.value;
+    }
+
+    router.replace({ query });
+}
 </script>
 
 <template>
