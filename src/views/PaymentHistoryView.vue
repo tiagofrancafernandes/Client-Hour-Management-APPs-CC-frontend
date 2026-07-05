@@ -651,6 +651,11 @@ onMounted(async () => {
                             <th
                                 class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
                             >
+                                #
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                            >
                                 Date
                             </th>
                             <th
@@ -710,6 +715,11 @@ onMounted(async () => {
                             class="hover:bg-gray-50 transition-colors cursor-pointer"
                             @click="openModal(purchase)"
                         >
+                            <!-- ID -->
+                            <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+                                {{ purchase?.id ? `#${purchase?.id}` : '' }}
+                            </td>
+
                             <!-- Date -->
                             <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
                                 {{ formatDate(purchase.created_at) }}

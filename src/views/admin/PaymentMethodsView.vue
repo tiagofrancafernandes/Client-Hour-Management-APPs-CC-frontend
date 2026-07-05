@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue';
 import { Icon } from '@iconify/vue';
 import { usePaymentMethodAdmin } from '@/composables/usePaymentMethodAdmin';
 import { useConfirm } from '@/composables/useConfirm';
+import CPaymentInstructionsEditModal from '@/components/CPaymentInstructionsEditModal.vue';
 
 const { configs, loading, updating, pagination, fetchConfigs, updateConfig, toggleConfig } = usePaymentMethodAdmin();
 const { state: confirmState, confirm, handleConfirm, handleCancel } = useConfirm();
