@@ -52,7 +52,10 @@ export default defineConfig({
         allowedHosts: true, // Any host
         proxy: {
             '/__open-in-editor': {
-                target: process.env.OPEN_IN_EDITOR_URL || 'http://host.docker.internal:3001',
+                target: [
+                    process.env.OPEN_IN_EDITOR_URL || 'http://host.docker.internal:3333',
+                    `?profile=hourledger-frontend&dry_run=0`,
+                ].join(''),
                 changeOrigin: true,
             },
         },

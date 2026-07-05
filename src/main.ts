@@ -40,7 +40,9 @@ app.use(pinia);
 app.use(router);
 app.use(authPlugin);
 app.use(ToastPlugin, {
-    autoClose: 8000,
+    type: 'default',
+    autoClose: 5000,
+    position: 'bottom-right',
 });
 
 for (let [compName, compObj] of Object.entries(components)) {

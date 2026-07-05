@@ -52,8 +52,8 @@ function handleSave(): void {
 </script>
 
 <template>
-    <teleport v-if="isOpen" to="body">
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click="emit('close')">
+    <teleport to="body">
+        <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click="emit('close')">
             <div
                 class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-2xl"
                 @click.stop

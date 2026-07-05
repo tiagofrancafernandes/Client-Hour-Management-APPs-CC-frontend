@@ -80,6 +80,8 @@ function cancelEditing(): void {
 }
 
 function openInstructionsEditor(config: any): void {
+    console.log('Opening instructions editor for:', config);
+
     editingInstructionsId.value = config.id;
 
     let instructions: Array<{ key: string; value: string }> = [];
@@ -91,12 +93,16 @@ function openInstructionsEditor(config: any): void {
             } else {
                 instructions = config.instructions;
             }
-        } catch {
+        } catch (err) {
+            console.error('Failed to parse instructions:', err);
             instructions = [];
         }
     }
 
     editingInstructionsForm.value = instructions.length > 0 ? instructions : [{ key: '', value: '' }];
+
+    console.log('Editing ID set to:', editingInstructionsId.value);
+    console.log('Instructions form:', editingInstructionsForm.value);
 }
 
 function closeInstructionsEditor(): void {
