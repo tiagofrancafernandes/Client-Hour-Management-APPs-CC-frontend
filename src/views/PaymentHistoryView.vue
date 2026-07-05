@@ -406,14 +406,6 @@ function getPurchaseStatusColor(status: string): string {
     return map[status] ?? 'bg-gray-100 text-gray-700';
 }
 
-function isPaymentExpired(payment: CreditPurchasePayment): boolean {
-    if (!payment.expires_at) {
-        return false;
-    }
-
-    return new Date(payment.expires_at) < new Date();
-}
-
 function formatCurrency(amount: string | number, code = 'USD'): string {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -427,6 +419,20 @@ function formatDate(date: string): string {
         month: 'short',
         day: 'numeric',
     });
+}
+
+function isPaymentExpired(payment: CreditPurchasePayment): boolean {
+    if (!payment.expires_at) {
+        return false;
+    }
+
+    const diff = new Date(payment?.expires_at)?.getTime() - Date.now();
+
+    if (diff <= 0) {
+        return true;
+    }
+
+    return false;
 }
 
 function formatExpiresAt(expiresAt: string): string {
@@ -449,6 +455,10 @@ function formatExpiresAt(expiresAt: string): string {
     }
 
     return `${Math.floor(diff / 60_000)}m`;
+}
+
+function copyInstructionToClipboard(text: string): void {
+    navigator.clipboard.writeText(text);
 }
 
 // ─── Lifecycle ───────────────────────────────────────────────────────────────
@@ -1042,7 +1052,7 @@ function updateUrlFromFilters(): void {
 
                                     <!-- View instructions button -->
                                     <button
-                                        v-if="modalPayment.payment_method && modalPayment.payment_status === 'pending'"
+                                        v-if="!isPaymentExpired(modalPayment) && modalPayment.payment_method && modalPayment.payment_status === 'pending'"
                                         @click="showPaymentInstructions = true"
                                         class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition border border-blue-200"
                                     >
@@ -1342,9 +1352,20 @@ function updateUrlFromFilters(): void {
                         <div v-if="modalPayment.payment_method.instructions && modalPayment.payment_method.instructions.length > 0" class="rounded-lg bg-blue-50 border border-blue-200 p-4">
                             <p class="text-xs font-semibold text-blue-900 mb-3">Payment Instructions:</p>
                             <div class="space-y-2">
-                                <div v-for="(instruction, index) in modalPayment.payment_method.instructions" :key="index" class="text-sm">
-                                    <span class="font-semibold text-gray-900">{{ instruction.key }}:</span>
-                                    <span class="text-gray-700 ml-2">{{ instruction.value }}</span>
+                                <div v-for="(instruction, index) in modalPayment.payment_method.instructions" :key="index" class="text-sm flex items-center justify-between group">
+                                    <div>
+                                        <span class="font-semibold text-gray-900">{{ instruction.key }}:</span>
+                                        <span class="text-gray-700 ml-2">{{ instruction.value }}</span>
+                                    </div>
+                                    <button
+                                        v-if="instruction.value"
+                                        type="button"
+                                        @click="copyInstructionToClipboard(instruction.value)"
+                                        class="ml-2 p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-blue-200 transition text-blue-500 hover:text-blue-700"
+                                        title="Copy to clipboard"
+                                    >
+                                        <Icon icon="mdi:content-copy" class="w-4 h-4" />
+                                    </button>
                                 </div>
                             </div>
                         </div>

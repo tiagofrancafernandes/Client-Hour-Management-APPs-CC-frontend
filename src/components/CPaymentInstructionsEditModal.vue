@@ -45,6 +45,10 @@ function removePair(index: number): void {
     }
 }
 
+function copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text);
+}
+
 function handleSave(): void {
     const validPairs = localInstructions.value.filter((pair) => pair.key.trim() || pair.value.trim());
     emit('save', validPairs);
@@ -62,7 +66,7 @@ function handleSave(): void {
                 <div class="sticky top-0 border-b border-gray-200 bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h2 class="text-lg font-bold text-white">Editar Instruções de Pagamento</h2>
+                            <h2 class="text-lg font-bold text-white">Edit Payment Instructions</h2>
                             <p class="text-sm text-red-100">{{ label }}</p>
                         </div>
 
@@ -82,8 +86,8 @@ function handleSave(): void {
                         <!-- Instructions Help -->
                         <div class="rounded-lg bg-blue-50 p-3 border border-blue-200">
                             <p class="text-xs text-blue-900">
-                                <strong>Dica:</strong> Adicione campos-chave como "Chave PIX", "Agência", "Conta",
-                                "Titular", etc. Cada campo aparecerá em uma linha com a chave em negrito.
+                                <strong>Dica:</strong> Add key fields such as "PIX Key", "Agency", "Account",
+                                "Holder", etc. Each field will appear on a line with the key in bold.
                             </p>
                         </div>
 
@@ -129,17 +133,28 @@ function handleSave(): void {
                             @click="addPair"
                         >
                             <Icon icon="mdi:plus" class="w-4 h-4" />
-                            Adicionar campo
+                            Add input
                         </button>
                     </div>
 
                     <!-- Preview -->
                     <div v-if="localInstructions.some((p) => p.key || p.value)" class="mt-6 pt-6 border-t">
-                        <p class="mb-3 text-sm font-semibold text-gray-700">Pré-visualização:</p>
+                        <p class="mb-3 text-sm font-semibold text-gray-700">Preview:</p>
                         <div class="rounded-lg bg-gray-50 p-4 space-y-2">
-                            <div v-for="(pair, index) in localInstructions" :key="index" class="text-sm">
-                                <span v-if="pair.key" class="font-bold text-gray-900">{{ pair.key }}:</span>
-                                <span v-if="pair.value" class="text-gray-700 ml-2">{{ pair.value }}</span>
+                            <div v-for="(pair, index) in localInstructions" :key="index" class="text-sm flex items-center justify-between group">
+                                <div>
+                                    <span v-if="pair.key" class="font-bold text-gray-900">{{ pair.key }}:</span>
+                                    <span v-if="pair.value" class="text-gray-700 ml-2">{{ pair.value }}</span>
+                                </div>
+                                <button
+                                    v-if="pair.value"
+                                    type="button"
+                                    @click="copyToClipboard(pair.value)"
+                                    class="ml-2 p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-gray-200 transition text-gray-500 hover:text-gray-700"
+                                    title="Copy to clipboard"
+                                >
+                                    <Icon icon="mdi:content-copy" class="w-4 h-4" />
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -148,11 +163,11 @@ function handleSave(): void {
                 <!-- Footer -->
                 <div class="sticky bottom-0 border-t border-gray-200 bg-gray-50 px-6 py-3 flex gap-2 justify-end">
                     <CButton preset="outlined-black" class="text-sm" @click="emit('close')">
-                        Cancelar
+                        Cancel
                     </CButton>
 
                     <CButton preset="primary" class="text-sm" @click="handleSave">
-                        Salvar Instruções
+                        Save
                     </CButton>
                 </div>
             </div>
