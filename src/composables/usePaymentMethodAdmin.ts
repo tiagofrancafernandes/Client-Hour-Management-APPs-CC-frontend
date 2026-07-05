@@ -69,11 +69,11 @@ export function usePaymentMethodAdmin() {
                 `/admin/payment-method-configs?${queryParams.toString()}`
             );
 
-            configs.value = response.data.data;
+            configs.value = response.data;
             pagination.value = {
-                current_page: response.data.current_page,
-                last_page: response.data.last_page,
-                total: response.data.total,
+                current_page: response.current_page,
+                last_page: response.last_page,
+                total: response.total,
             };
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Erro ao carregar métodos de pagamento';
@@ -97,7 +97,7 @@ export function usePaymentMethodAdmin() {
 
             const index = configs.value.findIndex((c) => c.id === id);
             if (index !== -1) {
-                configs.value[index] = response.data;
+                configs.value[index] = response;
             }
 
             toast.success('Método de pagamento atualizado com sucesso');
@@ -121,10 +121,10 @@ export function usePaymentMethodAdmin() {
 
             const index = configs.value.findIndex((c) => c.id === id);
             if (index !== -1) {
-                configs.value[index] = response.data.payment_method_config;
+                configs.value[index] = response.payment_method_config;
             }
 
-            const newStatus = response.data.payment_method_config.is_active ? 'ativado' : 'desativado';
+            const newStatus = response.payment_method_config.is_active ? 'ativado' : 'desativado';
             toast.success(`Método de pagamento ${newStatus}`);
             return true;
         } catch (err) {
