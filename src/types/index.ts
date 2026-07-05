@@ -260,6 +260,11 @@ export interface ImportRowForm {
     tags?: string[];
 }
 
+export interface PaymentInstruction {
+    key: string;
+    value: string;
+}
+
 export interface PaymentMethod {
     key: string;
     name: string;
@@ -271,6 +276,7 @@ export interface PaymentMethod {
     expires_time: string | number | null;
     accepts_discount: boolean;
     allowed_users: string[];
+    instructions?: PaymentInstruction[] | null;
 }
 
 export interface CreditPurchasePayment {

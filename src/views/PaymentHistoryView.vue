@@ -1338,9 +1338,22 @@ function updateUrlFromFilters(): void {
                             </p>
                         </div>
 
-                        <p class="text-xs text-gray-500 text-center">
-                            For complete payment instructions, please contact support.
-                        </p>
+                        <!-- Payment Instructions -->
+                        <div v-if="modalPayment.payment_method.instructions && modalPayment.payment_method.instructions.length > 0" class="rounded-lg bg-blue-50 border border-blue-200 p-4">
+                            <p class="text-xs font-semibold text-blue-900 mb-3">Payment Instructions:</p>
+                            <div class="space-y-2">
+                                <div v-for="(instruction, index) in modalPayment.payment_method.instructions" :key="index" class="text-sm">
+                                    <span class="font-semibold text-gray-900">{{ instruction.key }}:</span>
+                                    <span class="text-gray-700 ml-2">{{ instruction.value }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-else class="rounded-lg bg-amber-50 border border-amber-200 p-4">
+                            <p class="text-xs text-amber-900 text-center">
+                                No payment instructions configured. Please contact support for assistance.
+                            </p>
+                        </div>
                     </div>
 
                     <!-- Footer -->
