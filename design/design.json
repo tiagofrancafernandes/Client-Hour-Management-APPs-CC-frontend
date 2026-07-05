@@ -1,7 +1,7 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "version": "1.0.0",
-    "name": "Hours Ledger System - UI Design Specification",
+    "name": "Hour Ledger System - UI Design Specification",
     "description": "Design system specification extracted from desktop and mobile mockups",
 
     "colors": {

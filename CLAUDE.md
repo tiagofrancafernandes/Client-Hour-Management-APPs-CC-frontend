@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Hours Ledger System -- Frontend**
+**Hour Ledger System -- Frontend**
 
 Vue 3 SPA for client hour tracking with a ledger-based model.
 

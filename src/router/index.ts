@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
 
-const APP_TITLE = 'Hours Ledger';
+const APP_TITLE = 'Hour Ledger';
 
 declare module 'vue-router' {
     interface RouteMeta {

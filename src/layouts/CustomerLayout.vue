@@ -60,7 +60,7 @@ onUnmounted(() => {
                             <div class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center shadow-sm">
                                 <Icon icon="heroicons:clock" class="w-4 h-4 text-white" />
                             </div>
-                            <span class="text-sm font-bold text-gray-900 tracking-tight">Hours Ledger</span>
+                            <span class="text-sm font-bold text-gray-900 tracking-tight">Hour Ledger</span>
                         </RouterLink>
 
                         <!-- Nav Links -->

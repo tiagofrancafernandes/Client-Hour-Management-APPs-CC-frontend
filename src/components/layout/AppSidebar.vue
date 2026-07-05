@@ -202,7 +202,7 @@ watch(() => route.path, syncExpandedGroups, { immediate: true });
                 </div>
 
                 <span v-if="!collapsed" class="text-sm font-bold text-gray-200 dark:text-white truncate tracking-tight">
-                    Hours Ledger
+                    Hour Ledger
                 </span>
             </RouterLink>
         </div>

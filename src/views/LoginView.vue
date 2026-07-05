@@ -76,7 +76,7 @@ onMounted(() => {
                     >
                         <Icon icon="heroicons:clock" class="w-6 h-6 text-white" />
                     </div>
-                    <h1 class="text-xl font-bold text-gray-900">Hours Ledger</h1>
+                    <h1 class="text-xl font-bold text-gray-900">Hour Ledger</h1>
                     <p class="mt-1 text-sm text-gray-500">Sign in to your account</p>
                 </div>
 
