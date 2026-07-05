@@ -50,7 +50,7 @@ const filters = ref<FiltersType>({
     dateFrom: '',
     dateTo: '',
     purchaseStatus: '',
-    paymentStatus: '',
+    paymentStatus: 'pending',
     paymentMethod: '',
     walletId: null,
     clientId: null,
@@ -201,6 +201,7 @@ const activeFiltersCount = computed(() => {
 
 const modalOpen = ref(false);
 const selectedPurchase = ref<CreditPurchase | null>(null);
+const showPaymentInstructions = ref(false);
 
 const modalPayment = computed<CreditPurchasePayment | null>(() => {
     return selectedPurchase.value?.payments?.[0] ?? null;
@@ -1008,6 +1009,16 @@ function updateUrlFromFilters(): void {
                                         </span>
                                     </div>
 
+                                    <!-- View instructions button -->
+                                    <button
+                                        v-if="modalPayment.payment_method && modalPayment.payment_status === 'pending'"
+                                        @click="showPaymentInstructions = true"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition border border-blue-200"
+                                    >
+                                        <Icon icon="mdi:file-document-outline" class="w-3.5 h-3.5" />
+                                        Ver Instruções
+                                    </button>
+
                                     <!-- Payment status badge -->
                                     <span
                                         v-if="isPaymentExpired(modalPayment)"
@@ -1287,6 +1298,56 @@ function updateUrlFromFilters(): void {
                         <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
                             <CButton preset="outlined-black" @click="closeModal">Close</CButton>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Instructions Modal -->
+            <div v-if="showPaymentInstructions && modalPayment?.payment_method" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click="showPaymentInstructions = false">
+                <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all" @click.stop>
+                    <!-- Header -->
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-bold text-white">Detalhes do Pagamento</h2>
+                            <p class="text-sm text-blue-100">{{ modalPayment.payment_method.label }}</p>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="rounded-full p-1 hover:bg-blue-500 transition"
+                            @click="showPaymentInstructions = false"
+                        >
+                            <Icon icon="mdi:close" class="w-6 h-6 text-white" />
+                        </button>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="p-6 space-y-4">
+                        <div class="rounded-lg bg-gray-50 p-4">
+                            <p class="text-sm text-gray-700">
+                                <strong>Método:</strong> {{ modalPayment.payment_method.label }}
+                            </p>
+                            <p class="text-sm text-gray-700 mt-2">
+                                <strong>Status:</strong>
+                                <span :class="['ml-2', getPaymentStatusColor(modalPayment.payment_status)]">
+                                    {{ modalPayment.payment_status }}
+                                </span>
+                            </p>
+                            <p v-if="modalPayment.expires_at" class="text-sm text-gray-700 mt-2">
+                                <strong>Vence:</strong> {{ formatExpiresAt(modalPayment.expires_at) }}
+                            </p>
+                        </div>
+
+                        <p class="text-xs text-gray-500 text-center">
+                            Para instruções completas de pagamento, entre em contato com o suporte.
+                        </p>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="border-t border-gray-200 px-6 py-3 flex justify-end">
+                        <CButton preset="outlined-black" @click="showPaymentInstructions = false">
+                            Fechar
+                        </CButton>
                     </div>
                 </div>
             </div>
