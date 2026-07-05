@@ -32,7 +32,6 @@ export function getApiBaseUrl(defaultValue: string | null | undefined = null): U
             ?.replaceAll(/[\/]{0,}$/g, '')
             ?.trim() || null;
 
-    console.log('_apiUrl', _apiUrl, 'API_URL', API_URL, 'import .meta .env .VITE_API_URL ', import.meta.env.VITE_API_URL );
     _apiUrl = ifStringOrEmpty(_apiUrl)?.trim() || defaultValue || `${_protocol}//${API_DOMAIN}/api`;
 
     /** @ts-ignore */
@@ -53,7 +52,7 @@ export function getApiUrl(path: string | null | undefined = ''): URLType {
             ?.replaceAll(/^[\/]{0,}/g, '')
             ?.trim() || '/';
     let apiBaseUrl: URLType = getApiBaseUrl(null);
-    console.log('apiBaseUrl', apiBaseUrl, 'getApiBaseUrl', getApiBaseUrl());
+
     apiBaseUrl.pathname = makeUrlPath(
         [makeUrlPath(apiBaseUrl.pathname), makeUrlPath(pathname || '')].filter(Boolean).join('/').replaceAll('//', '/')
     );

@@ -221,6 +221,24 @@ onMounted(() => {
                         :disabled="isLoading"
                     />
 
+                    <CPasswodInput
+                        v-model="password"
+                        :disabled="isLoading"
+                        name="password"
+                        label="New Password (optional)"
+                        type="password"
+                        placeholder="Leave blank to keep current password"
+                    />
+
+                    <CPasswodInput
+                        v-if="password"
+                        :disabled="isLoading || !password"
+                        v-model="passwordConfirmation"
+                        name="password_confirmation"
+                        label="Confirm New Password"
+                        type="password"
+                    />
+
                     <div class="flex gap-3 pt-4">
                         <CButton preset="outlined-black" class="flex-1" :disabled="isLoading" @click="handleGoBack">
                             Back

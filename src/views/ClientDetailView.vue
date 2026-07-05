@@ -897,11 +897,20 @@ async function handleDeleteUser(userId: number) {
 
                     <CInput v-model="userForm.email" label="Email" type="email" required />
 
-                    <CInput v-model="userForm.password" label="Password" type="password" required />
+                    <CPasswodInput
+                        v-model="userForm.password"
+                        name="password"
+                        label="New Password"
+                        placeholder="New Password"
+                        type="password"
+                        required
+                    />
 
-                    <CInput
+                    <CPasswodInput
                         v-model="userForm.password_confirmation"
-                        label="Confirm Password"
+                        name="password_confirmation"
+                        label="Confirm New Password"
+                        placeholder="Confirm New Password"
                         type="password"
                         required
                     />
@@ -940,16 +949,19 @@ async function handleDeleteUser(userId: number) {
                         </p>
                     </div>
 
-                    <CInput
+                    <CPasswodInput
                         v-model="editingUser.password"
+                        name="password"
                         label="New Password (optional)"
                         type="password"
                         placeholder="Leave blank to keep current password"
                     />
 
-                    <CInput
+                    <CPasswodInput
                         v-if="editingUser.password"
+                        :disabled="!editingUser.password"
                         v-model="editingUser.password_confirmation"
+                        name="password_confirmation"
                         label="Confirm New Password"
                         type="password"
                     />

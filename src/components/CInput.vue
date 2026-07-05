@@ -44,6 +44,9 @@ const props = defineProps({
         type: String,
         default: 'default',
     },
+    placeholder: {
+        type: String,
+    },
 });
 
 const classes = computed(() => {
@@ -54,8 +57,41 @@ const classes = computed(() => {
     return _classes;
 });
 
+const prepareLabel = (value: any) => {
+    if (!value) {
+        return '';
+    }
+
+    value = typeof value === 'string' ? value?.trim() : '';
+
+    switch (value) {
+        case 'email':
+        case 'Email':
+            return 'E-mail';
+
+        default:
+        return value;
+    }
+}
+
 const label = computed(() => {
-    return props?.label || props?.name;
+    if (props?.label && typeof props?.label === 'string' && props?.label.trim()) {
+        return prepareLabel(props?.label?.trim());
+    }
+
+    if (props?.placeholder && typeof props?.placeholder === 'string' && props?.placeholder.trim()) {
+        return prepareLabel(props?.placeholder?.trim());
+    }
+
+    if (props?.name && typeof props?.name === 'string' && props?.name.trim()) {
+        return prepareLabel(props?.name?.trim());
+    }
+
+    return prepareLabel('');
+});
+
+const placeholder = computed(() => {
+    return String(props?.placeholder || label.value || '')?.trim();
 });
 
 const labelClasses = computed(() => {
@@ -108,6 +144,7 @@ const modelValue = defineModel<string | number | undefined>();
                 ...attrs,
                 class: classes,
                 type: type,
+                placeholder: placeholder,
                 required: props?.required,
                 disabled: props?.disabled,
             }"

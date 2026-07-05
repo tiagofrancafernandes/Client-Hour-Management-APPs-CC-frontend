@@ -321,7 +321,7 @@ onMounted(async () => {
 
                             <CButton
                                 v-if="canBuyCredits && wallet.credit_purchase_allowed"
-                                preset="outlined-red"
+                                preset="green"
                                 class="flex-1 justify-center text-xs"
                                 icon="mdi:credit-card-plus-outline"
                                 @click="goBuyCredits(wallet)"
