@@ -5,6 +5,8 @@ import { decimalToTimeFormat } from '@/utils/timeFormatters';
 import type { WalletWithBalance } from '@/types';
 import { useCreditPurchases } from '@/composables/useCreditPurchases';
 import { useToast } from '@/composables/useToast';
+import { usePaymentMethodConfigs } from '@/composables/usePaymentMethodConfigs';
+import CPaymentInstructionsModal from '@/components/CPaymentInstructionsModal.vue';
 
 export interface CCreditPurchaseModalProps {
     show: boolean;
@@ -20,6 +22,9 @@ const emit = defineEmits<{
 
 const { createPurchase, createPayment, uploadReceipt, loading } = useCreditPurchases();
 const toast = useToast();
+const { activeMethods, fetchMethods } = usePaymentMethodConfigs();
+const showInstructionsModal = ref(false);
+const selectedMethodForInstructions = ref<string | null>(null);
 
 // Step management
 const currentStep = ref<1 | 2 | 3>(1);
@@ -29,7 +34,7 @@ const selectedPackage = ref<string | null>(null);
 const customHours = ref<number | null>(null);
 
 // Step 3: Payment method
-const selectedPaymentMethod = ref<'pix_offline' | 'bank_transfer' | null>(null);
+const selectedPaymentMethod = ref<string | null>(null);
 const uploadReceiptNow = ref(false);
 const receiptFile = ref<File | null>(null);
 
@@ -126,8 +131,10 @@ const expirationLabel = computed(() => {
 // Watchers
 watch(
     () => props.show,
-    (newShow) => {
-        if (!newShow) {
+    async (newShow) => {
+        if (newShow) {
+            await fetchMethods();
+        } else {
             resetForm();
         }
     }
@@ -156,6 +163,11 @@ watch(
 );
 
 // Methods
+function showMethodInstructions(methodKey: string): void {
+    selectedMethodForInstructions.value = methodKey;
+    showInstructionsModal.value = true;
+}
+
 function resetForm(): void {
     currentStep.value = 1;
     selectedPackage.value = null;
@@ -204,7 +216,10 @@ async function handleSubmit(): Promise<void> {
         createdPurchaseId.value = purchase.id;
 
         // Create payment (method is optional)
-        const payment = await createPayment(purchase.id, selectedPaymentMethod.value);
+        const payment = await createPayment(
+            purchase.id,
+            selectedPaymentMethod.value as 'pix_offline' | 'bank_transfer' | null
+        );
 
         if (!payment) {
             toast.error('Failed to create payment');
@@ -506,63 +521,54 @@ function formatCurrency(value: number): string {
                                 </div>
                             </button>
 
-                            <!-- Bank Transfer -->
-                            <button
-                                @click="selectedPaymentMethod = 'bank_transfer'"
-                                :class="[
-                                    'w-full p-4 rounded-lg border-2 transition-all text-left',
-                                    {
-                                        'border-green-600 bg-green-50': selectedPaymentMethod === 'bank_transfer',
-                                        'border-gray-200 bg-white hover:border-gray-300':
-                                            selectedPaymentMethod !== 'bank_transfer',
-                                    },
-                                ]"
-                            >
-                                <div class="flex items-start">
-                                    <div class="flex-1">
-                                        <div class="font-semibold text-gray-900">Bank Transfer</div>
-                                        <p class="text-sm text-gray-600 mt-1">
-                                            Transfer via bank. Awaiting admin approval.
-                                        </p>
-                                        <p class="text-xs text-amber-600 mt-1">Expires in 7 days</p>
+                            <!-- Dynamic Payment Methods -->
+                            <div v-for="method in activeMethods" :key="method.key" class="space-y-2">
+                                <button
+                                    @click="selectedPaymentMethod = method.key as any"
+                                    :class="[
+                                        'w-full p-4 rounded-lg border-2 transition-all text-left',
+                                        {
+                                            'border-green-600 bg-green-50': selectedPaymentMethod === method.key,
+                                            'border-gray-200 bg-white hover:border-gray-300':
+                                                selectedPaymentMethod !== method.key,
+                                        },
+                                    ]"
+                                >
+                                    <div class="flex items-start">
+                                        <div class="flex-1">
+                                            <div class="font-semibold text-gray-900">{{ method.label }}</div>
+                                            <p class="text-sm text-gray-600 mt-1">
+                                                {{
+                                                    method.is_offline
+                                                        ? 'Envie o comprovante. Aprovação do admin necessária.'
+                                                        : 'Pagamento instantâneo'
+                                                }}
+                                            </p>
+                                            <p v-if="method.expires_time" class="text-xs text-amber-600 mt-1">
+                                                Vence em {{ method.expires_time }}
+                                            </p>
+                                        </div>
+
+                                        <Icon
+                                            v-if="selectedPaymentMethod === method.key"
+                                            icon="mdi:check-circle"
+                                            class="w-5 h-5 text-green-600 shrink-0 ml-2"
+                                        />
                                     </div>
+                                </button>
 
-                                    <Icon
-                                        v-if="selectedPaymentMethod === 'bank_transfer'"
-                                        icon="mdi:check-circle"
-                                        class="w-5 h-5 text-green-600 shrink-0 ml-2"
-                                    />
-                                </div>
-                            </button>
-
-                            <!-- PIX Offline -->
-                            <button
-                                @click="selectedPaymentMethod = 'pix_offline'"
-                                :class="[
-                                    'w-full p-4 rounded-lg border-2 transition-all text-left',
-                                    {
-                                        'border-green-600 bg-green-50': selectedPaymentMethod === 'pix_offline',
-                                        'border-gray-200 bg-white hover:border-gray-300':
-                                            selectedPaymentMethod !== 'pix_offline',
-                                    },
-                                ]"
-                            >
-                                <div class="flex items-start">
-                                    <div class="flex-1">
-                                        <div class="font-semibold text-gray-900">PIX Offline</div>
-                                        <p class="text-sm text-gray-600 mt-1">
-                                            Send PIX and attach receipt. Admin approval required.
-                                        </p>
-                                        <p class="text-xs text-amber-600 mt-1">Expires in 48 hours</p>
-                                    </div>
-
-                                    <Icon
-                                        v-if="selectedPaymentMethod === 'pix_offline'"
-                                        icon="mdi:check-circle"
-                                        class="w-5 h-5 text-green-600 shrink-0 ml-2"
-                                    />
-                                </div>
-                            </button>
+                                <!-- Show Instructions Button -->
+                                <button
+                                    v-if="selectedPaymentMethod === method.key && method.instructions"
+                                    @click="showMethodInstructions(method.key)"
+                                    class="w-full px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200"
+                                >
+                                    <span class="flex items-center justify-center gap-2">
+                                        <Icon icon="mdi:information-outline" class="w-4 h-4" />
+                                        Ver Instruções
+                                    </span>
+                                </button>
+                            </div>
 
                             <!-- Upload Receipt Now checkbox -->
                             <div v-if="selectedPaymentMethod !== null" class="border border-gray-200 rounded-lg p-4">
@@ -655,5 +661,17 @@ function formatCurrency(value: number): string {
                 </div>
             </div>
         </div>
+
+        <CPaymentInstructionsModal
+            :show="showInstructionsModal"
+            :method-label="activeMethods.find((m) => m.key === selectedMethodForInstructions)?.label || ''"
+            :instructions="
+                activeMethods.find((m) => m.key === selectedMethodForInstructions)?.instructions || null
+            "
+            :total-amount="totalPrice"
+            :currency-code="wallet?.currency_code || 'BRL'"
+            :expires-at="'Pending implementation'"
+            @close="showInstructionsModal = false"
+        />
     </Teleport>
 </template>
