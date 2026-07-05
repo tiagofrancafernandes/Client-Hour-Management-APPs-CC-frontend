@@ -55,11 +55,14 @@ watch(statusFilter, () => {
 // ─── Inline Edit ──────────────────────────────────────────────────────────────
 
 const editingId = ref<number | null>(null);
+const editingInstructionsId = ref<number | null>(null);
 
 const editForm = ref({
     label: '',
     display_order: 0,
 });
+
+const editingInstructionsForm = ref<Array<{ key: string; value: string }>>([]);
 
 function startEditing(config: { id: number; label: string; display_order: number }): void {
     editingId.value = config.id;
@@ -72,6 +75,43 @@ function startEditing(config: { id: number; label: string; display_order: number
 function cancelEditing(): void {
     editingId.value = null;
     editForm.value = { label: '', display_order: 0 };
+}
+
+function openInstructionsEditor(config: any): void {
+    editingInstructionsId.value = config.id;
+
+    let instructions: Array<{ key: string; value: string }> = [];
+
+    if (config.instructions) {
+        try {
+            if (typeof config.instructions === 'string') {
+                instructions = JSON.parse(config.instructions);
+            } else {
+                instructions = config.instructions;
+            }
+        } catch {
+            instructions = [];
+        }
+    }
+
+    editingInstructionsForm.value = instructions.length > 0 ? instructions : [{ key: '', value: '' }];
+}
+
+function closeInstructionsEditor(): void {
+    editingInstructionsId.value = null;
+    editingInstructionsForm.value = [];
+}
+
+async function saveInstructions(instructions: Array<{ key: string; value: string }>): Promise<void> {
+    if (editingInstructionsId.value === null) return;
+
+    const success = await updateConfig(editingInstructionsId.value, {
+        instructions: instructions.length > 0 ? instructions : null,
+    } as any);
+
+    if (success) {
+        closeInstructionsEditor();
+    }
 }
 
 async function saveEditing(id: number): Promise<void> {
@@ -270,15 +310,25 @@ onMounted(async () => {
                                 </CButton>
                             </div>
 
-                            <CButton
-                                v-else
-                                preset="outlined-black"
-                                class="text-xs"
-                                icon="mdi:pencil-outline"
-                                @click="startEditing(config)"
-                            >
-                                Edit
-                            </CButton>
+                            <div v-else class="inline-flex items-center gap-2">
+                                <CButton
+                                    preset="outlined-black"
+                                    class="text-xs"
+                                    icon="mdi:file-document-outline"
+                                    @click="openInstructionsEditor(config)"
+                                >
+                                    Instructions
+                                </CButton>
+
+                                <CButton
+                                    preset="outlined-black"
+                                    class="text-xs"
+                                    icon="mdi:pencil-outline"
+                                    @click="startEditing(config)"
+                                >
+                                    Edit
+                                </CButton>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -312,5 +362,14 @@ onMounted(async () => {
                 </div>
             </div>
         </div>
+
+        <!-- Instructions Edit Modal -->
+        <CPaymentInstructionsEditModal
+            :is-open="editingInstructionsId !== null"
+            :label="configs.find((c) => c.id === editingInstructionsId)?.label || ''"
+            :instructions="editingInstructionsForm"
+            @close="closeInstructionsEditor"
+            @save="saveInstructions"
+        />
     </div>
 </template>
