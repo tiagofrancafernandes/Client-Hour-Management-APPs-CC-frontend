@@ -135,7 +135,7 @@ This project uses TailwindCSS v4 with Vite plugin:
 ## Environment Variables
 
 ```env
-VITE_API_URL=http://api.local.tiagoapps.com.br
+VITE_API_URL='https://api.hourledger.local.com/api'
 ```
 
 Access in code: `import.meta.env.VITE_API_URL`

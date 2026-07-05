@@ -44,9 +44,9 @@ export default defineConfig({
         // host: '0.0.0.0',
         host: true,
         // allowedHosts: [
-        //     'app.tiagoapps.com.br',
-        //     'app.local.tiagoapps.com.br',
-        //     'app.hml.tiagoapps.com.br',
+        //     'app.hourledger.local.com',
+        //     'app.hourledger.local.com',
+        //     'app.hml.hourledger.local.com',
         //     // ... other hosts
         // ],
         allowedHosts: true, // Any host

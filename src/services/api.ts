@@ -11,9 +11,9 @@ import {
 import type { Response } from 'undici-types';
 // import { fetch } from 'undici';
 
-const DEFAUL_API_DOMAIN = 'api.local.tiagoapps.com.br';
+const DEFAUL_API_DOMAIN = 'api.hourledger.local.com';
 const API_DOMAIN = import.meta.env.VITE_API_DOMAIN || DEFAUL_API_DOMAIN;
-const API_URL = import.meta.env.VITE_API_URL || 'http://api.local.tiagoapps.com.br/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.hourledger.local.com/api';
 
 interface RequestOptions {
     method?: string;
@@ -31,7 +31,9 @@ export function getApiBaseUrl(defaultValue: string | null | undefined = null): U
             ?.trim()
             ?.replaceAll(/[\/]{0,}$/g, '')
             ?.trim() || null;
-    _apiUrl = ifStringOrEmpty(_apiUrl)?.trim() || defaultValue || `${_protocol}//${API_DOMAIN}`;
+
+    console.log('_apiUrl', _apiUrl, 'API_URL', API_URL, 'import .meta .env .VITE_API_URL ', import.meta.env.VITE_API_URL );
+    _apiUrl = ifStringOrEmpty(_apiUrl)?.trim() || defaultValue || `${_protocol}//${API_DOMAIN}/api`;
 
     /** @ts-ignore */
     let apiUrl: URLType = ifValidUrl(_apiUrl, true) as URLType;
@@ -51,6 +53,7 @@ export function getApiUrl(path: string | null | undefined = ''): URLType {
             ?.replaceAll(/^[\/]{0,}/g, '')
             ?.trim() || '/';
     let apiBaseUrl: URLType = getApiBaseUrl(null);
+    console.log('apiBaseUrl', apiBaseUrl, 'getApiBaseUrl', getApiBaseUrl());
     apiBaseUrl.pathname = makeUrlPath(
         [makeUrlPath(apiBaseUrl.pathname), makeUrlPath(pathname || '')].filter(Boolean).join('/').replaceAll('//', '/')
     );
