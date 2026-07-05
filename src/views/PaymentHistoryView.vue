@@ -440,15 +440,15 @@ function formatExpiresAt(expiresAt: string): string {
     const days = Math.floor(hours / 24);
 
     if (days > 0) {
-        return `${days}d ${hours % 24}h left`;
+        return `${days}d ${hours % 24}h`;
     }
 
     if (hours > 0) {
         const minutes = Math.floor((diff % 3_600_000) / 60_000);
-        return `${hours}h ${minutes}m left`;
+        return `${hours}h ${minutes}m`;
     }
 
-    return `${Math.floor(diff / 60_000)}m left`;
+    return `${Math.floor(diff / 60_000)}m`;
 }
 
 // ─── Lifecycle ───────────────────────────────────────────────────────────────
@@ -1009,16 +1009,6 @@ function updateUrlFromFilters(): void {
                                         </span>
                                     </div>
 
-                                    <!-- View instructions button -->
-                                    <button
-                                        v-if="modalPayment.payment_method && modalPayment.payment_status === 'pending'"
-                                        @click="showPaymentInstructions = true"
-                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition border border-blue-200"
-                                    >
-                                        <Icon icon="mdi:file-document-outline" class="w-3.5 h-3.5" />
-                                        Ver Instruções
-                                    </button>
-
                                     <!-- Payment status badge -->
                                     <span
                                         v-if="isPaymentExpired(modalPayment)"
@@ -1049,6 +1039,16 @@ function updateUrlFromFilters(): void {
                                         <Icon icon="mdi:clock-outline" class="w-3.5 h-3.5" />
                                         {{ formatExpiresAt(modalPayment.expires_at) }}
                                     </span>
+
+                                    <!-- View instructions button -->
+                                    <button
+                                        v-if="modalPayment.payment_method && modalPayment.payment_status === 'pending'"
+                                        @click="showPaymentInstructions = true"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition border border-blue-200"
+                                    >
+                                        <Icon icon="mdi:file-document-outline" class="w-3.5 h-3.5" />
+                                        View Instructions
+                                    </button>
                                 </div>
 
                                 <!-- Admin notes -->
@@ -1102,7 +1102,7 @@ function updateUrlFromFilters(): void {
                                                 :disabled="!pendingMethod || submittingMethod"
                                                 @click="handleSetMethod"
                                             >
-                                                Confirm
+                                                Submit
                                             </CButton>
                                             <CButton
                                                 preset="outlined-black"
@@ -1306,9 +1306,9 @@ function updateUrlFromFilters(): void {
             <div v-if="showPaymentInstructions && modalPayment?.payment_method" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click="showPaymentInstructions = false">
                 <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all" @click.stop>
                     <!-- Header -->
-                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between">
+                    <div class="bg-gradient-to-r rounded-t-lg from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between">
                         <div>
-                            <h2 class="text-lg font-bold text-white">Detalhes do Pagamento</h2>
+                            <h2 class="text-lg font-bold text-white">Payment Details</h2>
                             <p class="text-sm text-blue-100">{{ modalPayment.payment_method.label }}</p>
                         </div>
 
@@ -1325,7 +1325,7 @@ function updateUrlFromFilters(): void {
                     <div class="p-6 space-y-4">
                         <div class="rounded-lg bg-gray-50 p-4">
                             <p class="text-sm text-gray-700">
-                                <strong>Método:</strong> {{ modalPayment.payment_method.label }}
+                                <strong>Method:</strong> {{ modalPayment.payment_method.label }}
                             </p>
                             <p class="text-sm text-gray-700 mt-2">
                                 <strong>Status:</strong>
@@ -1334,19 +1334,19 @@ function updateUrlFromFilters(): void {
                                 </span>
                             </p>
                             <p v-if="modalPayment.expires_at" class="text-sm text-gray-700 mt-2">
-                                <strong>Vence:</strong> {{ formatExpiresAt(modalPayment.expires_at) }}
+                                <strong>Expires in:</strong> {{ formatExpiresAt(modalPayment.expires_at) }}
                             </p>
                         </div>
 
                         <p class="text-xs text-gray-500 text-center">
-                            Para instruções completas de pagamento, entre em contato com o suporte.
+                            For complete payment instructions, please contact support.
                         </p>
                     </div>
 
                     <!-- Footer -->
                     <div class="border-t border-gray-200 px-6 py-3 flex justify-end">
                         <CButton preset="outlined-black" @click="showPaymentInstructions = false">
-                            Fechar
+                            Close
                         </CButton>
                     </div>
                 </div>
