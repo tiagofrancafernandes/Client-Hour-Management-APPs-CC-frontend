@@ -2,8 +2,10 @@
 import { onMounted, ref, watch } from 'vue';
 import { Icon } from '@iconify/vue';
 import { usePaymentMethodAdmin } from '@/composables/usePaymentMethodAdmin';
+import { useConfirm } from '@/composables/useConfirm';
 
 const { configs, loading, updating, pagination, fetchConfigs, updateConfig, toggleConfig } = usePaymentMethodAdmin();
+const { state: confirmState, confirm, handleConfirm, handleCancel } = useConfirm();
 
 // ─── Filters ──────────────────────────────────────────────────────────────────
 
@@ -131,8 +133,25 @@ async function saveEditing(id: number): Promise<void> {
     }
 }
 
-async function handleToggle(id: number): Promise<void> {
-    await toggleConfig(id);
+const togglePendingId = ref<number | null>(null);
+
+async function requestToggle(id: number, currentStatus: boolean): Promise<void> {
+    togglePendingId.value = id;
+
+    const action = currentStatus ? 'desativar' : 'ativar';
+    const confirmed = await confirm({
+        title: `${action.charAt(0).toUpperCase() + action.slice(1)} Método de Pagamento`,
+        message: `Tem certeza que deseja ${action} este método de pagamento?`,
+        confirmText: 'Confirmar',
+        cancelText: 'Cancelar',
+        variant: currentStatus ? 'warning' : 'success',
+    });
+
+    if (confirmed) {
+        await toggleConfig(id);
+    }
+
+    togglePendingId.value = null;
 }
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
@@ -271,7 +290,7 @@ onMounted(async () => {
                         <td class="px-5 py-3.5">
                             <button
                                 type="button"
-                                :disabled="updating"
+                                :disabled="updating || togglePendingId === config.id"
                                 :class="[
                                     'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50',
                                     {
@@ -279,7 +298,7 @@ onMounted(async () => {
                                         'bg-gray-100 text-gray-600 hover:bg-gray-200': !config.is_active,
                                     },
                                 ]"
-                                @click="handleToggle(config.id)"
+                                @click="requestToggle(config.id, config.is_active)"
                             >
                                 <Icon :icon="config.is_active ? 'mdi:check-circle' : 'mdi:close-circle-outline'" />
                                 {{ config.is_active ? 'Active' : 'Inactive' }}
@@ -370,6 +389,18 @@ onMounted(async () => {
             :instructions="editingInstructionsForm"
             @close="closeInstructionsEditor"
             @save="saveInstructions"
+        />
+
+        <!-- Confirm Modal for Toggle -->
+        <ConfirmModal
+            v-model:isOpen="confirmState.isOpen"
+            :title="confirmState.title"
+            :message="confirmState.message"
+            :confirm-text="confirmState.confirmText"
+            :cancel-text="confirmState.cancelText"
+            :variant="confirmState.variant"
+            @confirm="handleConfirm"
+            @cancel="handleCancel"
         />
     </div>
 </template>
