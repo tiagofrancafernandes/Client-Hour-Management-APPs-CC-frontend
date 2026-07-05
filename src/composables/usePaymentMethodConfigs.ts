@@ -28,7 +28,7 @@ export function usePaymentMethodConfigs() {
 
         try {
             const response = await api.get<{ methods: PaymentMethod[] }>('/payment-methods');
-            methods.value = response.data.methods;
+            methods.value = response.methods;
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Failed to fetch payment methods';
         } finally {
