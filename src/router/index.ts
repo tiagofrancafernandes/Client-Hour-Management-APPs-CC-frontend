@@ -190,6 +190,16 @@ const router = createRouter({
             },
         },
         {
+            path: '/admin/payment-methods',
+            name: 'admin-payment-methods',
+            component: () => import('@/views/admin/PaymentMethodsView.vue'),
+            meta: {
+                title: 'Payment Methods',
+                requiresAuth: true,
+                permissions: ['payment_method.view_any'],
+            },
+        },
+        {
             path: '/invoices',
             name: 'invoices',
             component: () => import('@/views/InvoicesView.vue'),

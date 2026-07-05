@@ -132,6 +132,11 @@ const navItems = computed((): NavItem[] => {
                     to: '/admin/users',
                     icon: 'heroicons:users',
                 },
+                {
+                    label: 'Payment Methods',
+                    to: '/admin/payment-methods',
+                    icon: 'heroicons:credit-card',
+                },
             ],
         },
     ].filter((item) => item.show);
