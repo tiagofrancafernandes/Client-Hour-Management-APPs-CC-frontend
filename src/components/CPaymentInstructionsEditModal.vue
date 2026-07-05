@@ -24,7 +24,7 @@ const emit = defineEmits<Emits>();
 const localInstructions = ref<InstructionPair[]>([]);
 
 watch(
-    (props) => props.instructions,
+    () => props.instructions,
     (newInstructions) => {
         localInstructions.value = JSON.parse(JSON.stringify(newInstructions || []));
         if (localInstructions.value.length === 0) {
