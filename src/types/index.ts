@@ -438,3 +438,28 @@ export type TimezoneConfig = {
     timezone_id: string;
     country: string;
 };
+
+export interface SetupFieldRule {
+    name: string;
+    label: string;
+    type: 'string' | 'integer' | 'number' | 'boolean' | 'select';
+    required: boolean;
+    min?: number;
+    max?: number;
+    options?: Array<{ label: string; value: string | number }>;
+}
+
+export interface PaymentMethodConfig {
+    id: number;
+    payment_method_key: string;
+    label: string;
+    is_active: boolean;
+    instructions?: string | null;
+    setup_fields?: Record<string, any>;
+    setup_field_rules?: SetupFieldRule[];
+    setup_field_defaults?: Record<string, any>;
+    is_setup_complete?: boolean;
+    display_order: number;
+    created_at?: string;
+    updated_at?: string;
+}
