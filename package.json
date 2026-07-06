@@ -13,12 +13,17 @@
         "eslint:check": "eslint --config eslint.config.js",
         "eslint:check:no-warn": "eslint --config eslint.config.js --no-warn-ignored",
         "eslint:check:exit-on-fail": "eslint --exit-on-fatal-error",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui",
+        "test:e2e:debug": "playwright test --debug",
+        "test:e2e:report": "playwright show-report",
         "try:open-on-editor": "curl \"http://host.docker.internal:3001/__open-in-editor?file=/app/src/main.ts:1:1\"",
         "try:open-on-editor2": "curl \"http://172.17.0.1:3001/__open-in-editor?file=/app/src/main.ts:1:1\"",
         "dev:open-in-editor-server": "node open-in-editor-server.js",
         "open-in-editor-server": "node open-in-editor-server.js"
     },
     "devDependencies": {
+        "@playwright/test": "^1.48.2",
         "@eslint/js": "^10.0.1",
         "@iconify-json/heroicons": "^1.2.3",
         "@iconify-json/material-symbols": "^1.2.53",

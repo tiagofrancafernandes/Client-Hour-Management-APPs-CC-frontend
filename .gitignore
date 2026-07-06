@@ -63,3 +63,9 @@ _ide_helper*
 /*session-id*
 /*session_id*
 .vercel
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
