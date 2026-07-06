@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { Icon } from '@iconify/vue';
+import CPaymentMethodSetupFields from '@/components/CPaymentMethodSetupFields.vue';
+import CPaymentMethodPixOfflineDisplay from '@/components/CPaymentMethodPixOfflineDisplay.vue';
+import type { PaymentMethodConfig } from '@/types';
 
 interface InstructionPair {
     key: string;
@@ -11,6 +14,7 @@ interface Props {
     isOpen: boolean;
     label: string;
     instructions: InstructionPair[];
+    config?: PaymentMethodConfig;
 }
 
 interface Emits {
@@ -18,10 +22,13 @@ interface Emits {
     (e: 'save', instructions: InstructionPair[]): void;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+    config: undefined,
+});
 const emit = defineEmits<Emits>();
 
 const localInstructions = ref<InstructionPair[]>([]);
+const showSetupFields = ref(false);
 
 watch(
     () => props.instructions,
@@ -135,6 +142,45 @@ function handleSave(): void {
                             <Icon icon="mdi:plus" class="w-4 h-4" />
                             Add input
                         </button>
+
+                        <!-- Setup Button (if gateway has setupFieldRules) -->
+                        <div
+                            v-if="props.config?.setup_field_rules && props.config.setup_field_rules.length > 0"
+                            class="border-t pt-4 mt-4"
+                        >
+                            <button
+                                type="button"
+                                @click="showSetupFields = !showSetupFields"
+                                :class="[
+                                    'px-4 py-2 rounded-lg text-white font-medium transition inline-flex items-center gap-2',
+                                    {
+                                        'bg-green-600 hover:bg-green-700': showSetupFields,
+                                        'bg-blue-600 hover:bg-blue-700': !showSetupFields,
+                                    },
+                                ]"
+                            >
+                                <Icon
+                                    :icon="showSetupFields ? 'mdi:check' : 'mdi:cog'"
+                                    class="w-4 h-4"
+                                />
+                                {{ showSetupFields ? 'Setup Configurado' : 'Setup' }}
+                            </button>
+                        </div>
+
+                        <!-- Setup Fields Form -->
+                        <div
+                            v-if="showSetupFields && props.config?.setup_field_rules"
+                            class="border-t pt-4 mt-4"
+                        >
+                            <CPaymentMethodSetupFields :config="props.config" />
+                        </div>
+
+                        <!-- PIX Offline Display (if pix_offline and configured) -->
+                        <CPaymentMethodPixOfflineDisplay
+                            v-if="props.config?.payment_method_key === 'pix_offline'"
+                            :pix-key="props.config.setup_fields?.pix_key"
+                            :is-configured="props.config.is_setup_complete"
+                        />
                     </div>
 
                     <!-- Preview -->
