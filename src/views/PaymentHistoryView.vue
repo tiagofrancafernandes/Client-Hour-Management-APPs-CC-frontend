@@ -517,6 +517,10 @@ function copyInstructionToClipboard(text: string): void {
     navigator.clipboard.writeText(text);
 }
 
+async function handleRefreshList(): Promise<void> {
+    await fetchPurchasesXd();
+}
+
 // ─── Lifecycle ───────────────────────────────────────────────────────────────
 
 onMounted(async () => {
@@ -570,25 +574,37 @@ function updateUrlFromFilters(): void {
                 <p class="text-sm text-gray-500 mt-1">Track credit purchases and payment status</p>
             </div>
 
-            <button
-                @click="showFilters = !showFilters"
-                :class="[
-                    'inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors',
-                    {
-                        'bg-red-50 border-red-200 text-red-700': activeFiltersCount > 0,
-                        'bg-white border-gray-300 text-gray-700 hover:bg-gray-50': activeFiltersCount === 0,
-                    },
-                ]"
-            >
-                <Icon icon="mdi:filter-outline" class="w-4 h-4" />
-                Filters
-                <span
-                    v-if="activeFiltersCount > 0"
-                    class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-xs font-bold"
+            <div class="flex items-center gap-3">
+                <button
+                    @click="handleRefreshList"
+                    :disabled="loading"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap"
+                    aria-label="Refresh list"
                 >
-                    {{ activeFiltersCount }}
-                </span>
-            </button>
+                    <Icon icon="mdi:refresh" :class="['w-4 h-4', { 'animate-spin': loading }]" />
+                    <span>{{ loading ? 'Refreshing...' : 'Refresh' }}</span>
+                </button>
+
+                <button
+                    @click="showFilters = !showFilters"
+                    :class="[
+                        'inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors',
+                        {
+                            'bg-red-50 border-red-200 text-red-700': activeFiltersCount > 0,
+                            'bg-white border-gray-300 text-gray-700 hover:bg-gray-50': activeFiltersCount === 0,
+                        },
+                    ]"
+                >
+                    <Icon icon="mdi:filter-outline" class="w-4 h-4" />
+                    Filters
+                    <span
+                        v-if="activeFiltersCount > 0"
+                        class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-xs font-bold"
+                    >
+                        {{ activeFiltersCount }}
+                    </span>
+                </button>
+            </div>
         </div>
 
         <!-- Error state -->
