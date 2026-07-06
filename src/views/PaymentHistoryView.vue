@@ -379,13 +379,18 @@ async function handleDeleteReceipt(): Promise<void> {
 // ─── Modal: cancel purchase ──────────────────────────────────────────────────
 
 const cancellingPurchase = ref(false);
+const showCancelConfirmModal = ref(false);
 
-async function handleCancelPurchase(): Promise<void> {
+function openCancelConfirmModal(): void {
     if (!selectedPurchase.value) {
         return;
     }
 
-    if (!confirm('Are you sure you want to cancel this purchase?')) {
+    showCancelConfirmModal.value = true;
+}
+
+async function handleCancelPurchaseConfirm(): Promise<void> {
+    if (!selectedPurchase.value) {
         return;
     }
 
@@ -1103,7 +1108,11 @@ function updateUrlFromFilters(): void {
 
                                     <!-- View instructions button -->
                                     <button
-                                        v-if="!isPaymentExpired(modalPayment) && modalPayment.payment_method && modalPayment.payment_status === 'pending'"
+                                        v-if="
+                                            !isPaymentExpired(modalPayment) &&
+                                            modalPayment.payment_method &&
+                                            modalPayment.payment_status === 'pending'
+                                        "
                                         @click="showPaymentInstructions = true"
                                         class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition border border-blue-200"
                                     >
@@ -1262,8 +1271,7 @@ function updateUrlFromFilters(): void {
 
                                     <button
                                         v-if="
-                                            modalPayment.payment_status === 'pending' &&
-                                            !isPaymentExpired(modalPayment)
+                                            modalPayment.payment_status === 'pending' && !isPaymentExpired(modalPayment)
                                         "
                                         @click="handleDeleteReceipt"
                                         :disabled="deletingReceipt"
@@ -1376,7 +1384,7 @@ function updateUrlFromFilters(): void {
                                     preset="danger"
                                     size="sm"
                                     :disabled="cancellingPurchase"
-                                    @click="handleCancelPurchase"
+                                    @click="openCancelConfirmModal"
                                     class="inline-flex items-center gap-1.5"
                                 >
                                     <Icon icon="mdi:close-circle-outline" class="w-4 h-4" />
@@ -1389,11 +1397,28 @@ function updateUrlFromFilters(): void {
                 </div>
             </div>
 
+            <!-- Cancel Purchase Confirmation Modal -->
+            <ConfirmModal
+                v-model:isOpen="showCancelConfirmModal"
+                title="Cancel Purchase?"
+                message="This action cannot be undone. Are you sure you want to cancel this purchase?"
+                confirmText="Yes, Cancel"
+                cancelText="Keep Purchase"
+                variant="danger"
+                @confirm="handleCancelPurchaseConfirm"
+            />
+
             <!-- Payment Instructions Modal -->
-            <div v-if="showPaymentInstructions && modalPayment?.payment_method" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click="showPaymentInstructions = false">
+            <div
+                v-if="showPaymentInstructions && modalPayment?.payment_method"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+                @click="showPaymentInstructions = false"
+            >
                 <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all" @click.stop>
                     <!-- Header -->
-                    <div class="bg-gradient-to-r rounded-t-lg from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between">
+                    <div
+                        class="bg-gradient-to-r rounded-t-lg from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between"
+                    >
                         <div>
                             <h2 class="text-lg font-bold text-white">Payment Details</h2>
                             <p class="text-sm text-blue-100">{{ modalPayment.payment_method.label }}</p>
@@ -1412,7 +1437,8 @@ function updateUrlFromFilters(): void {
                     <div class="p-6 space-y-4">
                         <div class="rounded-lg bg-gray-50 p-4">
                             <p class="text-sm text-gray-700">
-                                <strong>Method:</strong> {{ modalPayment.payment_method.label }}
+                                <strong>Method:</strong>
+                                {{ modalPayment.payment_method.label }}
                             </p>
                             <p class="text-sm text-gray-700 mt-2">
                                 <strong>Status:</strong>
@@ -1421,15 +1447,26 @@ function updateUrlFromFilters(): void {
                                 </span>
                             </p>
                             <p v-if="modalPayment.expires_at" class="text-sm text-gray-700 mt-2">
-                                <strong>Expires in:</strong> {{ formatExpiresAt(modalPayment.expires_at) }}
+                                <strong>Expires in:</strong>
+                                {{ formatExpiresAt(modalPayment.expires_at) }}
                             </p>
                         </div>
 
                         <!-- Payment Instructions -->
-                        <div v-if="modalPayment.payment_method.instructions && modalPayment.payment_method.instructions.length > 0" class="rounded-lg bg-blue-50 border border-blue-200 p-4">
+                        <div
+                            v-if="
+                                modalPayment.payment_method.instructions &&
+                                modalPayment.payment_method.instructions.length > 0
+                            "
+                            class="rounded-lg bg-blue-50 border border-blue-200 p-4"
+                        >
                             <p class="text-xs font-semibold text-blue-900 mb-3">Payment Instructions:</p>
                             <div class="space-y-2">
-                                <div v-for="(instruction, index) in modalPayment.payment_method.instructions" :key="index" class="text-sm flex items-center justify-between group">
+                                <div
+                                    v-for="(instruction, index) in modalPayment.payment_method.instructions"
+                                    :key="index"
+                                    class="text-sm flex items-center justify-between group"
+                                >
                                     <div>
                                         <span class="font-semibold text-gray-900">{{ instruction.key }}:</span>
                                         <span class="text-gray-700 ml-2">{{ instruction.value }}</span>
@@ -1456,9 +1493,7 @@ function updateUrlFromFilters(): void {
 
                     <!-- Footer -->
                     <div class="border-t border-gray-200 px-6 py-3 flex justify-end">
-                        <CButton preset="outlined-black" @click="showPaymentInstructions = false">
-                            Close
-                        </CButton>
+                        <CButton preset="outlined-black" @click="showPaymentInstructions = false">Close</CButton>
                     </div>
                 </div>
             </div>
