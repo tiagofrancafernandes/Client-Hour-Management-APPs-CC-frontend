@@ -590,6 +590,7 @@ async function handleCreateUser(): Promise<void> {
         showCreateModal.value = false;
         resetCreateForm();
         toast.success('User created successfully');
+        await loadUsers(currentPage.value);
     } catch (e: any) {
         const errors = e?.response?.data?.errors;
 
@@ -603,6 +604,10 @@ async function handleCreateUser(): Promise<void> {
     } finally {
         createLoading.value = false;
     }
+}
+
+async function handleRefreshList(): Promise<void> {
+    await loadUsers(currentPage.value);
 }
 
 const allowedTabs = computed(() => {
@@ -637,6 +642,16 @@ onMounted(async () => {
         <!-- Header -->
         <UIPageHeader title="Users" description="Manage system users, roles, and permissions.">
             <template v-slot:actions>
+                <button
+                    @click="handleRefreshList"
+                    :disabled="loading"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap"
+                    aria-label="Refresh list"
+                >
+                    <Icon icon="mdi:refresh" :class="['w-4 h-4', { 'animate-spin': loading }]" />
+                    <span>{{ loading ? 'Refreshing...' : 'Refresh' }}</span>
+                </button>
+
                 <CButton preset="primary" icon="mdi:account-plus" @click="showCreateModal = true">New User</CButton>
 
                 <div class="relative">

@@ -2,14 +2,27 @@
     <div class="container mx-auto px-4 py-8">
         <div class="mb-6 flex items-center justify-between">
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Products & Services</h1>
-            <button
-                v-if="canCreate"
-                type="button"
-                class="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-                @click="handleCreate"
-            >
-                New Product/Service
-            </button>
+
+            <div class="flex items-center gap-3">
+                <button
+                    @click="handleRefreshList"
+                    :disabled="loading"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap"
+                    aria-label="Refresh list"
+                >
+                    <Icon icon="mdi:refresh" :class="['w-4 h-4', { 'animate-spin': loading }]" />
+                    <span>{{ loading ? 'Refreshing...' : 'Refresh' }}</span>
+                </button>
+
+                <button
+                    v-if="canCreate"
+                    type="button"
+                    class="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                    @click="handleCreate"
+                >
+                    New Product/Service
+                </button>
+            </div>
         </div>
 
         <div class="mb-6 rounded-lg bg-white p-4 shadow dark:bg-gray-800">
@@ -132,6 +145,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { Icon } from '@iconify/vue';
 import { useProductsServices } from '@/composables/useProductsServices';
 import { useToast } from '@/composables/useToast';
 
@@ -160,6 +174,10 @@ function handleClearFilters() {
 
 function handleCreate() {
     alert('Create Product/Service modal would open here');
+}
+
+async function handleRefreshList(): Promise<void> {
+    await fetchProductsServices(filters.value);
 }
 
 async function handleDelete(id: number) {

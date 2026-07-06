@@ -118,6 +118,16 @@ function goToInvoice(invoice: Invoice): void {
 function goToCreate(): void {
     router.push({ name: 'invoice-create' });
 }
+
+async function handleRefreshList(): Promise<void> {
+    await fetchInvoices({
+        client_id: filters.value.client_id || undefined,
+        status: filters.value.status || undefined,
+        from_date: filters.value.from_date || undefined,
+        to_date: filters.value.to_date || undefined,
+        page: pagination.value.currentPage,
+    });
+}
 </script>
 
 <template>
@@ -131,9 +141,21 @@ function goToCreate(): void {
                 <h1 class="text-lg font-semibold text-gray-900">Invoices</h1>
             </div>
 
-            <CButton v-if="canCreate" preset="primary-md" icon="heroicons:plus" @click="goToCreate">
-                New Invoice
-            </CButton>
+            <div class="flex items-center gap-3">
+                <button
+                    @click="handleRefreshList"
+                    :disabled="loading"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap"
+                    aria-label="Refresh list"
+                >
+                    <Icon icon="mdi:refresh" :class="['w-4 h-4', { 'animate-spin': loading }]" />
+                    <span>{{ loading ? 'Refreshing...' : 'Refresh' }}</span>
+                </button>
+
+                <CButton v-if="canCreate" preset="primary-md" icon="heroicons:plus" @click="goToCreate">
+                    New Invoice
+                </CButton>
+            </div>
         </div>
 
         <!-- Filters Card -->

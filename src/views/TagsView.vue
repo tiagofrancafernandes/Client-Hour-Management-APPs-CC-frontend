@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { Icon } from '@iconify/vue';
 import { useTags } from '@/composables/useTags';
 import { usePermissions } from '@/composables/usePermissions';
 
@@ -34,12 +35,26 @@ async function handleDelete(id: number) {
         await deleteTag(id);
     }
 }
+
+async function handleRefreshList(): Promise<void> {
+    await fetchTags();
+}
 </script>
 
 <template>
     <div class="container mx-auto px-4 py-8">
         <UIPageHeader title="Tags" description="Manage tags to categorize your time entries.">
             <template v-slot:actions>
+                <button
+                    @click="handleRefreshList"
+                    :disabled="loading"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap"
+                    aria-label="Refresh list"
+                >
+                    <Icon icon="mdi:refresh" :class="['w-4 h-4', { 'animate-spin': loading }]" />
+                    <span>{{ loading ? 'Refreshing...' : 'Refresh' }}</span>
+                </button>
+
                 <CButton
                     v-if="canManageTags"
                     @click="lockToEditTags = !lockToEditTags"

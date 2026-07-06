@@ -3,6 +3,16 @@
         <!-- Header -->
         <UIPageHeader title="Imports" description="Manage your record imports.">
             <template v-slot:actions>
+                <button
+                    @click="handleRefreshList"
+                    :disabled="loading"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap"
+                    aria-label="Refresh list"
+                >
+                    <Icon icon="mdi:refresh" :class="['w-4 h-4', { 'animate-spin': loading }]" />
+                    <span>{{ loading ? 'Refreshing...' : 'Refresh' }}</span>
+                </button>
+
                 <CButton preset="primary" @click="$router.push('/imports/upload')">
                     <Icon icon="mdi:upload" class="w-5 h-5" />
                     New Import
@@ -240,6 +250,10 @@ async function clearFilters(): Promise<void> {
 
 async function handlePageChange(page: number): Promise<void> {
     await fetchImportPlans(page, filters.value);
+}
+
+async function handleRefreshList(): Promise<void> {
+    await fetchImportPlans(currentPage.value, filters.value);
 }
 
 async function handleCancelPlan(planId: number): Promise<void> {

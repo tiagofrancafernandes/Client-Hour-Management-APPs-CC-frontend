@@ -171,6 +171,10 @@ function goToPage(page: number): void {
     loadConfigs(page);
 }
 
+async function handleRefreshList(): Promise<void> {
+    await loadConfigs(pagination.value.current_page);
+}
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 onMounted(async () => {
@@ -184,7 +188,19 @@ onMounted(async () => {
         <UIPageHeader
             title="Payment Methods"
             description="Manage available payment methods, labels, ordering, and activation status."
-        />
+        >
+            <template v-slot:actions>
+                <button
+                    @click="handleRefreshList"
+                    :disabled="loading"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap"
+                    aria-label="Refresh list"
+                >
+                    <Icon icon="mdi:refresh" :class="['w-4 h-4', { 'animate-spin': loading }]" />
+                    <span>{{ loading ? 'Refreshing...' : 'Refresh' }}</span>
+                </button>
+            </template>
+        </UIPageHeader>
 
         <!-- Filters -->
         <div class="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
