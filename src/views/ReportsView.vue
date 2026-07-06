@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { Icon } from '@iconify/vue';
 import { useReports } from '@/composables/useReports';
 import { useClients } from '@/composables/useClients';
 import { useWallets } from '@/composables/useWallets';
@@ -389,20 +390,7 @@ async function exportReport(format: 'pdf' | 'excel') {
                         class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap"
                         aria-label="Refresh list"
                     >
-                        <svg
-                            :class="['w-4 h-4', { 'animate-spin': loading }]"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                            />
-                        </svg>
+                        <Icon icon="mdi:refresh" :class="['w-4 h-4', { 'animate-spin': loading }]" />
                         <span>{{ loading ? 'Refreshing...' : 'Refresh' }}</span>
                     </button>
                 </div>
