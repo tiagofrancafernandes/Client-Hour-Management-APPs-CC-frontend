@@ -52,10 +52,8 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div v-if="showDisplay" class="space-y-4 border-t pt-4 mt-4">
-        <h3 class="text-lg font-semibold text-gray-900">
-            Dados de Pagamento PIX
-        </h3>
+    <div v-if="showDisplay" data-testid="setup-status" class="space-y-4 border-t pt-4 mt-4">
+        <h3 class="text-lg font-semibold text-gray-900">Dados de Pagamento PIX</h3>
 
         <!-- QR Code Display -->
         <div class="flex justify-center">
@@ -68,6 +66,7 @@ onMounted(async () => {
 
             <img
                 v-else-if="qrCodeBase64"
+                data-testid="pix-qr-code"
                 :src="qrCodeBase64"
                 alt="QR Code PIX"
                 class="w-48 h-48 border border-gray-300 rounded-lg p-2 bg-white"
@@ -80,18 +79,18 @@ onMounted(async () => {
 
         <!-- Copia e Cola -->
         <div class="space-y-2">
-            <label class="text-sm font-medium text-gray-700">
-                Copia e Cola
-            </label>
+            <label class="text-sm font-medium text-gray-700">Copia e Cola</label>
 
             <div class="relative">
                 <textarea
+                    data-testid="pix-copia-cola"
                     :value="pixKey"
                     readonly
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono bg-gray-50 resize-none overflow-hidden overflow-x-auto h-20"
                 ></textarea>
 
                 <button
+                    data-testid="pix-copy-button"
                     type="button"
                     @click="copyToClipboard"
                     :class="[

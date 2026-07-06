@@ -64,8 +64,13 @@ function handleSave(): void {
 
 <template>
     <teleport to="body">
-        <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click="emit('close')">
+        <div
+            v-if="isOpen"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            @click="emit('close')"
+        >
             <div
+                data-testid="payment-method-modal"
                 class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-2xl"
                 @click.stop
             >
@@ -93,8 +98,9 @@ function handleSave(): void {
                         <!-- Instructions Help -->
                         <div class="rounded-lg bg-blue-50 p-3 border border-blue-200">
                             <p class="text-xs text-blue-900">
-                                <strong>Dica:</strong> Add key fields such as "PIX Key", "Agency", "Account",
-                                "Holder", etc. Each field will appear on a line with the key in bold.
+                                <strong>Dica:</strong>
+                                Add key fields such as "PIX Key", "Agency", "Account", "Holder", etc. Each field will
+                                appear on a line with the key in bold.
                             </p>
                         </div>
 
@@ -149,6 +155,7 @@ function handleSave(): void {
                             class="border-t pt-4 mt-4"
                         >
                             <button
+                                data-testid="setup-button"
                                 type="button"
                                 @click="showSetupFields = !showSetupFields"
                                 :class="[
@@ -159,10 +166,7 @@ function handleSave(): void {
                                     },
                                 ]"
                             >
-                                <Icon
-                                    :icon="showSetupFields ? 'mdi:check' : 'mdi:cog'"
-                                    class="w-4 h-4"
-                                />
+                                <Icon :icon="showSetupFields ? 'mdi:check' : 'mdi:cog'" class="w-4 h-4" />
                                 {{ showSetupFields ? 'Setup Configurado' : 'Setup' }}
                             </button>
                         </div>
@@ -170,6 +174,7 @@ function handleSave(): void {
                         <!-- Setup Fields Form -->
                         <div
                             v-if="showSetupFields && props.config?.setup_field_rules"
+                            data-testid="setup-fields-form"
                             class="border-t pt-4 mt-4"
                         >
                             <CPaymentMethodSetupFields :config="props.config" />
@@ -187,7 +192,11 @@ function handleSave(): void {
                     <div v-if="localInstructions.some((p) => p.key || p.value)" class="mt-6 pt-6 border-t">
                         <p class="mb-3 text-sm font-semibold text-gray-700">Preview:</p>
                         <div class="rounded-lg bg-gray-50 p-4 space-y-2">
-                            <div v-for="(pair, index) in localInstructions" :key="index" class="text-sm flex items-center justify-between group">
+                            <div
+                                v-for="(pair, index) in localInstructions"
+                                :key="index"
+                                class="text-sm flex items-center justify-between group"
+                            >
                                 <div>
                                     <span v-if="pair.key" class="font-bold text-gray-900">{{ pair.key }}:</span>
                                     <span v-if="pair.value" class="text-gray-700 ml-2">{{ pair.value }}</span>
@@ -208,11 +217,9 @@ function handleSave(): void {
 
                 <!-- Footer -->
                 <div class="sticky bottom-0 border-t border-gray-200 bg-gray-50 px-6 py-3 flex gap-2 justify-end">
-                    <CButton preset="outlined-black" class="text-sm" @click="emit('close')">
-                        Cancel
-                    </CButton>
+                    <CButton preset="outlined-black" class="text-sm" @click="emit('close')">Cancel</CButton>
 
-                    <CButton preset="primary" class="text-sm" @click="handleSave">
+                    <CButton data-testid="save-payment-config" preset="primary" class="text-sm" @click="handleSave">
                         Save
                     </CButton>
                 </div>

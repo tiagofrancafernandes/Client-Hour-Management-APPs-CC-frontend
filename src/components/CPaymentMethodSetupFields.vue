@@ -8,14 +8,8 @@ const props = defineProps<{
     config: PaymentMethodConfig;
 }>();
 
-const {
-    setupFieldRules,
-    setupFields,
-    setupDefaults,
-    hasRequiredFields,
-    updateSetupField,
-    clearSetupField,
-} = usePaymentMethodSetup(props.config);
+const { setupFieldRules, setupFields, setupDefaults, hasRequiredFields, updateSetupField, clearSetupField } =
+    usePaymentMethodSetup(props.config);
 
 const labelClasses = computed(() => {
     return selectLabelPresets()?.mb1;
@@ -35,14 +29,19 @@ const getInputType = (type: string): string => {
 
 const getInputClasses = (rule: SetupFieldRule): string => {
     const presets = selectPresets();
-    const baseClasses = presets.default || 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-900 bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
+    const baseClasses =
+        presets.default ||
+        'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-900 bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
 
     return baseClasses;
 };
 
 const getSelectClasses = (): string => {
     const presets = selectPresets();
-    return presets.default || 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-900 bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
+    return (
+        presets.default ||
+        'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-900 bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none'
+    );
 };
 
 const getFieldValue = (rule: SetupFieldRule): any => {
@@ -75,11 +74,7 @@ const getFieldValue = (rule: SetupFieldRule): any => {
                     <option value="">
                         {{ setupDefaults[rule.name] ? `Default: ${setupDefaults[rule.name]}` : 'Select an option' }}
                     </option>
-                    <option
-                        v-for="option in rule.options"
-                        :key="option.value"
-                        :value="option.value"
-                    >
+                    <option v-for="option in rule.options" :key="option.value" :value="option.value">
                         {{ option.label }}
                     </option>
                 </select>
@@ -100,6 +95,7 @@ const getFieldValue = (rule: SetupFieldRule): any => {
 
             <div v-else class="relative">
                 <input
+                    :data-testid="`setup-field-${rule.name}`"
                     :id="rule.name"
                     :type="getInputType(rule.type)"
                     :value="getFieldValue(rule)"
@@ -120,15 +116,9 @@ const getFieldValue = (rule: SetupFieldRule): any => {
             </div>
 
             <div v-if="rule.min || rule.max" class="text-xs text-gray-500">
-                <span v-if="rule.min && rule.max">
-                    {{ rule.min }} to {{ rule.max }} characters
-                </span>
-                <span v-else-if="rule.min">
-                    Minimum {{ rule.min }} characters
-                </span>
-                <span v-else-if="rule.max">
-                    Maximum {{ rule.max }} characters
-                </span>
+                <span v-if="rule.min && rule.max">{{ rule.min }} to {{ rule.max }} characters</span>
+                <span v-else-if="rule.min">Minimum {{ rule.min }} characters</span>
+                <span v-else-if="rule.max">Maximum {{ rule.max }} characters</span>
             </div>
         </div>
     </div>

@@ -255,7 +255,7 @@ onMounted(async () => {
                 <div class="h-full w-1/3 animate-pulse bg-red-500"></div>
             </div>
 
-            <table class="w-full text-sm">
+            <table data-testid="payment-methods-list" class="w-full text-sm">
                 <thead>
                     <tr
                         class="border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
@@ -354,6 +354,7 @@ onMounted(async () => {
 
                             <div v-else class="inline-flex items-center gap-2">
                                 <CButton
+                                    :data-testid="`edit-${config.payment_method_key}`"
                                     preset="outlined-black"
                                     class="text-xs"
                                     icon="mdi:file-document-outline"
@@ -410,6 +411,7 @@ onMounted(async () => {
             :is-open="editingInstructionsId !== null"
             :label="configs.find((c) => c.id === editingInstructionsId)?.label || ''"
             :instructions="editingInstructionsForm"
+            :config="configs.find((c) => c.id === editingInstructionsId)"
             @close="closeInstructionsEditor"
             @save="saveInstructions"
         />
