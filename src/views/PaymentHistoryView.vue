@@ -18,6 +18,8 @@ const {
     setPaymentMethod,
     uploadReceipt,
     downloadReceipt,
+    deleteReceipt,
+    cancelPurchase,
     approvePayment,
     rejectPayment,
 } = useCreditPurchases();
@@ -349,6 +351,55 @@ async function handleReject(): Promise<void> {
         toast.error('Failed to reject payment');
     } finally {
         submittingApproval.value = false;
+    }
+}
+
+// ─── Modal: delete receipt ───────────────────────────────────────────────────
+
+const deletingReceipt = ref(false);
+
+async function handleDeleteReceipt(): Promise<void> {
+    if (!selectedPurchase.value || !modalPayment.value) {
+        return;
+    }
+
+    deletingReceipt.value = true;
+
+    try {
+        await deleteReceipt(selectedPurchase.value.id, modalPayment.value.id);
+        toast.success('Receipt deleted successfully');
+        await reloadPurchase();
+    } catch {
+        toast.error('Failed to delete receipt');
+    } finally {
+        deletingReceipt.value = false;
+    }
+}
+
+// ─── Modal: cancel purchase ──────────────────────────────────────────────────
+
+const cancellingPurchase = ref(false);
+
+async function handleCancelPurchase(): Promise<void> {
+    if (!selectedPurchase.value) {
+        return;
+    }
+
+    if (!confirm('Are you sure you want to cancel this purchase?')) {
+        return;
+    }
+
+    cancellingPurchase.value = true;
+
+    try {
+        await cancelPurchase(selectedPurchase.value.id);
+        toast.success('Purchase cancelled successfully');
+        closeModal();
+        await reloadPurchase();
+    } catch {
+        toast.error('Failed to cancel purchase');
+    } finally {
+        cancellingPurchase.value = false;
     }
 }
 
@@ -1199,14 +1250,27 @@ function updateUrlFromFilters(): void {
                                     </button>
                                 </div>
 
-                                <!-- Download receipt -->
-                                <div v-if="modalPayment.pix_receipt_path">
+                                <!-- Download receipt + Delete receipt -->
+                                <div v-if="modalPayment.pix_receipt_path" class="flex items-center gap-3">
                                     <button
                                         @click="handleDownloadReceipt"
                                         class="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-red-600 font-medium transition-colors"
                                     >
                                         <Icon icon="mdi:file-download-outline" class="w-4 h-4" />
                                         Download receipt
+                                    </button>
+
+                                    <button
+                                        v-if="
+                                            modalPayment.payment_status === 'pending' &&
+                                            !isPaymentExpired(modalPayment)
+                                        "
+                                        @click="handleDeleteReceipt"
+                                        :disabled="deletingReceipt"
+                                        class="inline-flex items-center gap-1.5 text-sm text-red-600 hover:text-red-800 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <Icon icon="mdi:trash-outline" class="w-4 h-4" />
+                                        Delete receipt
                                     </button>
                                 </div>
 
@@ -1305,7 +1369,20 @@ function updateUrlFromFilters(): void {
                         </div>
 
                         <!-- Modal footer -->
-                        <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+                        <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                            <div>
+                                <CButton
+                                    v-if="selectedPurchase.status !== 'approved'"
+                                    preset="danger"
+                                    size="sm"
+                                    :disabled="cancellingPurchase"
+                                    @click="handleCancelPurchase"
+                                    class="inline-flex items-center gap-1.5"
+                                >
+                                    <Icon icon="mdi:close-circle-outline" class="w-4 h-4" />
+                                    Cancel Purchase
+                                </CButton>
+                            </div>
                             <CButton preset="outlined-black" @click="closeModal">Close</CButton>
                         </div>
                     </div>

@@ -188,6 +188,51 @@ export function useCreditPurchases() {
         }
     }
 
+    async function deleteReceipt(purchaseId: number, paymentId: number): Promise<CreditPurchasePayment> {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.delete<{ data: CreditPurchasePayment }>(
+                `/credit-purchases/${purchaseId}/payments/${paymentId}/receipt`
+            );
+
+            payment.value = response.data;
+
+            return response.data;
+        } catch (e) {
+            error.value = e instanceof Error ? e.message : 'Failed to delete receipt';
+            throw e;
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function cancelPurchase(purchaseId: number): Promise<CreditPurchase> {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.delete<{ data: CreditPurchase }>(
+                `/credit-purchases/${purchaseId}`
+            );
+
+            const index = purchases.value.findIndex((p) => p.id === purchaseId);
+            if (index !== -1) {
+                purchases.value[index] = response.data;
+            }
+
+            purchase.value = response.data;
+
+            return response.data;
+        } catch (e) {
+            error.value = e instanceof Error ? e.message : 'Failed to cancel purchase';
+            throw e;
+        } finally {
+            loading.value = false;
+        }
+    }
+
     return {
         purchases,
         purchase,
@@ -201,6 +246,8 @@ export function useCreditPurchases() {
         setPaymentMethod,
         uploadReceipt,
         downloadReceipt,
+        deleteReceipt,
+        cancelPurchase,
         approvePayment,
         rejectPayment,
     };
