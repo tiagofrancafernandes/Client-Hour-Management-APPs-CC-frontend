@@ -11,6 +11,7 @@ import CDropZone from './components/CDropZone.vue';
 import CTypeahead from './components/CTypeahead.vue';
 import UIPageHeader from './components/UIPageHeader.vue';
 import DateDisplay from './components/DateDisplay.vue';
+import ConfirmModal from './components/ConfirmModal.vue';
 import { Icon } from '@iconify/vue';
 import router from './router';
 import authPlugin from './plugins/auth';
@@ -30,6 +31,7 @@ const components = {
     CTypeahead: CTypeahead,
     UIPageHeader: UIPageHeader,
     CPasswodInput: CPasswodInput,
+    ConfirmModal: ConfirmModal,
     SpeedInsights: SpeedInsights,
     DateDisplay: DateDisplay,
     Icon: Icon,
