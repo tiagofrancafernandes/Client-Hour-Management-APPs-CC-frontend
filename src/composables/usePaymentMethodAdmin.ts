@@ -83,17 +83,11 @@ export function usePaymentMethodAdmin() {
         }
     }
 
-    async function updateConfig(
-        id: number,
-        data: Partial<PaymentMethodConfig>
-    ): Promise<boolean> {
+    async function updateConfig(id: number, data: Partial<PaymentMethodConfig>): Promise<boolean> {
         updating.value = true;
 
         try {
-            const response = await api.put<PaymentMethodConfig>(
-                `/admin/payment-method-configs/${id}`,
-                data
-            );
+            const response = await api.put<PaymentMethodConfig>(`/admin/payment-method-configs/${id}`, data);
 
             const index = configs.value.findIndex((c) => c.id === id);
             if (index !== -1) {

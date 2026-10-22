@@ -213,9 +213,7 @@ export function useCreditPurchases() {
         error.value = null;
 
         try {
-            const response = await api.delete<{ data: CreditPurchase }>(
-                `/credit-purchases/${purchaseId}`
-            );
+            const response = await api.delete<{ data: CreditPurchase }>(`/credit-purchases/${purchaseId}`);
 
             const index = purchases.value.findIndex((p) => p.id === purchaseId);
             if (index !== -1) {

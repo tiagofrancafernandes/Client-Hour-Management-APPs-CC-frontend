@@ -70,9 +70,9 @@ const prepareLabel = (value: any) => {
             return 'E-mail';
 
         default:
-        return value;
+            return value;
     }
-}
+};
 
 const label = computed(() => {
     if (props?.label && typeof props?.label === 'string' && props?.label.trim()) {

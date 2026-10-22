@@ -678,9 +678,7 @@ function formatCurrency(value: number): string {
         <CPaymentInstructionsModal
             :show="showInstructionsModal"
             :method-label="activeMethods.find((m) => m.key === selectedMethodForInstructions)?.label || ''"
-            :instructions="
-                activeMethods.find((m) => m.key === selectedMethodForInstructions)?.instructions || null
-            "
+            :instructions="activeMethods.find((m) => m.key === selectedMethodForInstructions)?.instructions || null"
             :total-amount="totalPrice"
             :currency-code="wallet?.currency_code || 'BRL'"
             :expires-at="'Pending implementation'"

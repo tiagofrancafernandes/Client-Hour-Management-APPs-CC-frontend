@@ -52,10 +52,7 @@ function copyToClipboard(): void {
                 <div class="bg-linear-to-r from-blue-600 to-blue-700 px-6 py-4 rounded-t-lg">
                     <div class="flex items-center justify-between">
                         <h2 class="text-xl font-bold text-white">{{ methodLabel }}</h2>
-                        <button
-                            @click="handleClose"
-                            class="text-white hover:text-blue-100 transition-colors"
-                        >
+                        <button @click="handleClose" class="text-white hover:text-blue-100 transition-colors">
                             <Icon icon="mdi:close" class="w-6 h-6" />
                         </button>
                     </div>
@@ -67,10 +64,12 @@ function copyToClipboard(): void {
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <div class="text-sm text-gray-600 mb-1">Valor a pagar</div>
                         <div class="text-2xl font-bold text-gray-900">
-                            {{ new Intl.NumberFormat('pt-BR', {
-                                style: 'currency',
-                                currency: currencyCode,
-                            }).format(totalAmount) }}
+                            {{
+                                new Intl.NumberFormat('pt-BR', {
+                                    style: 'currency',
+                                    currency: currencyCode,
+                                }).format(totalAmount)
+                            }}
                         </div>
                     </div>
 
@@ -82,9 +81,7 @@ function copyToClipboard(): void {
 
                     <!-- Instructions -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Instruções de Pagamento
-                        </label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Instruções de Pagamento</label>
                         <div
                             class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-700 whitespace-pre-wrap min-h-32"
                         >
@@ -116,9 +113,7 @@ function copyToClipboard(): void {
 
                 <!-- Footer -->
                 <div class="bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-200">
-                    <CButton preset="outlined-black" class="w-full" @click="handleClose">
-                        Fechar
-                    </CButton>
+                    <CButton preset="outlined-black" class="w-full" @click="handleClose">Fechar</CButton>
                 </div>
             </div>
         </div>

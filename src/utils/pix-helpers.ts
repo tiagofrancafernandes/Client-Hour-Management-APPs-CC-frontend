@@ -16,7 +16,7 @@ export async function generatePixCopyAndPasteCode(
     amountInCents: number,
     pixKey: string,
     receiverName = 'PIX',
-    receiverCityName = 'BRASIL',
+    receiverCityName = 'BRASIL'
 ): Promise<PixCode> {
     validatePixAmount(amountInCents);
 
@@ -25,12 +25,7 @@ export async function generatePixCopyAndPasteCode(
     const normalizedReceiverName = normalizeText(receiverName, 25);
     const normalizedReceiverCityName = normalizeText(receiverCityName, 15);
 
-    const payloadWithoutCRC = buildPixPayload(
-        pixKey,
-        amount,
-        normalizedReceiverName,
-        normalizedReceiverCityName,
-    );
+    const payloadWithoutCRC = buildPixPayload(pixKey, amount, normalizedReceiverName, normalizedReceiverCityName);
 
     const copyAndPasteCode = `${payloadWithoutCRC}${calculateCRC16(payloadWithoutCRC)}`;
 
@@ -68,16 +63,8 @@ function normalizeText(text: string, maxLength: number): string {
         .slice(0, maxLength);
 }
 
-function buildPixPayload(
-    pixKey: string,
-    amount: string,
-    receiverName: string,
-    receiverCityName: string,
-): string {
-    const merchantAccount = [
-        createField('00', PIX_GUI),
-        createField('01', pixKey),
-    ].join('');
+function buildPixPayload(pixKey: string, amount: string, receiverName: string, receiverCityName: string): string {
+    const merchantAccount = [createField('00', PIX_GUI), createField('01', pixKey)].join('');
 
     const payload = [
         createField('00', '01'),
@@ -136,8 +123,5 @@ function calculateCRC16(payload: string): string {
         }
     }
 
-    return crc
-        .toString(16)
-        .toUpperCase()
-        .padStart(4, '0');
+    return crc.toString(16).toUpperCase().padStart(4, '0');
 }
