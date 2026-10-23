@@ -357,8 +357,17 @@ async function handleReject(): Promise<void> {
 // ─── Modal: delete receipt ───────────────────────────────────────────────────
 
 const deletingReceipt = ref(false);
+const showDeleteReceiptConfirmModal = ref(false);
 
-async function handleDeleteReceipt(): Promise<void> {
+function openDeleteReceiptConfirmModal(): void {
+    if (!selectedPurchase.value || !modalPayment.value) {
+        return;
+    }
+
+    showDeleteReceiptConfirmModal.value = true;
+}
+
+async function handleDeleteReceiptConfirm(): Promise<void> {
     if (!selectedPurchase.value || !modalPayment.value) {
         return;
     }
@@ -368,6 +377,7 @@ async function handleDeleteReceipt(): Promise<void> {
     try {
         await deleteReceipt(selectedPurchase.value.id, modalPayment.value.id);
         toast.success('Receipt deleted successfully');
+        showDeleteReceiptConfirmModal.value = false;
         await reloadPurchase();
     } catch {
         toast.error('Failed to delete receipt');
@@ -1289,7 +1299,7 @@ function updateUrlFromFilters(): void {
                                         v-if="
                                             modalPayment.payment_status === 'pending' && !isPaymentExpired(modalPayment)
                                         "
-                                        @click="handleDeleteReceipt"
+                                        @click="openDeleteReceiptConfirmModal"
                                         :disabled="deletingReceipt"
                                         class="inline-flex items-center gap-1.5 text-sm text-red-600 hover:text-red-800 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
@@ -1422,6 +1432,17 @@ function updateUrlFromFilters(): void {
                 cancelText="Keep Purchase"
                 variant="danger"
                 @confirm="handleCancelPurchaseConfirm"
+            />
+
+            <!-- Delete Receipt Confirmation Modal -->
+            <ConfirmModal
+                v-model:isOpen="showDeleteReceiptConfirmModal"
+                title="Delete Receipt?"
+                message="This will delete the uploaded receipt from storage. Are you sure you want to proceed?"
+                confirmText="Yes, Delete"
+                cancelText="Keep Receipt"
+                variant="danger"
+                @confirm="handleDeleteReceiptConfirm"
             />
 
             <!-- Payment Instructions Modal -->
