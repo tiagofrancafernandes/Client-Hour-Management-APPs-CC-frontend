@@ -149,28 +149,28 @@ onMounted(async () => {
                     </button>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Invoice</h1>
+                            <h1 class="text-lg sm:text-xl font-semibold text-slate-900 tracking-tight">Invoice</h1>
                             <span
-                                class="font-mono text-base font-bold text-slate-900 bg-slate-100 px-3 py-0.5 rounded-lg border border-slate-200 shadow-2xs"
+                                class="font-mono text-xs font-semibold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs"
                             >
                                 {{ formatInvoiceCode(invoice) }}
                             </span>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">
+                        <p class="text-xs text-slate-500 mt-0.5">
                             Issued for
-                            <span class="font-semibold text-slate-800">{{ invoice.client?.name }}</span>
+                            <span class="font-medium text-slate-800">{{ invoice.client?.name }}</span>
                         </p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5 flex-wrap justify-end">
                     <button
                         v-if="canEditInvoice(invoice)"
                         type="button"
                         @click="handleEdit"
-                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs cursor-pointer"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
                     >
-                        <Icon icon="mdi:pencil-outline" class="w-4 h-4" />
+                        <Icon icon="mdi:pencil-outline" class="w-3.5 h-3.5" />
                         Edit
                     </button>
 
@@ -178,9 +178,9 @@ onMounted(async () => {
                     <button
                         type="button"
                         @click="openPrintModal"
-                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-slate-300 bg-white text-slate-800 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-slate-300 bg-white text-slate-800 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
                     >
-                        <Icon icon="mdi:printer-outline" class="w-4 h-4" />
+                        <Icon icon="mdi:printer-outline" class="w-3.5 h-3.5" />
                         Print / Preview
                     </button>
 
@@ -188,9 +188,9 @@ onMounted(async () => {
                     <button
                         type="button"
                         @click="handleDownloadPdf"
-                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs cursor-pointer"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
                     >
-                        <Icon icon="mdi:file-pdf-box" class="w-4 h-4 text-red-600" />
+                        <Icon icon="mdi:file-pdf-box" class="w-3.5 h-3.5 text-red-600" />
                         Download PDF
                     </button>
 
@@ -198,9 +198,9 @@ onMounted(async () => {
                     <button
                         type="button"
                         @click="handleDownloadMarkdown"
-                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs cursor-pointer"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
                     >
-                        <Icon icon="mdi:language-markdown" class="w-4 h-4 text-slate-600" />
+                        <Icon icon="mdi:language-markdown" class="w-3.5 h-3.5 text-slate-600" />
                         Markdown
                     </button>
 
@@ -208,42 +208,42 @@ onMounted(async () => {
                         v-if="canDeleteInvoice(invoice)"
                         type="button"
                         @click="openDeleteModal"
-                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors cursor-pointer"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors cursor-pointer"
                     >
-                        <Icon icon="mdi:trash-can-outline" class="w-4 h-4" />
+                        <Icon icon="mdi:trash-can-outline" class="w-3.5 h-3.5" />
                         Delete
                     </button>
                 </div>
             </div>
 
             <!-- Details Card -->
-            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-6">
+            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-2xs space-y-5">
                 <!-- Summary Meta Grid -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-6 border-b border-gray-100">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-5 border-b border-gray-100">
                     <div>
-                        <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Client</span>
-                        <p class="text-sm font-bold text-gray-900">{{ invoice.client?.name || '—' }}</p>
+                        <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Client</span>
+                        <p class="text-xs font-semibold text-slate-900">{{ invoice.client?.name || '—' }}</p>
                     </div>
 
                     <div>
-                        <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
                             Issue Date
                         </span>
-                        <p class="text-sm font-medium text-gray-800">{{ formatInvoiceDate(invoice.issue_date) }}</p>
+                        <p class="text-xs font-medium text-slate-800">{{ formatInvoiceDate(invoice.issue_date) }}</p>
                     </div>
 
                     <div>
-                        <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
                             Due Date
                         </span>
-                        <p class="text-sm font-medium text-gray-800">{{ formatInvoiceDate(invoice.due_date) }}</p>
+                        <p class="text-xs font-medium text-slate-800">{{ formatInvoiceDate(invoice.due_date) }}</p>
                     </div>
 
                     <div>
-                        <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Status</span>
+                        <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Status</span>
                         <span
                             :class="[
-                                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border',
+                                'inline-flex items-center px-2 py-0.5 rounded-md text-2xs font-medium border capitalize',
                                 getInvoiceStatusBadgeClass(invoice.status),
                             ]"
                         >

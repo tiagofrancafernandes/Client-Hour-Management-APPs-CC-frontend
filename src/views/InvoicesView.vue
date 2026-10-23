@@ -239,36 +239,36 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <div class="container mx-auto px-4 py-6 max-w-7xl">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
             <div class="flex items-center gap-3">
-                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 shadow-xs">
-                    <Icon icon="mdi:receipt-text-outline" class="w-6 h-6 text-red-600" />
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-red-100/80 shadow-2xs">
+                    <Icon icon="mdi:receipt-text-outline" class="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Invoices</h1>
-                    <p class="text-sm text-gray-500">Manage client invoices, billing, and services</p>
+                    <h1 class="text-lg sm:text-xl font-semibold tracking-tight text-slate-900">Invoices</h1>
+                    <p class="text-xs text-slate-500">Manage client invoices, billing, and services</p>
                 </div>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
                 <button
                     type="button"
                     @click="showFilters = !showFilters"
                     :class="[
-                        'inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors cursor-pointer',
+                        'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border transition-colors cursor-pointer',
                         {
                             'bg-red-50 text-red-700 border-red-200': showFilters,
-                            'bg-white text-gray-700 border-gray-300 hover:bg-gray-50': !showFilters,
+                            'bg-white text-slate-700 border-slate-300 hover:bg-slate-50': !showFilters,
                         },
                     ]"
                 >
-                    <Icon icon="mdi:filter-outline" class="w-4 h-4" />
+                    <Icon icon="mdi:filter-outline" class="w-3.5 h-3.5" />
                     Filters
                     <span
                         v-if="activeFiltersCount > 0"
-                        class="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-semibold bg-red-600 text-white"
+                        class="inline-flex items-center justify-center px-1.5 py-0.2 rounded-full text-2xs font-semibold bg-red-600 text-white"
                     >
                         {{ activeFiltersCount }}
                     </span>
@@ -278,40 +278,40 @@ onMounted(async () => {
                     type="button"
                     @click="loadInvoices(pagination.currentPage)"
                     :disabled="loading"
-                    class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors cursor-pointer"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer"
                 >
-                    <Icon icon="mdi:refresh" :class="['w-4 h-4', { 'animate-spin': loading }]" />
+                    <Icon icon="mdi:refresh" :class="['w-3.5 h-3.5', { 'animate-spin': loading }]" />
                     Refresh
                 </button>
 
-                <CButton v-if="canCreate" preset="primary-md" @click="goToCreate">
-                    <Icon icon="mdi:plus" class="w-4 h-4 mr-1.5" />
+                <CButton v-if="canCreate" preset="red" @click="goToCreate">
+                    <Icon icon="mdi:plus" class="w-3.5 h-3.5 mr-1" />
                     New Invoice
                 </CButton>
             </div>
         </div>
 
         <!-- Error state -->
-        <div v-if="error" class="mb-6 rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+        <div v-if="error" class="mb-5 rounded-md bg-red-50 border border-red-200 p-3 text-xs text-red-700">
             {{ error }}
         </div>
 
         <!-- Filter panel -->
-        <div v-if="showFilters" class="mb-5 rounded-xl border border-gray-200 bg-white shadow-sm p-5">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div v-if="showFilters" class="mb-4 rounded-xl border border-gray-200 bg-white shadow-2xs p-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                 <!-- Search -->
                 <div class="space-y-1 sm:col-span-2">
-                    <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Search</label>
+                    <label class="block text-2xs font-semibold text-slate-500 uppercase tracking-wider">Search</label>
                     <div class="relative">
                         <Icon
                             icon="mdi:magnify"
-                            class="w-5 h-5 absolute left-3 top-2.5 text-gray-400 pointer-events-none"
+                            class="w-4 h-4 absolute left-3 top-2.5 text-slate-400 pointer-events-none"
                         />
                         <input
                             v-model="searchQuery"
                             type="text"
                             placeholder="Search by #C12-I005, client, notes, item..."
-                            class="w-full rounded-lg border border-gray-300 pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                            class="w-full rounded-md border border-slate-300 pl-9 pr-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
                         />
                     </div>
                 </div>
@@ -324,7 +324,7 @@ onMounted(async () => {
                         :initialOptions="clientOptions"
                         placeholder="All Clients"
                         clearable
-                        label-classes="block text-xs font-medium text-gray-600 uppercase tracking-wide"
+                        label-classes="block text-2xs font-semibold text-slate-500 uppercase tracking-wider"
                     />
                 </div>
 
@@ -379,7 +379,7 @@ onMounted(async () => {
                         <tr class="bg-gray-50">
                             <!-- Invoice Code -->
                             <th
-                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 select-none"
+                                class="px-3 py-2 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-slate-700 select-none"
                                 @click="handleSort('client_invoice_number')"
                             >
                                 <div class="inline-flex items-center gap-1">
@@ -395,14 +395,14 @@ onMounted(async () => {
                             <!-- Client -->
                             <th
                                 v-if="canViewAny"
-                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                                class="px-3 py-2 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider"
                             >
                                 Client
                             </th>
 
                             <!-- Issue Date -->
                             <th
-                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 select-none"
+                                class="px-3 py-2 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-slate-700 select-none"
                                 @click="handleSort('issue_date')"
                             >
                                 <div class="inline-flex items-center gap-1">
@@ -417,7 +417,7 @@ onMounted(async () => {
 
                             <!-- Due Date -->
                             <th
-                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 select-none"
+                                class="px-3 py-2 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-slate-700 select-none"
                                 @click="handleSort('due_date')"
                             >
                                 <div class="inline-flex items-center gap-1">
@@ -432,7 +432,7 @@ onMounted(async () => {
 
                             <!-- Total -->
                             <th
-                                class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 select-none"
+                                class="px-3 py-2 text-right text-2xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-slate-700 select-none"
                                 @click="handleSort('total')"
                             >
                                 <div class="inline-flex items-center gap-1">
@@ -447,7 +447,7 @@ onMounted(async () => {
 
                             <!-- Status -->
                             <th
-                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 select-none"
+                                class="px-3 py-2 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-slate-700 select-none"
                                 @click="handleSort('status')"
                             >
                                 <div class="inline-flex items-center gap-1">
@@ -462,7 +462,7 @@ onMounted(async () => {
 
                             <!-- Actions -->
                             <th
-                                class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                                class="px-3 py-2 text-right text-2xs font-semibold text-slate-500 uppercase tracking-wider"
                             >
                                 Actions
                             </th>
@@ -473,13 +473,13 @@ onMounted(async () => {
                         <tr
                             v-for="inv in invoices"
                             :key="inv.id"
-                            class="hover:bg-gray-50 transition-colors cursor-pointer"
+                            class="hover:bg-slate-50/70 transition-colors cursor-pointer"
                             @click="goToInvoice(inv)"
                         >
                             <!-- Invoice Code -->
-                            <td class="px-4 py-3.5 whitespace-nowrap">
+                            <td class="px-3 py-2.5 whitespace-nowrap">
                                 <span
-                                    class="font-mono text-sm font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200/80 inline-flex items-center gap-1"
+                                    class="font-mono text-xs font-semibold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/80 inline-flex items-center gap-1"
                                 >
                                     {{ formatInvoiceCode(inv) }}
                                 </span>
@@ -488,31 +488,31 @@ onMounted(async () => {
                             <!-- Client -->
                             <td
                                 v-if="canViewAny"
-                                class="px-4 py-3.5 text-sm text-gray-900 whitespace-nowrap font-medium"
+                                class="px-3 py-2.5 text-xs text-slate-900 whitespace-nowrap font-medium"
                             >
                                 {{ inv.client?.name || '—' }}
                             </td>
 
                             <!-- Issue Date -->
-                            <td class="px-4 py-3.5 text-sm text-gray-600 whitespace-nowrap">
+                            <td class="px-3 py-2.5 text-xs text-slate-600 whitespace-nowrap">
                                 {{ formatInvoiceDate(inv.issue_date) }}
                             </td>
 
                             <!-- Due Date -->
-                            <td class="px-4 py-3.5 text-sm text-gray-600 whitespace-nowrap">
+                            <td class="px-3 py-2.5 text-xs text-slate-600 whitespace-nowrap">
                                 {{ formatInvoiceDate(inv.due_date) }}
                             </td>
 
                             <!-- Total -->
-                            <td class="px-4 py-3.5 text-sm font-semibold text-gray-900 text-right whitespace-nowrap">
+                            <td class="px-3 py-2.5 text-xs font-semibold text-slate-900 text-right whitespace-nowrap">
                                 {{ formatCurrency(inv.total, inv.currency) }}
                             </td>
 
                             <!-- Status -->
-                            <td class="px-4 py-3.5 whitespace-nowrap">
+                            <td class="px-3 py-2.5 whitespace-nowrap">
                                 <span
                                     :class="[
-                                        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border',
+                                        'inline-flex items-center px-2 py-0.5 rounded-md text-2xs font-medium border capitalize',
                                         getInvoiceStatusBadgeClass(inv.status),
                                     ]"
                                 >
@@ -521,52 +521,52 @@ onMounted(async () => {
                             </td>
 
                             <!-- Actions -->
-                            <td class="px-4 py-3.5 text-right whitespace-nowrap" @click.stop>
-                                <div class="inline-flex items-center gap-1.5 justify-end">
+                            <td class="px-3 py-2.5 text-right whitespace-nowrap" @click.stop>
+                                <div class="inline-flex items-center gap-1 justify-end">
                                     <button
                                         type="button"
                                         @click="goToInvoice(inv)"
-                                        class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                        class="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
                                         title="View Details"
                                     >
-                                        <Icon icon="mdi:eye-outline" class="w-4 h-4" />
+                                        <Icon icon="mdi:eye-outline" class="w-3.5 h-3.5" />
                                     </button>
 
                                     <button
                                         v-if="canEditInvoice(inv)"
                                         type="button"
                                         @click="goToEdit(inv)"
-                                        class="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
+                                        class="p-1 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors cursor-pointer"
                                         title="Edit Invoice"
                                     >
-                                        <Icon icon="mdi:pencil-outline" class="w-4 h-4" />
+                                        <Icon icon="mdi:pencil-outline" class="w-3.5 h-3.5" />
                                     </button>
 
                                     <!-- Print / PDF Preview -->
                                     <button
                                         type="button"
                                         @click="openPrintModal(inv)"
-                                        class="p-1.5 text-gray-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                                        class="p-1 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
                                         title="Print / PDF Preview"
                                     >
-                                        <Icon icon="mdi:printer-outline" class="w-4 h-4" />
+                                        <Icon icon="mdi:printer-outline" class="w-3.5 h-3.5" />
                                     </button>
 
                                     <!-- Download PDF -->
                                     <button
                                         type="button"
                                         @click="handleDownloadPdf(inv)"
-                                        class="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                        class="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
                                         title="Download PDF"
                                     >
-                                        <Icon icon="mdi:file-pdf-box" class="w-4 h-4" />
+                                        <Icon icon="mdi:file-pdf-box" class="w-3.5 h-3.5" />
                                     </button>
 
                                     <!-- Download Markdown -->
                                     <button
                                         type="button"
                                         @click="handleDownloadMarkdown(inv)"
-                                        class="p-1.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                                        class="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors cursor-pointer"
                                         title="Download Markdown"
                                     >
                                         <Icon icon="mdi:language-markdown" class="w-4 h-4" />

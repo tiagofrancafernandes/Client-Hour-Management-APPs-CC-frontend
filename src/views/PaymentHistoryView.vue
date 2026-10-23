@@ -393,31 +393,31 @@ function updateUrlFromFilters(): void {
 </script>
 
 <template>
-    <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <div class="container mx-auto px-4 py-6 max-w-7xl">
         <!-- Page header -->
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-5">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Payment History</h1>
-                <p class="text-sm text-gray-500 mt-1">Track and manage credit purchases and payment statuses</p>
+                <h1 class="text-lg sm:text-xl font-semibold tracking-tight text-slate-900">Payment History</h1>
+                <p class="text-xs text-slate-500 mt-0.5">Track and manage credit purchases and payment statuses</p>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
                 <button
                     type="button"
                     @click="showFilters = !showFilters"
                     :class="[
-                        'inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors cursor-pointer',
+                        'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border transition-colors cursor-pointer',
                         {
                             'bg-red-50 text-red-700 border-red-200': showFilters,
-                            'bg-white text-gray-700 border-gray-300 hover:bg-gray-50': !showFilters,
+                            'bg-white text-slate-700 border-slate-300 hover:bg-slate-50': !showFilters,
                         },
                     ]"
                 >
-                    <Icon icon="mdi:filter-outline" class="w-4 h-4" />
+                    <Icon icon="mdi:filter-outline" class="w-3.5 h-3.5" />
                     Filters
                     <span
                         v-if="activeFiltersCount > 0"
-                        class="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-semibold bg-red-600 text-white"
+                        class="inline-flex items-center justify-center px-1.5 py-0.2 rounded-full text-2xs font-semibold bg-red-600 text-white"
                     >
                         {{ activeFiltersCount }}
                     </span>
@@ -427,9 +427,9 @@ function updateUrlFromFilters(): void {
                     type="button"
                     @click="handleRefreshList"
                     :disabled="loading"
-                    class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors cursor-pointer"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer"
                 >
-                    <Icon icon="mdi:refresh" :class="['w-4 h-4', { 'animate-spin': loading }]" />
+                    <Icon icon="mdi:refresh" :class="['w-3.5 h-3.5', { 'animate-spin': loading }]" />
                     Refresh
                 </button>
             </div>

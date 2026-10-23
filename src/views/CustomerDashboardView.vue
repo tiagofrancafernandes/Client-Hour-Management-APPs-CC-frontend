@@ -201,39 +201,39 @@ onMounted(async () => {
         <!-- Main Content -->
         <div v-else class="space-y-8">
             <!-- Client Info Section -->
-            <div v-if="myClient" class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 class="mb-4 text-2xl font-bold text-gray-900">{{ myClient.name }}</h2>
+            <div v-if="myClient" class="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
+                <h2 class="mb-3 text-lg sm:text-xl font-semibold tracking-tight text-slate-900">{{ myClient.name }}</h2>
 
-                <div class="space-y-2 text-gray-700">
+                <div class="space-y-1.5 text-xs text-slate-600">
                     <p v-if="myClient.notes">
-                        <strong>Notes:</strong>
+                        <strong class="font-semibold text-slate-800">Notes:</strong>
                         {{ myClient.notes }}
                     </p>
 
                     <p>
-                        <strong>Client since:</strong>
+                        <strong class="font-semibold text-slate-800">Client since:</strong>
                         {{ getClientSinceDate() }}
                     </p>
                 </div>
             </div>
 
             <!-- Wallets Summary Section -->
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                    <p class="text-sm text-gray-600">Total Wallets</p>
-                    <p class="mt-2 text-3xl font-bold text-gray-900">{{ myWalletsSummary.totalWallets }}</p>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+                <div class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
+                    <p class="text-2xs font-semibold uppercase tracking-wider text-slate-500">Total Wallets</p>
+                    <p class="mt-1 text-lg sm:text-xl font-bold tracking-tight text-slate-900">{{ myWalletsSummary.totalWallets }}</p>
                 </div>
 
-                <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                    <p class="text-sm text-gray-600">Total Balance</p>
-                    <p class="mt-2 text-3xl font-bold text-gray-900">
+                <div class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
+                    <p class="text-2xs font-semibold uppercase tracking-wider text-slate-500">Total Balance</p>
+                    <p class="mt-1 text-lg sm:text-xl font-bold tracking-tight text-slate-900">
                         {{ formatBalance(myWalletsSummary.totalBalance) }}h
                     </p>
                 </div>
 
-                <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                    <p class="text-sm text-gray-600">Average per Wallet</p>
-                    <p class="mt-2 text-3xl font-bold text-gray-900">
+                <div class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
+                    <p class="text-2xs font-semibold uppercase tracking-wider text-slate-500">Average per Wallet</p>
+                    <p class="mt-1 text-lg sm:text-xl font-bold tracking-tight text-slate-900">
                         {{
                             formatBalance(
                                 myWalletsSummary.totalWallets > 0
@@ -246,10 +246,10 @@ onMounted(async () => {
             </div>
 
             <!-- Wallets List Section -->
-            <div class="space-y-4">
+            <div class="space-y-3">
                 <!-- Section header -->
                 <div class="flex items-center justify-between">
-                    <h3 class="text-xl font-bold text-gray-900">My Wallets</h3>
+                    <h3 class="text-sm font-semibold tracking-tight text-slate-900 uppercase">My Wallets</h3>
 
                     <CButton v-if="canCreateWallets" preset="primary" icon="mdi:plus" @click="openCreateModal">
                         Add Wallet

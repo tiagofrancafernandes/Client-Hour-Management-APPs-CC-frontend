@@ -197,23 +197,23 @@ watch(() => route.path, syncExpandedGroups, { immediate: true });
         <!-- Logo -->
         <div
             :class="[
-                'flex items-center h-12 px-4 border-b border-white/10 flex-shrink-0 gap-3',
+                'flex items-center h-12 px-3.5 border-b border-white/10 flex-shrink-0 gap-2.5',
                 { 'justify-center': collapsed },
             ]"
         >
-            <RouterLink to="/" class="flex items-center gap-3 min-w-0">
-                <div class="flex-shrink-0 w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center shadow-sm">
+            <RouterLink to="/" class="flex items-center gap-2.5 min-w-0">
+                <div class="flex-shrink-0 w-7 h-7 bg-red-600 rounded-md flex items-center justify-center shadow-xs">
                     <Icon icon="heroicons:clock" class="w-4 h-4 text-white" />
                 </div>
 
-                <span v-if="!collapsed" class="text-sm font-bold text-gray-200 dark:text-white truncate tracking-tight">
+                <span v-if="!collapsed" class="text-xs font-bold text-gray-200 dark:text-white truncate tracking-tight uppercase">
                     Hour Ledger
                 </span>
             </RouterLink>
         </div>
 
         <!-- Navigation Items (scrollable) -->
-        <nav class="flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-0.5 px-2">
+        <nav class="flex-1 overflow-y-auto overflow-x-hidden py-2.5 space-y-0.5 px-2">
             <template v-for="item in navItems" :key="item.key">
                 <!-- Direct link (no children) -->
                 <RouterLink
@@ -221,16 +221,15 @@ watch(() => route.path, syncExpandedGroups, { immediate: true });
                     :to="item.to"
                     :title="collapsed ? item.label : undefined"
                     :class="[
-                        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150',
+                        'flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors duration-150',
                         {
-                            'bg-red-600 dark:text-white shadow-sm': isDirectActive(item.to),
-                            'text-gray-100 dark:hover:text-white hover:bg-gray-600/40 dark:hover:bg-white/10':
-                                !isDirectActive(item.to),
+                            'bg-red-600 text-white shadow-2xs': isDirectActive(item.to),
+                            'text-slate-300 hover:text-white hover:bg-white/10': !isDirectActive(item.to),
                             'justify-center': collapsed,
                         },
                     ]"
                 >
-                    <Icon :icon="item.icon" class="w-5 h-5 flex-shrink-0" />
+                    <Icon :icon="item.icon" class="w-4 h-4 flex-shrink-0" />
                     <span v-if="!collapsed" class="truncate">{{ item.label }}</span>
                 </RouterLink>
 
@@ -240,17 +239,16 @@ watch(() => route.path, syncExpandedGroups, { immediate: true });
                     <button
                         :title="collapsed ? item.label : undefined"
                         :class="[
-                            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150',
+                            'w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors duration-150 cursor-pointer',
                             {
-                                // dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-white
-                                'dark:bg-white/10 dark:text-white': isGroupActive(item),
-                                'dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-white': !isGroupActive(item),
+                                'bg-white/10 text-white': isGroupActive(item),
+                                'text-slate-300 hover:text-white hover:bg-white/10': !isGroupActive(item),
                                 'justify-center': collapsed,
                             },
                         ]"
                         @click="!collapsed && toggleExpanded(item.key)"
                     >
-                        <Icon :icon="item.icon" class="w-5 h-5 flex-shrink-0" />
+                        <Icon :icon="item.icon" class="w-4 h-4 flex-shrink-0" />
 
                         <span v-if="!collapsed" class="flex-1 text-left truncate">
                             {{ item.label }}
@@ -260,7 +258,7 @@ watch(() => route.path, syncExpandedGroups, { immediate: true });
                             v-if="!collapsed"
                             icon="heroicons:chevron-down"
                             :class="[
-                                'w-4 h-4 flex-shrink-0 transition-transform duration-200',
+                                'w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200',
                                 { 'rotate-180': isExpanded(item.key) },
                             ]"
                         />
@@ -269,24 +267,21 @@ watch(() => route.path, syncExpandedGroups, { immediate: true });
                     <!-- Sub-items -->
                     <div
                         v-if="!collapsed && isExpanded(item.key)"
-                        class="mt-0.5 ml-3 pl-3 border-l border-white/10 space-y-0.5"
+                        class="mt-0.5 ml-3 pl-2.5 border-l border-white/10 space-y-0.5"
                     >
                         <RouterLink
                             v-for="child in item.children"
                             :key="child.to"
                             :to="child.to"
                             :class="[
-                                'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150',
+                                'flex items-center gap-2 px-2.5 py-1 rounded-md text-2xs transition-colors duration-150',
                                 {
-                                    'text-red-400 font-medium bg-red-400/10 dark:bg-red-500/10': isChildActive(
-                                        child.to
-                                    ),
-                                    'text-gray-100 dark:hover:text-white hover:bg-gray-600/40 dark:hover:bg-white/10':
-                                        !isChildActive(child.to),
+                                    'text-red-400 font-semibold bg-red-400/10': isChildActive(child.to),
+                                    'text-slate-300 hover:text-white hover:bg-white/10': !isChildActive(child.to),
                                 },
                             ]"
                         >
-                            <Icon :icon="child.icon" class="w-4 h-4 flex-shrink-0" />
+                            <Icon :icon="child.icon" class="w-3.5 h-3.5 flex-shrink-0" />
                             <span class="truncate">{{ child.label }}</span>
                         </RouterLink>
                     </div>
@@ -298,7 +293,7 @@ watch(() => route.path, syncExpandedGroups, { immediate: true });
         <div class="flex-shrink-0 border-t border-white/10 p-2">
             <button
                 :class="[
-                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/10 transition-colors duration-150',
+                    'w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs text-slate-400 hover:text-white hover:bg-white/10 transition-colors duration-150 cursor-pointer',
                     { 'justify-center': collapsed },
                 ]"
                 :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"

@@ -230,16 +230,16 @@ onMounted(async () => {
                 <button
                     type="button"
                     @click="router.push({ name: 'invoices' })"
-                    class="p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+                    class="p-1.5 rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
                     title="Back to invoices"
                 >
-                    <Icon icon="mdi:arrow-left" class="w-5 h-5" />
+                    <Icon icon="mdi:arrow-left" class="w-4 h-4" />
                 </button>
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">
+                    <h1 class="text-lg sm:text-xl font-semibold tracking-tight text-slate-900">
                         {{ isEditing ? 'Edit Invoice' : 'Create New Invoice' }}
                     </h1>
-                    <p class="text-xs text-gray-500 mt-0.5">
+                    <p class="text-xs text-slate-500 mt-0.5">
                         {{
                             isEditing ? `Editing ${computedPreviewCode}` : 'Fill in the details to generate an invoice'
                         }}
@@ -251,7 +251,7 @@ onMounted(async () => {
             <div class="flex items-center gap-2">
                 <span class="text-xs text-slate-500 font-medium">Invoice Code:</span>
                 <span
-                    class="font-mono text-sm font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200/90 shadow-2xs"
+                    class="font-mono text-xs font-semibold text-slate-900 bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200/90 shadow-2xs"
                 >
                     {{ computedPreviewCode }}
                 </span>

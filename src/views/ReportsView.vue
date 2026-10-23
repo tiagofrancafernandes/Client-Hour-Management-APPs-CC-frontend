@@ -455,24 +455,24 @@ async function exportReport(format: 'pdf' | 'excel') {
 
         <template v-else>
             <!-- Summary -->
-            <div v-if="summary" class="mb-6 grid gap-4 md:grid-cols-4">
-                <div class="rounded-xl bg-white border border-gray-200 p-4 shadow-sm">
-                    <p class="text-sm text-gray-500">Total Credits</p>
-                    <p class="text-2xl font-bold text-green-600">+{{ summary.total_credits }}h</p>
+            <div v-if="summary" class="mb-5 grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+                <div class="rounded-xl bg-white border border-slate-200/90 p-3.5 shadow-2xs">
+                    <p class="text-2xs font-semibold uppercase tracking-wider text-slate-500">Total Credits</p>
+                    <p class="text-lg sm:text-xl font-bold tracking-tight text-green-600 mt-1">+{{ summary.total_credits }}h</p>
                 </div>
-                <div class="rounded-xl bg-white border border-gray-200 p-4 shadow-sm">
-                    <p class="text-sm text-gray-500">Total Debits</p>
-                    <p class="text-2xl font-bold text-red-600">{{ summary.total_debits }}h</p>
+                <div class="rounded-xl bg-white border border-slate-200/90 p-3.5 shadow-2xs">
+                    <p class="text-2xs font-semibold uppercase tracking-wider text-slate-500">Total Debits</p>
+                    <p class="text-lg sm:text-xl font-bold tracking-tight text-red-600 mt-1">{{ summary.total_debits }}h</p>
                 </div>
-                <div class="rounded-xl bg-white border border-gray-200 p-4 shadow-sm">
-                    <p class="text-sm text-gray-500">Net Balance</p>
-                    <p class="text-2xl font-bold" :class="getHoursColor(summary.net_balance)">
+                <div class="rounded-xl bg-white border border-slate-200/90 p-3.5 shadow-2xs">
+                    <p class="text-2xs font-semibold uppercase tracking-wider text-slate-500">Net Balance</p>
+                    <p class="text-lg sm:text-xl font-bold tracking-tight mt-1" :class="getHoursColor(summary.net_balance)">
                         {{ formatHours(summary.net_balance) }}
                     </p>
                 </div>
-                <div class="rounded-xl bg-white border border-gray-200 p-4 shadow-sm">
-                    <p class="text-sm text-gray-500">Total Entries</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ summary.entry_count }}</p>
+                <div class="rounded-xl bg-white border border-slate-200/90 p-3.5 shadow-2xs">
+                    <p class="text-2xs font-semibold uppercase tracking-wider text-slate-500">Total Entries</p>
+                    <p class="text-lg sm:text-xl font-bold tracking-tight text-slate-900 mt-1">{{ summary.entry_count }}</p>
                 </div>
             </div>
 

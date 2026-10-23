@@ -1,34 +1,34 @@
 /**
  * Button base — shared across all button presets
- * rounded-lg, smooth shadow, spring tap effect
+ * rounded-md, subtle shadow, spring tap effect, modern tracking
  */
 const buttonBase =
-    'cursor-pointer rounded-lg font-medium transition-all duration-150 active:scale-[.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2';
+    'cursor-pointer rounded-md font-medium tracking-tight transition-all duration-150 active:scale-[.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 select-none';
 
 /**
  * Size presets
  */
 const sizes = {
-    default: 'px-3 py-1.5 text-sm',
-    sm: 'px-2.5 py-1 text-xs',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-5 py-2.5 text-base',
-    xl: 'px-6 py-3 text-base',
+    default: 'px-2.5 py-1.5 text-xs',
+    sm: 'px-2 py-1 text-2xs',
+    md: 'px-3 py-1.5 text-xs',
+    lg: 'px-3.5 py-2 text-sm',
+    xl: 'px-4 py-2 text-sm',
 };
 
 /**
  * Badge / Pill base
  */
-const badgeBase = 'inline-flex items-center font-medium select-none';
+const badgeBase = 'inline-flex items-center font-medium select-none tracking-tight';
 
 /**
  * Badge / Pill sizes
  */
 const badgeSizes = {
-    default: 'px-2 py-0.5 text-xs',
+    default: 'px-2 py-0.5 text-2xs',
     sm: 'px-1.5 py-0.5 text-[10px]',
-    md: 'px-2.5 py-1 text-xs',
-    lg: 'px-3 py-1.5 text-sm',
+    md: 'px-2 py-0.5 text-xs',
+    lg: 'px-2.5 py-1 text-xs',
 };
 
 /**
@@ -227,10 +227,10 @@ export function pillPresets() {
  * Focus ring uses primary red to match design system
  */
 const formFieldBase =
-    'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400';
+    'w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-900 transition-colors placeholder:text-gray-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400';
 
-const formFieldSm = 'px-2.5 py-1.5 text-xs';
-const formFieldLg = 'px-4 py-2.5 text-base';
+const formFieldSm = 'px-2 py-1 text-2xs';
+const formFieldLg = 'px-3.5 py-2 text-sm';
 
 /**
  * Select presets
@@ -238,17 +238,17 @@ const formFieldLg = 'px-4 py-2.5 text-base';
 export function selectPresets() {
     return {
         default: formFieldBase,
-        sm: [formFieldBase.replace('px-3 py-2', formFieldSm)].join(' '),
+        sm: [formFieldBase.replace('px-3 py-1.5', formFieldSm)].join(' '),
         md: formFieldBase,
-        lg: [formFieldBase.replace('px-3 py-2', formFieldLg)].join(' '),
+        lg: [formFieldBase.replace('px-3 py-1.5', formFieldLg)].join(' '),
     };
 }
 
 export function selectLabelPresets() {
     return {
-        default: 'block text-sm font-medium text-gray-700',
-        mb1: 'block text-sm font-medium text-gray-700 mb-1',
-        mb2: 'block text-sm font-medium text-gray-700 mb-2',
+        default: 'block text-xs font-medium text-gray-700',
+        mb1: 'block text-xs font-medium text-gray-700 mb-1',
+        mb2: 'block text-xs font-medium text-gray-700 mb-1.5',
     };
 }
 
@@ -258,17 +258,17 @@ export function selectLabelPresets() {
 export function dateInputPresets() {
     return {
         default: formFieldBase,
-        sm: formFieldBase.replace('px-3 py-2', formFieldSm),
+        sm: formFieldBase.replace('px-3 py-1.5', formFieldSm),
         md: formFieldBase,
-        lg: formFieldBase.replace('px-3 py-2', formFieldLg),
+        lg: formFieldBase.replace('px-3 py-1.5', formFieldLg),
     };
 }
 
 export function dateInputLabelPresets() {
     return {
-        default: 'block text-sm font-medium text-gray-700',
-        mb1: 'block text-sm font-medium text-gray-700 mb-1',
-        mb2: 'block text-sm font-medium text-gray-700 mb-2',
+        default: 'block text-xs font-medium text-gray-700',
+        mb1: 'block text-xs font-medium text-gray-700 mb-1',
+        mb2: 'block text-xs font-medium text-gray-700 mb-1.5',
     };
 }
 
@@ -278,17 +278,17 @@ export function dateInputLabelPresets() {
 export function textInputPresets() {
     return {
         default: formFieldBase,
-        sm: formFieldBase.replace('px-3 py-2', formFieldSm),
+        sm: formFieldBase.replace('px-3 py-1.5', formFieldSm),
         md: formFieldBase,
-        lg: formFieldBase.replace('px-3 py-2', formFieldLg),
+        lg: formFieldBase.replace('px-3 py-1.5', formFieldLg),
     };
 }
 
 export function textInputLabelPresets() {
     return {
-        default: 'block text-sm font-medium text-gray-700',
-        mb1: 'block text-sm font-medium text-gray-700 mb-1',
-        mb2: 'block text-sm font-medium text-gray-700 mb-2',
+        default: 'block text-xs font-medium text-gray-700',
+        mb1: 'block text-xs font-medium text-gray-700 mb-1',
+        mb2: 'block text-xs font-medium text-gray-700 mb-1.5',
     };
 }
 
@@ -298,16 +298,16 @@ export function textInputLabelPresets() {
 export function textareaPresets() {
     return {
         default: formFieldBase,
-        sm: formFieldBase.replace('px-3 py-2', formFieldSm),
+        sm: formFieldBase.replace('px-3 py-1.5', formFieldSm),
         md: formFieldBase,
-        lg: formFieldBase.replace('px-3 py-2', formFieldLg),
+        lg: formFieldBase.replace('px-3 py-1.5', formFieldLg),
     };
 }
 
 export function textareaLabelPresets() {
     return {
-        default: 'block text-sm font-medium text-gray-700',
-        mb1: 'block text-sm font-medium text-gray-700 mb-1',
-        mb2: 'block text-sm font-medium text-gray-700 mb-2',
+        default: 'block text-xs font-medium text-gray-700',
+        mb1: 'block text-xs font-medium text-gray-700 mb-1',
+        mb2: 'block text-xs font-medium text-gray-700 mb-1.5',
     };
 }

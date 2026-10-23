@@ -5,12 +5,12 @@
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
             @click.self="handleCancel"
         >
-            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md transform transition-all" @click.stop>
-                <div class="p-6">
-                    <div class="flex items-start gap-4">
+            <div class="bg-white rounded-xl shadow-xl w-full max-w-md transform transition-all border border-slate-200" @click.stop>
+                <div class="p-5">
+                    <div class="flex items-start gap-3.5">
                         <div
                             :class="[
-                                'flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center',
+                                'flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center',
                                 {
                                     'bg-red-100': variant === 'danger',
                                     'bg-amber-100': variant === 'warning',
@@ -22,7 +22,7 @@
                             <Icon
                                 :icon="icon"
                                 :class="[
-                                    'w-5 h-5',
+                                    'w-4 h-4',
                                     {
                                         'text-red-600': variant === 'danger',
                                         'text-amber-600': variant === 'warning',
@@ -34,18 +34,18 @@
                         </div>
 
                         <div class="flex-1">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                            <h3 class="text-sm font-semibold text-slate-900 mb-1">
                                 {{ title }}
                             </h3>
 
-                            <p class="text-sm text-gray-600">
+                            <p class="text-xs text-slate-600 leading-relaxed">
                                 {{ message }}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-gray-50 px-6 py-4 flex gap-3 justify-end rounded-b-2xl border-t border-gray-100">
+                <div class="bg-slate-50 px-5 py-3 flex gap-2.5 justify-end rounded-b-xl border-t border-slate-100">
                     <CButton preset="outlined-black" @click="handleCancel">
                         {{ cancelText }}
                     </CButton>
