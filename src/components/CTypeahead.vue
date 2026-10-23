@@ -82,7 +82,7 @@ const currentValue = computed(() => {
     return props.initialValue;
 });
 const labelClasses = computed(() => {
-    return props.labelClasses || ['font-medium text-gray-600'];
+    return props.labelClasses || ['text-gray-600'];
 });
 
 const selectedOption = computed(() => {
@@ -260,7 +260,7 @@ onMounted(async () => {
 <template>
     <div class="relative" :class="containerClasses || []">
         <!-- Label -->
-        <label v-if="label" class="block text-sm" :class="labelClasses || []">
+        <label v-if="label" class="block text-sm font-medium" :class="labelClasses || []">
             {{ label }}
             <span v-if="required" class="text-red-500 font-bold italic">*</span>
         </label>
