@@ -60,6 +60,14 @@ button:not([disabled]) {
             bg-red-50
             text-red-700;
     }
+
+    .flex select {
+        @apply min-w-[3rem];
+    }
+
+    .flex select:not([disabled]) {
+        @apply cursor-pointer;
+    }
 }
 
 .material-symbols-outlined {

@@ -63,3 +63,4 @@ export function formatInvoiceDate(dateString?: string | null): string {
         day: 'numeric',
     });
 }
+

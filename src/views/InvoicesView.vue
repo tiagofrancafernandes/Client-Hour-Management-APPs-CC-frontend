@@ -123,6 +123,13 @@ async function loadInvoices(page = 1): Promise<void> {
     });
 }
 
+watch(
+    () => filters.value.client_id,
+    () => {
+        loadInvoices(1);
+    }
+);
+
 watch(searchQuery, () => {
     if (searchDebounceTimer) {
         clearTimeout(searchDebounceTimer);
@@ -282,17 +289,14 @@ onMounted(async () => {
 
                 <!-- Client filter -->
                 <div v-if="canViewAny" class="space-y-1">
-                    <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Client</label>
-                    <select
+                    <CTypeahead
+                        label="Client"
                         v-model="filters.client_id"
-                        @change="loadInvoices(1)"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    >
-                        <option :value="null">All Clients</option>
-                        <option v-for="c in clientOptions" :key="c.value" :value="c.value">
-                            {{ c.label }}
-                        </option>
-                    </select>
+                        :initialOptions="clientOptions"
+                        placeholder="All Clients"
+                        clearable
+                        label-classes="uppercase tracking-wide"
+                    />
                 </div>
 
                 <!-- Status filter -->

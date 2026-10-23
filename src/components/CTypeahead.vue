@@ -256,7 +256,7 @@ onMounted(async () => {
 <template>
     <div class="relative" :class="containerClasses || []">
         <!-- Label -->
-        <label v-if="label" class="block text-sm font-medium text-gray-700 mb-1.5">
+        <label v-if="label" class="block text-sm font-medium text-gray-600">
             {{ label }}
             <span v-if="required" class="text-red-500 font-bold italic">*</span>
         </label>

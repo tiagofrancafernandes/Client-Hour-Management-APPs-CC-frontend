@@ -27,6 +27,8 @@ export function useProductsServices() {
             search?: string;
             type?: 'product' | 'service';
             is_active?: boolean;
+            sort_by?: string;
+            sort_direction?: 'asc' | 'desc';
             all?: boolean;
             per_page?: number;
             page?: number;
@@ -50,6 +52,14 @@ export function useProductsServices() {
                 params.append('is_active', filters.is_active.toString());
             }
 
+            if (filters.sort_by) {
+                params.append('sort_by', filters.sort_by);
+            }
+
+            if (filters.sort_direction) {
+                params.append('sort_direction', filters.sort_direction);
+            }
+
             if (filters.all) {
                 params.append('all', '1');
             }
@@ -66,17 +76,22 @@ export function useProductsServices() {
                 `/products-services?${params.toString()}`
             );
 
-            productsServices.value = (
-                'data' in response.data ? response.data?.data : response.data
-            ) as ProductService[];
+            if (filters.all) {
+                productsServices.value = (
+                    'data' in response.data ? response.data?.data : response.data
+                ) as ProductService[];
+                return response.data;
+            }
+
+            productsServices.value = response.data || [];
             pagination.value = {
-                currentPage: response.current_page,
-                lastPage: response.last_page,
-                perPage: response.per_page,
-                total: response.total,
+                currentPage: response.current_page || 1,
+                lastPage: response.last_page || 1,
+                perPage: response.per_page || 20,
+                total: response.total || 0,
             };
 
-            return response.data;
+            return response;
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to fetch products/services';
             error.value = message;

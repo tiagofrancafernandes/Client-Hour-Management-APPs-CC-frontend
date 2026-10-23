@@ -20,12 +20,19 @@ const { productsServices, fetchProductsServices } = useProductsServices();
 
 const isEditing = computed(() => !!route.params.id);
 
+const clientOptions = computed(() => {
+    return clients.value.map((client) => ({
+        value: client.id,
+        label: client.name,
+    }));
+});
+
 const form = ref<InvoiceForm>({
     client_id: 0,
     client_invoice_number: null,
     issue_date: new Date().toISOString().split('T')[0] as string,
     due_date: null,
-    currency: 'USD',
+    currency: 'BRL',
     tax_percentage: 0,
     discount_amount: 0,
     status: 'draft',
@@ -264,21 +271,14 @@ onMounted(async () => {
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <!-- Client Selection -->
                     <div class="space-y-1">
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide">
-                            Client
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <select
+                        <CTypeahead
+                            label="Client *"
                             v-model="form.client_id"
+                            :initialOptions="clientOptions"
+                            placeholder="Select a client..."
                             :disabled="isEditing"
                             required
-                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-                        >
-                            <option :value="0" disabled>Select a client...</option>
-                            <option v-for="client in clients" :key="client.id" :value="client.id">
-                                {{ client.name }}
-                            </option>
-                        </select>
+                        />
                     </div>
 
                     <!-- Client Invoice Number (Optional Counter) -->
@@ -316,8 +316,8 @@ onMounted(async () => {
                             required
                             class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                         >
-                            <option value="USD">USD ($)</option>
                             <option value="BRL">BRL (R$)</option>
+                            <option value="USD">USD ($)</option>
                             <option value="EUR">EUR (€)</option>
                             <option value="GBP">GBP (£)</option>
                         </select>
