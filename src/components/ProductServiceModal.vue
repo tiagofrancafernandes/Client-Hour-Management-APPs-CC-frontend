@@ -16,12 +16,14 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
     close: [];
-    save: [data: ProductServiceForm, id?: number];
+    save: [data: ProductServiceForm, id?: number, keepOpen?: boolean];
 }>();
 
 const isEditing = computed(() => !!props.item);
 
 const commonUnits = ['unit', 'hour', 'day', 'month', 'project', 'license'];
+
+const keepOpen = ref<boolean>(false);
 
 const form = ref<ProductServiceForm>({
     name: '',
@@ -32,6 +34,18 @@ const form = ref<ProductServiceForm>({
     default_quantity: 1,
     is_active: true,
 });
+
+function resetForm(): void {
+    form.value = {
+        name: '',
+        description: '',
+        type: 'service',
+        unit: 'hour',
+        default_price: 0,
+        default_quantity: 1,
+        is_active: true,
+    };
+}
 
 const isFormValid = computed(() => {
     if (!form.value.name.trim()) {
@@ -49,10 +63,12 @@ watch(
     () => props.show,
     (isOpen) => {
         if (!isOpen) {
+            resetForm();
             return;
         }
 
         if (props.item) {
+            keepOpen.value = false;
             form.value = {
                 name: props.item.name,
                 description: props.item.description || '',
@@ -65,15 +81,7 @@ watch(
             return;
         }
 
-        form.value = {
-            name: '',
-            description: '',
-            type: 'service',
-            unit: 'hour',
-            default_price: 0,
-            default_quantity: 1,
-            is_active: true,
-        };
+        resetForm();
     },
     { immediate: true }
 );
@@ -87,6 +95,7 @@ function handleClose(): void {
         return;
     }
 
+    resetForm();
     emit('close');
 }
 
@@ -95,7 +104,8 @@ function handleSubmit(): void {
         return;
     }
 
-    emit('save', { ...form.value }, props.item?.id);
+    const shouldKeepOpen = !isEditing.value && keepOpen.value;
+    emit('save', { ...form.value }, props.item?.id, shouldKeepOpen);
 }
 </script>
 
@@ -362,13 +372,30 @@ function handleSubmit(): void {
 
             <!-- Fixed Footer / Actions -->
             <div
-                class="px-6 py-4 border-t border-slate-100 bg-slate-50/80 flex items-center justify-end gap-3 shrink-0"
+                class="px-6 py-4 border-t border-slate-100 bg-slate-50/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0"
             >
-                <CButton preset="outlined-black" type="button" :disabled="loading" @click="handleClose">Cancel</CButton>
-                <CButton preset="red" type="submit" form="productServiceForm" :disabled="loading || !isFormValid">
-                    <Icon v-if="loading" icon="mdi:loading" class="w-4 h-4 animate-spin mr-1.5" />
-                    <span>{{ isEditing ? 'Save Changes' : 'Create Item' }}</span>
-                </CButton>
+                <div v-if="!isEditing" class="flex items-center gap-2">
+                    <input
+                        id="keep-modal-open"
+                        v-model="keepOpen"
+                        type="checkbox"
+                        class="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer"
+                    />
+                    <label for="keep-modal-open" class="text-xs font-medium text-slate-700 cursor-pointer select-none">
+                        Keep form open to add another
+                    </label>
+                </div>
+                <div v-else></div>
+
+                <div class="flex items-center justify-end gap-3">
+                    <CButton preset="outlined-black" type="button" :disabled="loading" @click="handleClose">
+                        Cancel
+                    </CButton>
+                    <CButton preset="red" type="submit" form="productServiceForm" :disabled="loading || !isFormValid">
+                        <Icon v-if="loading" icon="mdi:loading" class="w-4 h-4 animate-spin mr-1.5" />
+                        <span>{{ isEditing ? 'Save Changes' : keepOpen ? 'Create & Add Another' : 'Create Item' }}</span>
+                    </CButton>
+                </div>
             </div>
         </div>
     </div>

@@ -142,17 +142,20 @@ function closeModal(): void {
     editingItem.value = null;
 }
 
-async function handleSaveItem(data: ProductServiceForm, id?: number): Promise<void> {
+async function handleSaveItem(data: ProductServiceForm, id?: number, keepOpen?: boolean): Promise<void> {
     modalSaving.value = true;
     try {
         if (id) {
             await updateProductService(id, data);
             toast.success('Catalog item updated successfully');
+            closeModal();
         } else {
             await createProductService(data);
             toast.success('Catalog item created successfully');
+            if (!keepOpen) {
+                closeModal();
+            }
         }
-        closeModal();
         await loadData();
     } catch {
         toast.error('Failed to save item');
