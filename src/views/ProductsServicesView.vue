@@ -134,8 +134,8 @@ function openEditModal(item: ProductService): void {
     isModalOpen.value = true;
 }
 
-function closeModal(): void {
-    if (modalSaving.value) {
+function closeModal(force: boolean = false): void {
+    if (modalSaving.value && !force) {
         return;
     }
     isModalOpen.value = false;
@@ -148,12 +148,12 @@ async function handleSaveItem(data: ProductServiceForm, id?: number, keepOpen?: 
         if (id) {
             await updateProductService(id, data);
             toast.success('Catalog item updated successfully');
-            closeModal();
+            closeModal(true);
         } else {
             await createProductService(data);
             toast.success('Catalog item created successfully');
             if (!keepOpen) {
-                closeModal();
+                closeModal(true);
             }
         }
         await loadData();

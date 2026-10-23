@@ -112,6 +112,10 @@ function handleSubmit(): void {
 
     const shouldKeepOpen = !isEditing.value && keepOpen.value;
     emit('save', { ...form.value }, props.item?.id, shouldKeepOpen);
+
+    if (!shouldKeepOpen) {
+        resetForm();
+    }
 }
 </script>
 
@@ -397,13 +401,7 @@ function handleSubmit(): void {
                     <CButton preset="outlined-black" type="button" :disabled="loading" @click="handleClose">
                         Cancel
                     </CButton>
-                    <CButton
-                        preset="red"
-                        type="submit"
-                        form="productServiceForm"
-                        :disabled="loading || !isFormValid"
-                        @click="handleSubmit"
-                    >
+                    <CButton preset="red" type="button" :disabled="loading || !isFormValid" @click="handleSubmit">
                         <Icon v-if="loading" icon="mdi:loading" class="w-4 h-4 animate-spin mr-1.5" />
                         <span>
                             {{ isEditing ? 'Save Changes' : keepOpen ? 'Create & Add Another' : 'Create Item' }}
