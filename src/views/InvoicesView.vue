@@ -542,12 +542,12 @@ onMounted(async () => {
                                         <Icon icon="mdi:pencil-outline" class="w-3.5 h-3.5" />
                                     </button>
 
-                                    <!-- Print / PDF Preview -->
+                                    <!-- Print -->
                                     <button
                                         type="button"
                                         @click="openPrintModal(inv)"
                                         class="p-1 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
-                                        title="Print / PDF Preview"
+                                        title="Print"
                                     >
                                         <Icon icon="mdi:printer-outline" class="w-3.5 h-3.5" />
                                     </button>

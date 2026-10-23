@@ -24,7 +24,83 @@ const invoiceCode = computed(() => {
 });
 
 function handlePrint(): void {
-    window.print();
+    const printContent = document.getElementById('invoicePrintSheet');
+    if (!printContent) {
+        window.print();
+        return;
+    }
+
+    const styleTags = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+        .map((node) => node.outerHTML)
+        .join('\n');
+
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.visibility = 'hidden';
+
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (!doc) {
+        document.body.removeChild(iframe);
+        window.print();
+        return;
+    }
+
+    doc.open();
+    doc.write(`<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>${invoiceCode.value}</title>
+    ${styleTags}
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 12mm 15mm;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: #ffffff !important;
+            color: #0f172a;
+            font-family: Inter, system-ui, -apple-system, sans-serif;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        #invoicePrintSheet {
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+        }
+    </style>
+</head>
+<body>
+    ${printContent.outerHTML}
+</body>
+</html>`);
+    doc.close();
+
+    setTimeout(() => {
+        try {
+            iframe.contentWindow?.focus();
+            iframe.contentWindow?.print();
+        } finally {
+            setTimeout(() => {
+                if (iframe.parentNode) {
+                    iframe.parentNode.removeChild(iframe);
+                }
+            }, 1000);
+        }
+    }, 250);
 }
 
 function handleClose(): void {
@@ -62,7 +138,7 @@ function handleClose(): void {
                     <!-- Print Button -->
                     <CButton preset="red" type="button" @click="handlePrint">
                         <Icon icon="mdi:printer" class="w-4 h-4 mr-1.5" />
-                        <span>Print / Save as PDF</span>
+                        <span>Print</span>
                     </CButton>
 
                     <!-- Download PDF Button -->
@@ -306,25 +382,3 @@ function handleClose(): void {
         </div>
     </div>
 </template>
-
-<style>
-@media print {
-    body * {
-        visibility: hidden;
-    }
-    #invoicePrintSheet,
-    #invoicePrintSheet * {
-        visibility: visible;
-    }
-    #invoicePrintSheet {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        border: none !important;
-        box-shadow: none !important;
-    }
-}
-</style>

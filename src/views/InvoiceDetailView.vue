@@ -174,14 +174,14 @@ onMounted(async () => {
                         Edit
                     </button>
 
-                    <!-- Print / Preview Modal -->
+                    <!-- Print -->
                     <button
                         type="button"
                         @click="openPrintModal"
                         class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-slate-300 bg-white text-slate-800 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
                     >
                         <Icon icon="mdi:printer-outline" class="w-3.5 h-3.5" />
-                        Print / Preview
+                        Print
                     </button>
 
                     <!-- Download PDF -->
@@ -221,7 +221,9 @@ onMounted(async () => {
                 <!-- Summary Meta Grid -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-5 border-b border-gray-100">
                     <div>
-                        <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Client</span>
+                        <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                            Client
+                        </span>
                         <p class="text-xs font-semibold text-slate-900">{{ invoice.client?.name || '—' }}</p>
                     </div>
 
@@ -240,7 +242,9 @@ onMounted(async () => {
                     </div>
 
                     <div>
-                        <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Status</span>
+                        <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                            Status
+                        </span>
                         <span
                             :class="[
                                 'inline-flex items-center px-2 py-0.5 rounded-md text-2xs font-medium border capitalize',

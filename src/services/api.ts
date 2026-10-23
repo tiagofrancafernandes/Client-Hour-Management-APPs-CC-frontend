@@ -206,7 +206,7 @@ async function downloadFile(endpoint: string, filename: string | null = null): P
     const config: RequestInit = {
         method: 'GET',
         headers: {
-            Accept: 'application/octet-stream',
+            Accept: 'application/pdf, application/octet-stream, */*',
         },
         credentials: 'include',
     };
@@ -224,13 +224,6 @@ async function downloadFile(endpoint: string, filename: string | null = null): P
     }
 
     const contentDisposition = response.headers.get('Content-Disposition');
-
-    console.log('api.ts downloadFile', {
-        filename,
-        response,
-        contentDisposition,
-        responseHeaders: response.headers,
-    });
 
     if (!filename && contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
@@ -259,8 +252,13 @@ async function downloadFile(endpoint: string, filename: string | null = null): P
     link.download = filename;
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+
+    setTimeout(() => {
+        if (link.parentNode) {
+            link.parentNode.removeChild(link);
+        }
+        window.URL.revokeObjectURL(url);
+    }, 1500);
 }
 
 export const api = {
