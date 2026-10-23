@@ -338,11 +338,11 @@ onUnmounted(() => {
 
         <div class="w-full">
             <!-- Filter Tabs -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+            <div class="text-xs bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
                 <div class="flex overflow-x-auto">
                     <button
                         :class="[
-                            'px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap',
+                            'px-6 py-3 text-xs font-medium transition-colors whitespace-nowrap',
                             {
                                 'text-red-600 border-b-2 border-red-600': filterStatus === 'all',
                                 'text-gray-600 hover:text-gray-900': filterStatus !== 'all',
@@ -354,7 +354,7 @@ onUnmounted(() => {
                     </button>
                     <button
                         :class="[
-                            'px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap',
+                            'px-6 py-3 text-xs font-medium transition-colors whitespace-nowrap',
                             {
                                 'text-red-600 border-b-2 border-red-600': filterStatus === 'running',
                                 'text-gray-600 hover:text-gray-900': filterStatus !== 'running',
@@ -366,7 +366,7 @@ onUnmounted(() => {
                     </button>
                     <button
                         :class="[
-                            'px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap',
+                            'px-6 py-3 text-xs font-medium transition-colors whitespace-nowrap',
                             {
                                 'text-red-600 border-b-2 border-red-600': filterStatus === 'paused',
                                 'text-gray-600 hover:text-gray-900': filterStatus !== 'paused',
@@ -378,7 +378,7 @@ onUnmounted(() => {
                     </button>
                     <button
                         :class="[
-                            'px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap',
+                            'px-6 py-3 text-xs font-medium transition-colors whitespace-nowrap',
                             {
                                 'text-red-600 border-b-2 border-red-600': filterStatus === 'stopped',
                                 'text-gray-600 hover:text-gray-900': filterStatus !== 'stopped',
@@ -390,7 +390,7 @@ onUnmounted(() => {
                     </button>
                     <button
                         :class="[
-                            'px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap',
+                            'px-6 py-3 text-xs font-medium transition-colors whitespace-nowrap',
                             {
                                 'text-red-600 border-b-2 border-red-600': filterStatus === 'confirmed',
                                 'text-gray-600 hover:text-gray-900': filterStatus !== 'confirmed',
@@ -402,7 +402,7 @@ onUnmounted(() => {
                     </button>
                     <button
                         :class="[
-                            'px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap',
+                            'px-6 py-3 text-xs font-medium transition-colors whitespace-nowrap',
                             {
                                 'text-red-600 border-b-2 border-red-600': filterStatus === 'cancelled',
                                 'text-gray-600 hover:text-gray-900': filterStatus !== 'cancelled',
@@ -467,7 +467,7 @@ onUnmounted(() => {
                     </div>
 
                     <div class="flex justify-end w-full truncate">
-                        <div :class="['px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap']">
+                        <div :class="['px-6 py-text-xs-sm font-medium transition-colors whitespace-nowrap']">
                             <!-- List All toggle - admin only -->
                             <label v-if="canViewAnyTimer" class="flex cursor-pointer items-center gap-2 select-none">
                                 <span class="text-sm text-gray-600">List all users</span>

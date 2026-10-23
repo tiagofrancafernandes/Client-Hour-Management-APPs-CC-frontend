@@ -127,7 +127,7 @@ onUnmounted(() => {
         <!-- Timer actions: Desktop (md+) -->
         <div v-if="canCreateTimer" class="hidden md:flex items-center gap-2">
             <button
-                class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors font-medium"
+                class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-gray-700 hover:bg-gray-100 transition-colors font-medium"
                 @click="openManualEntryModal"
             >
                 <Icon icon="hugeicons:add-circle" class="w-4 h-4" />
@@ -136,7 +136,7 @@ onUnmounted(() => {
 
             <button
                 v-if="!hasActiveTimer"
-                class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-white bg-red-600 hover:bg-red-700 transition-colors font-medium"
+                class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-white bg-red-600 hover:bg-red-700 transition-colors font-medium"
                 @click="openStartTimerModal"
             >
                 <Icon icon="mdi:timer-plus" class="w-4 h-4" />
@@ -145,7 +145,7 @@ onUnmounted(() => {
 
             <button
                 v-else
-                class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-red-600 bg-red-50 hover:bg-red-100 transition-colors font-medium"
+                class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-red-600 bg-red-50 hover:bg-red-100 transition-colors font-medium"
                 @click="$router.push('/timers')"
             >
                 <Icon icon="mdi:timer" :class="['w-4 h-4', { 'animate-pulse': isTimerRunning }]" />
@@ -177,7 +177,7 @@ onUnmounted(() => {
                     class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50"
                 >
                     <button
-                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors"
                         @click="openManualEntryModal"
                     >
                         <Icon icon="hugeicons:add-circle" class="w-4 h-4 text-gray-400 flex-shrink-0" />
@@ -186,7 +186,7 @@ onUnmounted(() => {
 
                     <button
                         v-if="!hasActiveTimer"
-                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs text-red-600 hover:bg-red-50 transition-colors"
                         @click="openStartTimerModal"
                     >
                         <Icon icon="mdi:timer-plus" class="w-4 h-4 flex-shrink-0" />
@@ -195,7 +195,7 @@ onUnmounted(() => {
 
                     <button
                         v-else
-                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs text-red-600 hover:bg-red-50 transition-colors"
                         @click="
                             $router.push('/timers');
                             closeTimerMenu();
@@ -214,7 +214,7 @@ onUnmounted(() => {
         <!-- Right area -->
         <div ref="userMenuRef" class="relative">
             <button
-                class="flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                class="flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-xs text-gray-700 hover:bg-gray-100 transition-colors"
                 @click="toggleUserMenu"
             >
                 <!-- Avatar -->
@@ -258,7 +258,7 @@ onUnmounted(() => {
 
                     <!-- Profile link -->
                     <button
-                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors"
                         @click="goToProfile"
                     >
                         <Icon icon="heroicons:user-circle" class="w-4 h-4 text-gray-400 flex-shrink-0" />
@@ -268,7 +268,7 @@ onUnmounted(() => {
                     <!-- Logout -->
                     <button
                         :disabled="loading"
-                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
                         @click="handleLogout"
                     >
                         <Icon icon="heroicons:arrow-right-on-rectangle" class="w-4 h-4 flex-shrink-0" />

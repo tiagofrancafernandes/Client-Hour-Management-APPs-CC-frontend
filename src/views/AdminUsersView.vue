@@ -740,7 +740,7 @@ onMounted(async () => {
                                     class="inline-flex items-center gap-0.5 rounded-full bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-700"
                                 >
                                     <Icon icon="mdi:crown" class="text-[10px]" />
-                                    Admin
+                                    Client Admin
                                 </span>
 
                                 <span
@@ -1360,7 +1360,7 @@ onMounted(async () => {
                 }
             "
         >
-            <div class="flex w-full max-w-lg flex-col rounded-xl bg-white shadow-xl">
+            <div class="flex w-full max-w-xl flex-col rounded-xl bg-white shadow-xl">
                 <!-- Header -->
                 <div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">
                     <div class="flex items-center gap-3">

@@ -585,7 +585,7 @@ async function handleDeleteUser(userId: number) {
                 class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
                 @click.self="closeAttachModal"
             >
-                <div class="flex w-full max-w-md flex-col rounded-xl bg-white shadow-xl">
+                <div class="flex w-full max-w-lg flex-col rounded-xl bg-white shadow-xl">
                     <!-- Header -->
                     <div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">
                         <div class="flex items-center gap-3">
@@ -847,7 +847,7 @@ async function handleDeleteUser(userId: number) {
             v-if="showEditWalletModal && editingWallet"
             class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
         >
-            <div class="w-full max-w-md rounded-lg bg-white p-6">
+            <div class="w-full max-w-xl rounded-lg bg-white p-6">
                 <h2 class="mb-4 text-lg font-semibold">Edit Wallet</h2>
                 <div class="mb-4">
                     <label class="mb-1 block text-sm font-medium text-gray-700">Name</label>

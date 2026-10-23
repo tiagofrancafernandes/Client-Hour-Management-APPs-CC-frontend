@@ -201,7 +201,7 @@ onMounted(() => {
         <!-- Header -->
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
             <div>
-                <h1 class="text-lg sm:text-xl font-semibold text-slate-900 tracking-tight flex items-center gap-2">
+                <h1 class="text-sm sm:text-xl font-semibold text-slate-900 tracking-tight flex items-center gap-2">
                     <Icon icon="mdi:format-list-bulleted-type" class="w-5 h-5 text-red-600" />
                     Products & Services
                 </h1>
@@ -304,7 +304,7 @@ onMounted(() => {
         <!-- Table Container -->
         <div class="bg-white rounded-xl border border-gray-200 shadow-2xs overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="w-full text-left border-collapse text-xs">
                     <thead>
                         <tr
                             class="bg-slate-50 border-b border-gray-200 text-2xs font-semibold text-slate-500 uppercase tracking-wider select-none"
@@ -350,7 +350,7 @@ onMounted(() => {
                             </th>
                             <th
                                 @click="handleSort('default_price')"
-                                class="py-2.5 px-3.5 text-right cursor-pointer hover:bg-slate-100 transition-colors w-28"
+                                class="py-2.5 px-3.5 text-right cursor-pointer hover:bg-slate-100 transition-colors w-36"
                             >
                                 <div class="flex items-center justify-end gap-1">
                                     <span>Default Price</span>

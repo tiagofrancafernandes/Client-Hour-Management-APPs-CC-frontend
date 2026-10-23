@@ -454,7 +454,7 @@ async function handleRemoveClientUser(userId: number): Promise<void> {
                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
                 @click.self="showCreateModal = false"
             >
-                <div class="w-full max-w-md rounded-2xl bg-white shadow-xl">
+                <div class="w-full max-w-lg rounded-2xl bg-white shadow-xl">
                     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                         <h2 class="text-base font-semibold text-gray-900">New Client</h2>
                         <button
@@ -480,7 +480,7 @@ async function handleRemoveClientUser(userId: number): Promise<void> {
                             <textarea
                                 v-model="newClientNotes"
                                 rows="3"
-                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors resize-none"
+                                class="min-h-[8rem] max-h-[30vh] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors"
                                 placeholder="Optional notes..."
                             ></textarea>
                         </div>
@@ -501,7 +501,7 @@ async function handleRemoveClientUser(userId: number): Promise<void> {
                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
                 @click.self="closeEditModal"
             >
-                <div class="flex w-full max-w-lg flex-col rounded-2xl bg-white shadow-xl max-h-[90vh]">
+                <div class="flex w-full max-w-xl flex-col rounded-2xl bg-white shadow-xl max-h-[90vh]">
                     <!-- Modal Header -->
                     <div class="flex shrink-0 items-center justify-between px-6 py-4 border-b border-gray-100">
                         <div class="flex items-center gap-2.5">
@@ -574,7 +574,7 @@ async function handleRemoveClientUser(userId: number): Promise<void> {
                                 <textarea
                                     v-model="editingClient.notes"
                                     rows="3"
-                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors resize-none"
+                                    class="w-full min-h-[8rem] max-h-[30vh] resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors"
                                 ></textarea>
                             </div>
 

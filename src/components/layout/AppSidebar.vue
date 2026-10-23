@@ -62,13 +62,6 @@ const navItems = computed((): NavItem[] => {
             ],
         },
         {
-            key: 'reports',
-            label: 'Reports',
-            icon: 'heroicons:chart-bar',
-            to: '/reports',
-            show: permissions.canViewReports.value,
-        },
-        {
             key: 'timers',
             label: 'Timers',
             icon: 'heroicons:clock',
@@ -114,11 +107,18 @@ const navItems = computed((): NavItem[] => {
                     icon: 'heroicons:credit-card',
                 },
                 {
-                    label: 'Approvals',
+                    label: 'Pending Approvals',
                     to: '/payments/approvals',
                     icon: 'heroicons:check-badge',
                 },
             ],
+        },
+        {
+            key: 'reports',
+            label: 'Reports',
+            icon: 'heroicons:chart-bar',
+            to: '/reports',
+            show: permissions.canViewReports.value,
         },
         {
             key: 'admin',
