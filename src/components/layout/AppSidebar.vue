@@ -146,11 +146,19 @@ function isDirectActive(to: string): boolean {
     return route.path === to || route.path.startsWith(to + '/');
 }
 
-function isChildActive(to: string): boolean {
-    return route.path === to;
+function isChildActive(to: string, children: any[]|undefined): boolean {
+    if (!children || !Array.isArray(children)) {
+        return route.path === to;
+    }
+
+    return Boolean((route.path === to) || children.find((i: any) => i.to === route.path));
 }
 
 function isGroupActive(item: NavItem): boolean {
+    if (Array.isArray(item?.children) && item?.children.find((i: any) => i.to === route.path)) {
+        return true;
+    }
+
     if (item.basePath) {
         return route.path === item.basePath || route.path.startsWith(item.basePath + '/');
     }
@@ -276,7 +284,7 @@ watch(() => route.path, syncExpandedGroups, { immediate: true });
                             :class="[
                                 'flex items-center gap-2 px-2.5 py-1 rounded-md text-2xs transition-colors duration-150',
                                 {
-                                    'text-red-400 font-semibold bg-red-400/10': isChildActive(child.to),
+                                    'text-red-400 font-semibold bg-red-400/10': isChildActive(child.to, item?.children),
                                     'text-slate-300 hover:text-white hover:bg-white/10': !isChildActive(child.to),
                                 },
                             ]"

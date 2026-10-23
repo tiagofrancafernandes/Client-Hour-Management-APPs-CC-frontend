@@ -279,9 +279,9 @@ onMounted(async () => {
                     Invoice & Client Details
                 </h2>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-4 items-start">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-4 items-start">
                     <!-- Client Selection -->
-                    <div class="flex flex-col">
+                    <div class="flex flex-col col-span-2">
                         <div class="flex items-center justify-between h-5 mb-1.5">
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">
                                 Client
@@ -298,10 +298,10 @@ onMounted(async () => {
                     </div>
 
                     <!-- Client Invoice Number (Optional Counter) -->
-                    <div class="flex flex-col">
+                    <div class="flex flex-col col-span-2">
                         <div class="flex items-center justify-between h-5 mb-1.5">
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">
-                                Invoice # (Counter)
+                                Invoice number (sequence)
                             </label>
                             <span class="text-2xs text-slate-400 font-medium">Optional</span>
                         </div>

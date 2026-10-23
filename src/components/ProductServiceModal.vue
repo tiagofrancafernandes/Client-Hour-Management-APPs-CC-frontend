@@ -113,9 +113,7 @@ function handleSubmit(): void {
     const shouldKeepOpen = !isEditing.value && keepOpen.value;
     emit('save', { ...form.value }, props.item?.id, shouldKeepOpen);
 
-    if (!shouldKeepOpen) {
-        resetForm();
-    }
+    resetForm();
 }
 </script>
 
