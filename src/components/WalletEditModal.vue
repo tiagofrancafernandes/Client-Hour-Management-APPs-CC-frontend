@@ -206,7 +206,7 @@ function handleClose() {
                             id="description"
                             v-model="form.description"
                             rows="3"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                            class="w-full min-h-[4rem] max-h-[30vh] rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                             :disabled="isSubmitting"
                         ></textarea>
                     </div>
@@ -220,7 +220,7 @@ function handleClose() {
                             id="internal_note"
                             v-model="form.internal_note"
                             rows="3"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                            class="w-full min-h-[4rem] max-h-[30vh] rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                             :disabled="isSubmitting"
                             placeholder="Visible only to authorized users"
                         ></textarea>
