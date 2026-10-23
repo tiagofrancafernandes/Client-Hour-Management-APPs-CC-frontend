@@ -63,7 +63,9 @@ watch(
     () => props.show,
     (isOpen) => {
         if (!isOpen) {
-            resetForm();
+            if (!keepOpen.value) {
+                resetForm();
+            }
             return;
         }
 
@@ -81,7 +83,9 @@ watch(
             return;
         }
 
-        resetForm();
+        if (!keepOpen.value) {
+            resetForm();
+        }
     },
     { immediate: true }
 );
@@ -95,7 +99,9 @@ function handleClose(): void {
         return;
     }
 
-    resetForm();
+    if (!keepOpen.value) {
+        resetForm();
+    }
     emit('close');
 }
 
@@ -391,9 +397,17 @@ function handleSubmit(): void {
                     <CButton preset="outlined-black" type="button" :disabled="loading" @click="handleClose">
                         Cancel
                     </CButton>
-                    <CButton preset="red" type="submit" form="productServiceForm" :disabled="loading || !isFormValid">
+                    <CButton
+                        preset="red"
+                        type="submit"
+                        form="productServiceForm"
+                        :disabled="loading || !isFormValid"
+                        @click="handleSubmit"
+                    >
                         <Icon v-if="loading" icon="mdi:loading" class="w-4 h-4 animate-spin mr-1.5" />
-                        <span>{{ isEditing ? 'Save Changes' : keepOpen ? 'Create & Add Another' : 'Create Item' }}</span>
+                        <span>
+                            {{ isEditing ? 'Save Changes' : keepOpen ? 'Create & Add Another' : 'Create Item' }}
+                        </span>
                     </CButton>
                 </div>
             </div>

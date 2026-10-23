@@ -21,10 +21,19 @@ const { productsServices, fetchProductsServices } = useProductsServices();
 const isEditing = computed(() => !!route.params.id);
 
 const clientOptions = computed(() => {
-    return clients.value.map((client) => ({
+    const list = clients.value.map((client) => ({
         value: client.id,
         label: client.name,
     }));
+
+    if (invoice.value?.client && !list.some((c) => c.value === invoice.value?.client_id)) {
+        list.unshift({
+            value: invoice.value.client.id,
+            label: invoice.value.client.name,
+        });
+    }
+
+    return list;
 });
 
 const form = ref<InvoiceForm>({
@@ -163,6 +172,8 @@ async function handleSubmit(): Promise<void> {
     try {
         const payload: InvoiceForm = {
             ...form.value,
+            issue_date: form.value.issue_date ? String(form.value.issue_date).substring(0, 10) : '',
+            due_date: form.value.due_date ? String(form.value.due_date).substring(0, 10) : null,
             client_invoice_number: form.value.client_invoice_number || undefined,
         };
 
@@ -175,8 +186,8 @@ async function handleSubmit(): Promise<void> {
         }
 
         router.push({ name: 'invoices' });
-    } catch {
-        toast.error('Failed to save invoice');
+    } catch (err: any) {
+        toast.error(err?.message || 'Failed to save invoice');
     }
 }
 
@@ -199,21 +210,21 @@ onMounted(async () => {
             form.value = {
                 client_id: invoice.value.client_id,
                 client_invoice_number: invoice.value.client_invoice_number,
-                issue_date: invoice.value.issue_date,
-                due_date: invoice.value.due_date,
+                issue_date: invoice.value.issue_date ? String(invoice.value.issue_date).substring(0, 10) : '',
+                due_date: invoice.value.due_date ? String(invoice.value.due_date).substring(0, 10) : null,
                 currency: invoice.value.currency,
-                tax_percentage: parseFloat(invoice.value.tax_percentage),
-                discount_amount: parseFloat(invoice.value.discount_amount),
+                tax_percentage: Number(invoice.value.tax_percentage) || 0,
+                discount_amount: Number(invoice.value.discount_amount) || 0,
                 status: invoice.value.status,
-                hidden: invoice.value.hidden,
+                hidden: invoice.value.hidden ?? false,
                 notes: invoice.value.notes,
                 items:
                     invoice.value.items?.map((item) => ({
                         id: item.id,
                         description: item.description,
-                        unit: item.unit,
-                        quantity: parseFloat(item.quantity),
-                        unit_price: parseFloat(item.unit_price),
+                        unit: item.unit || 'unit',
+                        quantity: Number(item.quantity) || 1,
+                        unit_price: Number(item.unit_price) || 0,
                         product_service_id: item.product_service_id,
                     })) || [],
             };

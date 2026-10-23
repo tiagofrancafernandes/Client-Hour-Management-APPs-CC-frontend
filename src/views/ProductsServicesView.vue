@@ -157,8 +157,8 @@ async function handleSaveItem(data: ProductServiceForm, id?: number, keepOpen?: 
             }
         }
         await loadData();
-    } catch {
-        toast.error('Failed to save item');
+    } catch (err: any) {
+        toast.error(err?.message || 'Failed to save item');
     } finally {
         modalSaving.value = false;
     }

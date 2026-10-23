@@ -102,15 +102,24 @@ export function useProductsServices() {
         }
     }
 
+    function unwrapItem(response: any): ProductService {
+        if (response && typeof response === 'object' && 'data' in response && response.data) {
+            return unwrapItem(response.data);
+        }
+
+        return response as ProductService;
+    }
+
     async function fetchProductService(id: number) {
         loading.value = true;
         error.value = null;
 
         try {
-            const response = await api.get<GenericResponse<ProductService>>(`/products-services/${id}`);
-            productService.value = 'data' in response.data ? response.data?.data : response.data;
+            const response = await api.get<any>(`/products-services/${id}`);
+            const item = unwrapItem(response);
+            productService.value = item;
 
-            return response.data;
+            return item;
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to fetch product/service';
             error.value = message;
@@ -126,10 +135,11 @@ export function useProductsServices() {
         error.value = null;
 
         try {
-            const response = await api.post<GenericResponse<ProductService>>('/products-services', data);
-            productService.value = response.data as ProductService;
+            const response = await api.post<any>('/products-services', data);
+            const item = unwrapItem(response);
+            productService.value = item;
 
-            return response.data as ProductService;
+            return item;
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to create product/service';
             error.value = message;
@@ -145,10 +155,16 @@ export function useProductsServices() {
         error.value = null;
 
         try {
-            const response = await api.put<GenericResponse<ProductService>>(`/products-services/${id}`, data);
-            productService.value = 'data' in response.data ? response.data?.data : response.data;
+            const response = await api.put<any>(`/products-services/${id}`, data);
+            const item = unwrapItem(response);
+            productService.value = item;
 
-            return productService.value;
+            return item;
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to update product/service';
+            error.value = message;
+
+            throw err;
         } finally {
             loading.value = false;
         }
