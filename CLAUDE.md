@@ -88,13 +88,29 @@ const { clients, loading, error, fetchClients } = useClients();
 
 ### Path Aliases
 
-Configured in `vite.config.ts`:
+Configured in `vite.config.ts` and `tsconfig.app.json`:
 
-- `@` → `./src`
-- `@composables` → `./src/composables`
-- `@views` → `./src/views`
-- `@services` → `./src/services`
-- `@types` → `./src/types`
+- `@` or `@/` → `./src`
+- `@@` or `@@/` → `./` (repository root)
+- `@components` or `@components/` → `./src/components`
+- `@composables` or `@composables/` → `./src/composables`
+- `@views` or `@views/` → `./src/views`
+- `@services` or `@services/` → `./src/services`
+- `@types` or `@types/` → `./src/types`
+- `@utils` or `@utils/` → `./src/utils`
+- `@stores` or `@stores/` → `./src/stores`
+- `@assets` or `@assets/` → `./src/assets`
+- `@layouts` or `@layouts/` → `./src/layouts`
+
+Always use these aliases instead of long relative paths like `../../../../`.
+
+## Single Responsibility Principle & File Size Limits
+
+- **Avoid Monolithic Files**: View and component files should not grow excessively large (target: under 300–400 lines).
+- **Extract UI Components**: Decompose large view templates into small, focused sub-components inside `@components/` (e.g. modals, tables, summary cards, action panels).
+- **Extract Composables**: Move state management, asynchronous data fetching, and business operations to dedicated composables in `@composables/`.
+- **Extract Utility Functions**: Place pure formatting (currency, dates, badges), data transformations, and helpers into `@utils/`.
+- **Single Responsibility**: Each component, composable, and utility file should have one clear purpose and responsibility.
 
 ## Vue.js Guidelines
 
