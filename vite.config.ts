@@ -29,7 +29,7 @@ export default defineConfig({
             '@assets': fileURLToPath(new URL('./src/assets', import.meta.url)),
             '@layouts': fileURLToPath(new URL('./src/layouts', import.meta.url)),
             '@types': fileURLToPath(new URL('./src/types', import.meta.url)),
-            // '@components': fileURLToPath(new URL('./src/components', import.meta.url)),
+            '@components': fileURLToPath(new URL('./src/components', import.meta.url)),
             '@router': fileURLToPath(new URL('./src/router', import.meta.url)),
             '@composables': fileURLToPath(new URL('./src/composables', import.meta.url)),
             '@views': fileURLToPath(new URL('./src/views', import.meta.url)),
