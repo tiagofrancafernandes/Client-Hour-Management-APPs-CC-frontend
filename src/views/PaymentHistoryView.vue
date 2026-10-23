@@ -8,7 +8,9 @@ import { usePermissions } from '@composables/usePermissions';
 import { useClients } from '@composables/useClients';
 import { useWallets } from '@composables/useWallets';
 import { useToast } from '@composables/useToast';
-import CPaymentHistoryFilters, { type PaymentHistoryFilterState } from '@components/CPaymentHistoryFilters.vue';
+import CPaymentHistoryFilters, {
+    type PaymentHistoryFilterState,
+} from '@components/CPaymentHistoryFilters.vue';
 import CPaymentHistoryTable from '@components/CPaymentHistoryTable.vue';
 import CPurchaseDetailModal from '@components/CPurchaseDetailModal.vue';
 import CPaymentHistoryInstructionsModal from '@components/CPaymentHistoryInstructionsModal.vue';

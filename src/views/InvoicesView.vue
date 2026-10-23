@@ -1,19 +1,40 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { Icon } from '@iconify/vue';
-import { useInvoices } from '@/composables/useInvoices';
-import { useClients } from '@/composables/useClients';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { Icon } from '@iconify/vue';
+import { useInvoices } from '@composables/useInvoices';
+import { useClients } from '@composables/useClients';
+import { useToast } from '@composables/useToast';
 import type { Invoice } from '@/types';
+import { formatInvoiceCode, getInvoiceStatusBadgeClass, formatInvoiceDate } from '@utils/invoice-helpers';
+import { formatCurrency } from '@utils/payment-helpers';
 
 const router = useRouter();
+const toast = useToast();
 
-const { invoices, loading, error, pagination, canViewAny, canCreate, canViewDraft, fetchInvoices } = useInvoices();
+const {
+    invoices,
+    loading,
+    error,
+    pagination,
+    canViewAny,
+    canCreate,
+    canViewDraft,
+    fetchInvoices,
+    deleteInvoice,
+    downloadMarkdown,
+    canEditInvoice,
+    canDeleteInvoice,
+} = useInvoices();
+
 const { clients, fetchClients } = useClients();
 
-// ─── Filters ────────────────────────────────────────────────────────────────
-
+// ─── Filters & Search State ──────────────────────────────────────────────────
 const showFilters = ref(true);
+const searchQuery = ref('');
+const sortBy = ref('issue_date');
+const sortDirection = ref<'asc' | 'desc'>('desc');
+const perPage = ref(15);
 
 const filters = ref({
     client_id: null as number | null,
@@ -22,9 +43,12 @@ const filters = ref({
     to_date: '',
 });
 
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 const activeFiltersCount = computed(() => {
     let count = 0;
 
+    if (searchQuery.value.trim()) count++;
     if (filters.value.client_id) count++;
     if (filters.value.status) count++;
     if (filters.value.from_date) count++;
@@ -34,9 +58,9 @@ const activeFiltersCount = computed(() => {
 });
 
 const clientOptions = computed(() => {
-    return clients.value.map((c) => ({
-        value: c.id,
-        label: c.name,
+    return clients.value.map((client) => ({
+        value: client.id,
+        label: client.name,
     }));
 });
 
@@ -54,33 +78,74 @@ const statusOptions = computed(() => {
     return options;
 });
 
-// ─── List State ────────────────────────────────────────────────────────────
+// ─── Delete Modal State ──────────────────────────────────────────────────────
+const showDeleteConfirmModal = ref(false);
+const invoiceToDelete = ref<Invoice | null>(null);
+const deletingInvoice = ref(false);
 
-onMounted(async () => {
-    await fetchInvoices();
-
-    if (canViewAny.value) {
-        await fetchClients();
-    }
-});
-
-function formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+function openDeleteModal(invoice: Invoice): void {
+    invoiceToDelete.value = invoice;
+    showDeleteConfirmModal.value = true;
 }
 
-function getStatusBadgeClass(status: string): string {
-    const classes: Record<string, string> = {
-        draft: 'bg-gray-100 text-gray-700',
-        sent: 'bg-blue-100 text-blue-700',
-        paid: 'bg-green-100 text-green-700',
-        cancelled: 'bg-red-100 text-red-700',
-    };
+async function handleDeleteConfirm(): Promise<void> {
+    if (!invoiceToDelete.value) {
+        return;
+    }
 
-    return classes[status] || 'bg-gray-100 text-gray-700';
+    deletingInvoice.value = true;
+
+    try {
+        await deleteInvoice(invoiceToDelete.value.id);
+        toast.success(`Invoice ${formatInvoiceCode(invoiceToDelete.value)} deleted successfully`);
+        showDeleteConfirmModal.value = false;
+        invoiceToDelete.value = null;
+        await loadInvoices();
+    } catch {
+        toast.error('Failed to delete invoice');
+    } finally {
+        deletingInvoice.value = false;
+    }
+}
+
+// ─── Data Fetching ───────────────────────────────────────────────────────────
+async function loadInvoices(page = 1): Promise<void> {
+    await fetchInvoices({
+        search: searchQuery.value.trim() || undefined,
+        client_id: filters.value.client_id || undefined,
+        status: filters.value.status || undefined,
+        from_date: filters.value.from_date || undefined,
+        to_date: filters.value.to_date || undefined,
+        sort_by: sortBy.value,
+        sort_direction: sortDirection.value,
+        per_page: perPage.value,
+        page,
+    });
+}
+
+watch(searchQuery, () => {
+    if (searchDebounceTimer) {
+        clearTimeout(searchDebounceTimer);
+    }
+
+    searchDebounceTimer = setTimeout(() => {
+        loadInvoices(1);
+    }, 400);
+});
+
+function handleSort(column: string): void {
+    if (sortBy.value === column) {
+        sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortBy.value = column;
+        sortDirection.value = 'desc';
+    }
+
+    loadInvoices(1);
 }
 
 function handleClearFilters(): void {
+    searchQuery.value = '';
     filters.value = {
         client_id: null,
         status: null,
@@ -88,272 +153,455 @@ function handleClearFilters(): void {
         to_date: '',
     };
 
-    handleSearch();
+    loadInvoices(1);
 }
 
-async function handleSearch(): Promise<void> {
-    await fetchInvoices({
-        client_id: filters.value.client_id || undefined,
-        status: filters.value.status || undefined,
-        from_date: filters.value.from_date || undefined,
-        to_date: filters.value.to_date || undefined,
-        page: 1,
-    });
+function handlePerPageChange(): void {
+    loadInvoices(1);
 }
 
-async function goToPage(page: number): Promise<void> {
-    await fetchInvoices({
-        client_id: filters.value.client_id || undefined,
-        status: filters.value.status || undefined,
-        from_date: filters.value.from_date || undefined,
-        to_date: filters.value.to_date || undefined,
-        page,
-    });
+function goToPage(page: number): void {
+    loadInvoices(page);
 }
 
 function goToInvoice(invoice: Invoice): void {
     router.push({ name: 'invoice-detail', params: { id: invoice.id } });
 }
 
+function goToEdit(invoice: Invoice): void {
+    router.push({ name: 'invoice-edit', params: { id: invoice.id } });
+}
+
 function goToCreate(): void {
     router.push({ name: 'invoice-create' });
 }
 
-async function handleRefreshList(): Promise<void> {
-    await fetchInvoices({
-        client_id: filters.value.client_id || undefined,
-        status: filters.value.status || undefined,
-        from_date: filters.value.from_date || undefined,
-        to_date: filters.value.to_date || undefined,
-        page: pagination.value.currentPage,
-    });
+async function handleDownload(invoice: Invoice): Promise<void> {
+    try {
+        const markdown = await downloadMarkdown(invoice.id);
+        const blob = new Blob([markdown], { type: 'text/markdown' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const code = invoice.code || `invoice-${invoice.invoice_number}`;
+        a.download = `${code}.md`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        toast.success('Markdown downloaded successfully');
+    } catch {
+        toast.error('Failed to download markdown');
+    }
 }
+
+onMounted(async () => {
+    await loadInvoices();
+
+    if (canViewAny.value) {
+        await fetchClients();
+    }
+});
 </script>
 
 <template>
-    <div class="flex flex-col h-full">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
         <!-- Header -->
-        <div class="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-3">
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-red-100">
-                    <Icon icon="heroicons:document-text" class="text-red-600" />
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 shadow-xs">
+                    <Icon icon="mdi:receipt-text-outline" class="w-6 h-6 text-red-600" />
                 </div>
-                <h1 class="text-lg font-semibold text-gray-900">Invoices</h1>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Invoices</h1>
+                    <p class="text-sm text-gray-500">Manage client invoices, billing, and services</p>
+                </div>
             </div>
 
             <div class="flex items-center gap-3">
                 <button
-                    @click="handleRefreshList"
-                    :disabled="loading"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap"
-                    aria-label="Refresh list"
-                >
-                    <Icon icon="mdi:refresh" :class="['w-4 h-4', { 'animate-spin': loading }]" />
-                    <span>{{ loading ? 'Refreshing...' : 'Refresh' }}</span>
-                </button>
-
-                <CButton v-if="canCreate" preset="primary-md" icon="heroicons:plus" @click="goToCreate">
-                    New Invoice
-                </CButton>
-            </div>
-        </div>
-
-        <!-- Filters Card -->
-        <div class="flex-shrink-0 px-6 py-4 border-b border-gray-100 bg-gray-50">
-            <div class="flex items-center justify-between mb-3">
-                <button
-                    class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                    type="button"
                     @click="showFilters = !showFilters"
+                    :class="[
+                        'inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors cursor-pointer',
+                        {
+                            'bg-red-50 text-red-700 border-red-200': showFilters,
+                            'bg-white text-gray-700 border-gray-300 hover:bg-gray-50': !showFilters,
+                        },
+                    ]"
                 >
-                    <Icon
-                        icon="heroicons:funnel"
-                        class="w-4 h-4 transition-transform"
-                        :class="{ 'rotate-180': !showFilters }"
-                    />
-                    <span>Filters</span>
+                    <Icon icon="mdi:filter-outline" class="w-4 h-4" />
+                    Filters
                     <span
                         v-if="activeFiltersCount > 0"
-                        class="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-red-600 text-white text-[10px] font-bold"
+                        class="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-semibold bg-red-600 text-white"
                     >
                         {{ activeFiltersCount }}
                     </span>
                 </button>
 
                 <button
-                    v-if="activeFiltersCount > 0"
-                    class="text-xs text-red-600 hover:text-red-700 font-medium transition-colors"
-                    @click="handleClearFilters"
+                    type="button"
+                    @click="loadInvoices(pagination.currentPage)"
+                    :disabled="loading"
+                    class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors cursor-pointer"
                 >
-                    Clear all
+                    <Icon icon="mdi:refresh" :class="['w-4 h-4', { 'animate-spin': loading }]" />
+                    Refresh
                 </button>
-            </div>
 
-            <div v-if="showFilters" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                <CTypeahead
-                    v-if="canViewAny"
-                    label="Client"
-                    v-model="filters.client_id"
-                    :initialOptions="clientOptions"
-                    placeholder="All Clients"
-                    clearable
-                />
-
-                <CSelect label="Status" v-model="filters.status">
-                    <option :value="null">All Status</option>
-                    <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">
-                        {{ opt.label }}
-                    </option>
-                </CSelect>
-
-                <CInput label="From Date" v-model="filters.from_date" type="date" />
-
-                <CInput label="To Date" v-model="filters.to_date" type="date" />
-            </div>
-
-            <div v-if="showFilters" class="flex gap-2 mt-3">
-                <CButton preset="primary-sm" @click="handleSearch">Search</CButton>
-                <CButton preset="lightgray-sm" @click="handleClearFilters">Clear</CButton>
+                <CButton v-if="canCreate" preset="primary-md" @click="goToCreate">
+                    <Icon icon="mdi:plus" class="w-4 h-4 mr-1.5" />
+                    New Invoice
+                </CButton>
             </div>
         </div>
 
-        <!-- Table Container -->
-        <div class="flex-1 overflow-auto px-6 py-4">
-            <!-- Loading State -->
-            <div v-if="loading" class="flex items-center justify-center py-12">
-                <div class="text-center">
-                    <Icon icon="heroicons:arrow-path" class="w-8 h-8 text-gray-400 mx-auto mb-2 animate-spin" />
-                    <p class="text-sm text-gray-500">Loading invoices...</p>
+        <!-- Error state -->
+        <div v-if="error" class="mb-6 rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+            {{ error }}
+        </div>
+
+        <!-- Filter panel -->
+        <div v-if="showFilters" class="mb-5 rounded-xl border border-gray-200 bg-white shadow-sm p-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <!-- Search -->
+                <div class="space-y-1 sm:col-span-2">
+                    <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Search</label>
+                    <div class="relative">
+                        <Icon
+                            icon="mdi:magnify"
+                            class="w-5 h-5 absolute left-3 top-2.5 text-gray-400 pointer-events-none"
+                        />
+                        <input
+                            v-model="searchQuery"
+                            type="text"
+                            placeholder="Search by #C12-I005, client, notes, item..."
+                            class="w-full rounded-lg border border-gray-300 pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        />
+                    </div>
+                </div>
+
+                <!-- Client filter -->
+                <div v-if="canViewAny" class="space-y-1">
+                    <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Client</label>
+                    <select
+                        v-model="filters.client_id"
+                        @change="loadInvoices(1)"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    >
+                        <option :value="null">All Clients</option>
+                        <option v-for="c in clientOptions" :key="c.value" :value="c.value">
+                            {{ c.label }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Status filter -->
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Status</label>
+                    <select
+                        v-model="filters.status"
+                        @change="loadInvoices(1)"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    >
+                        <option :value="null">All Statuses</option>
+                        <option v-for="s in statusOptions" :key="s.value" :value="s.value">
+                            {{ s.label }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Clear filters button -->
+                <div class="flex items-end">
+                    <button
+                        v-if="activeFiltersCount > 0"
+                        type="button"
+                        @click="handleClearFilters"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 hover:text-red-600 transition-colors cursor-pointer"
+                    >
+                        <Icon icon="mdi:filter-off-outline" class="w-4 h-4" />
+                        Clear all
+                    </button>
                 </div>
             </div>
+        </div>
 
-            <!-- Error State -->
+        <!-- Table Card -->
+        <div class="relative bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <!-- Loading overlay -->
             <div
-                v-else-if="error"
-                class="flex items-center justify-center py-12 px-4 rounded-lg bg-red-50 border border-red-200"
+                v-if="loading"
+                class="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center pointer-events-none"
             >
-                <div class="text-center">
-                    <Icon icon="heroicons:exclamation-circle" class="w-8 h-8 text-red-500 mx-auto mb-2" />
-                    <p class="text-sm font-medium text-red-800">{{ error }}</p>
+                <div
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white shadow-md border border-gray-200 text-sm font-medium text-gray-700"
+                >
+                    <Icon icon="mdi:loading" class="w-4 h-4 animate-spin text-red-600" />
+                    Updating…
                 </div>
             </div>
 
-            <!-- Table -->
-            <div v-else class="border border-gray-200 rounded-lg overflow-hidden bg-white">
-                <table class="w-full">
-                    <thead class="bg-gray-50 border-b border-gray-200">
-                        <tr>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <!-- Invoice Code -->
                             <th
-                                class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 select-none"
+                                @click="handleSort('client_invoice_number')"
                             >
-                                Invoice #
+                                <div class="inline-flex items-center gap-1">
+                                    Invoice
+                                    <Icon
+                                        v-if="sortBy === 'client_invoice_number'"
+                                        :icon="sortDirection === 'asc' ? 'mdi:arrow-up' : 'mdi:arrow-down'"
+                                        class="w-3.5 h-3.5 text-red-600"
+                                    />
+                                </div>
                             </th>
+
+                            <!-- Client -->
                             <th
-                                class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                                v-if="canViewAny"
+                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
                             >
                                 Client
                             </th>
+
+                            <!-- Issue Date -->
                             <th
-                                class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 select-none"
+                                @click="handleSort('issue_date')"
                             >
-                                Date
+                                <div class="inline-flex items-center gap-1">
+                                    Issue Date
+                                    <Icon
+                                        v-if="sortBy === 'issue_date'"
+                                        :icon="sortDirection === 'asc' ? 'mdi:arrow-up' : 'mdi:arrow-down'"
+                                        class="w-3.5 h-3.5 text-red-600"
+                                    />
+                                </div>
                             </th>
+
+                            <!-- Due Date -->
                             <th
-                                class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 select-none"
+                                @click="handleSort('due_date')"
                             >
-                                Total
+                                <div class="inline-flex items-center gap-1">
+                                    Due Date
+                                    <Icon
+                                        v-if="sortBy === 'due_date'"
+                                        :icon="sortDirection === 'asc' ? 'mdi:arrow-up' : 'mdi:arrow-down'"
+                                        class="w-3.5 h-3.5 text-red-600"
+                                    />
+                                </div>
                             </th>
+
+                            <!-- Total -->
                             <th
-                                class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                                class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 select-none"
+                                @click="handleSort('total')"
                             >
-                                Status
+                                <div class="inline-flex items-center gap-1">
+                                    Total
+                                    <Icon
+                                        v-if="sortBy === 'total'"
+                                        :icon="sortDirection === 'asc' ? 'mdi:arrow-up' : 'mdi:arrow-down'"
+                                        class="w-3.5 h-3.5 text-red-600"
+                                    />
+                                </div>
                             </th>
+
+                            <!-- Status -->
                             <th
-                                class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 select-none"
+                                @click="handleSort('status')"
+                            >
+                                <div class="inline-flex items-center gap-1">
+                                    Status
+                                    <Icon
+                                        v-if="sortBy === 'status'"
+                                        :icon="sortDirection === 'asc' ? 'mdi:arrow-up' : 'mdi:arrow-down'"
+                                        class="w-3.5 h-3.5 text-red-600"
+                                    />
+                                </div>
+                            </th>
+
+                            <!-- Actions -->
+                            <th
+                                class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider"
                             >
                                 Actions
                             </th>
                         </tr>
                     </thead>
+
                     <tbody class="divide-y divide-gray-100">
                         <tr
-                            v-for="invoice in invoices"
-                            :key="invoice.id"
+                            v-for="inv in invoices"
+                            :key="inv.id"
                             class="hover:bg-gray-50 transition-colors cursor-pointer"
-                            @click="goToInvoice(invoice)"
+                            @click="goToInvoice(inv)"
                         >
-                            <td class="px-4 py-3">
-                                <span class="text-sm font-medium text-gray-900">#{{ invoice.invoice_number }}</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="text-sm text-gray-900">
-                                    {{ invoice.client?.name || 'N/A' }}
+                            <!-- Invoice Code -->
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <span
+                                    class="font-mono text-sm font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200/80 inline-flex items-center gap-1"
+                                >
+                                    {{ formatInvoiceCode(inv) }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3">
-                                <span class="text-sm text-gray-600">
-                                    {{ formatDate(invoice.issue_date) }}
-                                </span>
+
+                            <!-- Client -->
+                            <td
+                                v-if="canViewAny"
+                                class="px-4 py-3.5 text-sm text-gray-900 whitespace-nowrap font-medium"
+                            >
+                                {{ inv.client?.name || '—' }}
                             </td>
-                            <td class="px-4 py-3">
-                                <span class="text-sm font-medium text-gray-900">
-                                    {{ invoice.currency }} {{ invoice.total }}
-                                </span>
+
+                            <!-- Issue Date -->
+                            <td class="px-4 py-3.5 text-sm text-gray-600 whitespace-nowrap">
+                                {{ formatInvoiceDate(inv.issue_date) }}
                             </td>
-                            <td class="px-4 py-3">
+
+                            <!-- Due Date -->
+                            <td class="px-4 py-3.5 text-sm text-gray-600 whitespace-nowrap">
+                                {{ formatInvoiceDate(inv.due_date) }}
+                            </td>
+
+                            <!-- Total -->
+                            <td class="px-4 py-3.5 text-sm font-semibold text-gray-900 text-right whitespace-nowrap">
+                                {{ formatCurrency(inv.total, inv.currency) }}
+                            </td>
+
+                            <!-- Status -->
+                            <td class="px-4 py-3.5 whitespace-nowrap">
                                 <span
                                     :class="[
-                                        'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold',
-                                        getStatusBadgeClass(invoice.status),
+                                        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border',
+                                        getInvoiceStatusBadgeClass(inv.status),
                                     ]"
                                 >
-                                    {{ invoice.status }}
+                                    {{ inv.status }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-right">
-                                <button
-                                    class="text-sm text-red-600 hover:text-red-700 font-medium transition-colors"
-                                    @click.stop="goToInvoice(invoice)"
-                                >
-                                    View
-                                </button>
+
+                            <!-- Actions -->
+                            <td class="px-4 py-3.5 text-right whitespace-nowrap" @click.stop>
+                                <div class="inline-flex items-center gap-1.5 justify-end">
+                                    <button
+                                        type="button"
+                                        @click="goToInvoice(inv)"
+                                        class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                        title="View Details"
+                                    >
+                                        <Icon icon="mdi:eye-outline" class="w-4 h-4" />
+                                    </button>
+
+                                    <button
+                                        v-if="canEditInvoice(inv)"
+                                        type="button"
+                                        @click="goToEdit(inv)"
+                                        class="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
+                                        title="Edit Invoice"
+                                    >
+                                        <Icon icon="mdi:pencil-outline" class="w-4 h-4" />
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        @click="handleDownload(inv)"
+                                        class="p-1.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                                        title="Download Markdown"
+                                    >
+                                        <Icon icon="mdi:file-download-outline" class="w-4 h-4" />
+                                    </button>
+
+                                    <button
+                                        v-if="canDeleteInvoice(inv)"
+                                        type="button"
+                                        @click="openDeleteModal(inv)"
+                                        class="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                        title="Delete Invoice"
+                                    >
+                                        <Icon icon="mdi:trash-can-outline" class="w-4 h-4" />
+                                    </button>
+                                </div>
                             </td>
                         </tr>
 
                         <!-- Empty state -->
-                        <tr v-if="!invoices.length">
-                            <td colspan="6" class="px-6 py-12 text-center">
-                                <Icon icon="heroicons:document-text" class="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                                <p class="text-sm font-medium text-gray-500">No invoices found</p>
+                        <tr v-if="invoices.length === 0 && !loading">
+                            <td :colspan="canViewAny ? 7 : 6" class="px-6 py-12 text-center">
+                                <Icon icon="mdi:receipt-text-outline" class="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                                <h3 class="text-base font-semibold text-gray-900">No invoices found</h3>
+                                <p class="text-sm text-gray-500 mt-1">Try adjusting your filters or search keywords.</p>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-        </div>
 
-        <!-- Pagination -->
-        <div v-if="pagination.lastPage > 1" class="flex-shrink-0 px-6 py-4 border-t border-gray-100">
-            <div class="flex items-center justify-center gap-2">
-                <button
-                    :disabled="pagination.currentPage === 1"
-                    class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    @click="goToPage(pagination.currentPage - 1)"
-                >
-                    <Icon icon="heroicons:chevron-left" class="w-4 h-4" />
-                    Previous
-                </button>
-                <span class="text-sm text-gray-500">
-                    Page {{ pagination.currentPage }} of {{ pagination.lastPage }}
-                </span>
-                <button
-                    :disabled="pagination.currentPage === pagination.lastPage"
-                    class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    @click="goToPage(pagination.currentPage + 1)"
-                >
-                    Next
-                    <Icon icon="heroicons:chevron-right" class="w-4 h-4" />
-                </button>
+            <!-- Footer & Pagination -->
+            <div
+                class="px-5 py-3.5 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-3"
+            >
+                <div class="flex items-center gap-4 text-xs text-gray-500">
+                    <span>Showing {{ invoices.length }} of {{ pagination.total }} invoices</span>
+
+                    <div class="flex items-center gap-1.5">
+                        <span>Per page:</span>
+                        <select
+                            v-model.number="perPage"
+                            @change="handlePerPageChange"
+                            class="bg-white border border-gray-300 rounded px-2 py-0.5 text-xs text-gray-700 focus:outline-none"
+                        >
+                            <option :value="10">10</option>
+                            <option :value="15">15</option>
+                            <option :value="25">25</option>
+                            <option :value="50">50</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div v-if="pagination.lastPage > 1" class="flex items-center gap-1.5">
+                    <button
+                        type="button"
+                        :disabled="pagination.currentPage <= 1 || loading"
+                        @click="goToPage(pagination.currentPage - 1)"
+                        class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                        <Icon icon="mdi:chevron-left" class="w-4 h-4" />
+                        Previous
+                    </button>
+
+                    <span class="text-xs text-gray-600 px-2">
+                        Page {{ pagination.currentPage }} of {{ pagination.lastPage }}
+                    </span>
+
+                    <button
+                        type="button"
+                        :disabled="pagination.currentPage >= pagination.lastPage || loading"
+                        @click="goToPage(pagination.currentPage + 1)"
+                        class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                        Next
+                        <Icon icon="mdi:chevron-right" class="w-4 h-4" />
+                    </button>
+                </div>
             </div>
         </div>
+
+        <!-- Delete Confirmation Modal -->
+        <ConfirmModal
+            v-model:isOpen="showDeleteConfirmModal"
+            title="Delete Invoice?"
+            :message="`Are you sure you want to delete invoice ${formatInvoiceCode(invoiceToDelete)}? This action cannot be undone.`"
+            confirmText="Yes, Delete"
+            cancelText="Keep Invoice"
+            variant="danger"
+            @confirm="handleDeleteConfirm"
+        />
     </div>
 </template>

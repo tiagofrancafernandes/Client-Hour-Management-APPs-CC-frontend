@@ -388,6 +388,8 @@ export interface Invoice {
     client_id: number;
     invoice_number: number;
     client_invoice_number: number;
+    code?: string;
+    formatted_code?: string;
     issue_date: string;
     due_date: string | null;
     currency: string;
@@ -409,6 +411,7 @@ export interface Invoice {
 
 export interface InvoiceForm {
     client_id: number;
+    client_invoice_number?: number | null;
     issue_date: string | null | undefined;
     due_date?: string | null;
     currency: string;

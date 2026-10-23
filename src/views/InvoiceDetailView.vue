@@ -1,198 +1,67 @@
-<template>
-    <div class="container mx-auto px-4 py-8">
-        <div v-if="loading" class="text-center">
-            <p class="text-gray-600 dark:text-gray-400">Loading invoice...</p>
-        </div>
-
-        <div v-else-if="error" class="rounded-lg bg-red-50 p-4 text-red-800">
-            {{ error }}
-        </div>
-
-        <div v-else-if="invoice" class="space-y-6">
-            <div class="flex items-center justify-between">
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Invoice #{{ invoice.invoice_number }}</h1>
-                <div class="flex gap-2">
-                    <button
-                        v-if="canEditInvoice(invoice)"
-                        type="button"
-                        class="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-50"
-                        @click="handleEdit"
-                    >
-                        Edit
-                    </button>
-                    <button
-                        type="button"
-                        class="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-                        @click="handleDownloadMarkdown"
-                    >
-                        Download Markdown
-                    </button>
-                </div>
-            </div>
-
-            <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <div>
-                        <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Invoice Details</h2>
-                        <dl class="space-y-2">
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Client</dt>
-                                <dd class="text-gray-900 dark:text-white">{{ invoice.client?.name }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Issue Date</dt>
-                                <dd class="text-gray-900 dark:text-white">{{ formatDate(invoice.issue_date) }}</dd>
-                            </div>
-                            <div v-if="invoice.due_date">
-                                <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Due Date</dt>
-                                <dd class="text-gray-900 dark:text-white">{{ formatDate(invoice.due_date) }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Status</dt>
-                                <dd>
-                                    <span
-                                        :class="[
-                                            'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
-                                            {
-                                                'bg-gray-100 text-gray-800': invoice.status === 'draft',
-                                                'bg-blue-100 text-blue-800': invoice.status === 'sent',
-                                                'bg-green-100 text-green-800': invoice.status === 'paid',
-                                                'bg-red-100 text-red-800': invoice.status === 'cancelled',
-                                            },
-                                        ]"
-                                    >
-                                        {{ invoice.status }}
-                                    </span>
-                                </dd>
-                            </div>
-                        </dl>
-                    </div>
-
-                    <div>
-                        <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Totals</h2>
-                        <dl class="space-y-2">
-                            <div class="flex justify-between">
-                                <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Subtotal</dt>
-                                <dd class="text-gray-900 dark:text-white">
-                                    {{ invoice.currency }} {{ invoice.subtotal }}
-                                </dd>
-                            </div>
-                            <div class="flex justify-between">
-                                <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Tax ({{ invoice.tax_percentage }}%)
-                                </dt>
-                                <dd class="text-gray-900 dark:text-white">
-                                    {{ invoice.currency }} {{ invoice.tax_amount }}
-                                </dd>
-                            </div>
-                            <div v-if="parseFloat(invoice.discount_amount) > 0" class="flex justify-between">
-                                <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Discount</dt>
-                                <dd class="text-gray-900 dark:text-white">
-                                    -{{ invoice.currency }} {{ invoice.discount_amount }}
-                                </dd>
-                            </div>
-                            <div class="flex justify-between border-t pt-2">
-                                <dt class="text-lg font-bold text-gray-900 dark:text-white">Total</dt>
-                                <dd class="text-lg font-bold text-gray-900 dark:text-white">
-                                    {{ invoice.currency }} {{ invoice.total }}
-                                </dd>
-                            </div>
-                        </dl>
-                    </div>
-                </div>
-
-                <div v-if="invoice.notes" class="mt-6">
-                    <h3 class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">Notes</h3>
-                    <p class="text-gray-900 dark:text-white">{{ invoice.notes }}</p>
-                </div>
-            </div>
-
-            <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-                <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Line Items</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
-                            <tr>
-                                <th
-                                    class="px-4 py-2 text-left text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
-                                >
-                                    Description
-                                </th>
-                                <th
-                                    class="px-4 py-2 text-left text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
-                                >
-                                    Unit
-                                </th>
-                                <th
-                                    class="px-4 py-2 text-right text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
-                                >
-                                    Quantity
-                                </th>
-                                <th
-                                    class="px-4 py-2 text-right text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
-                                >
-                                    Unit Price
-                                </th>
-                                <th
-                                    class="px-4 py-2 text-right text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
-                                >
-                                    Total
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                            <tr v-for="item in invoice.items" :key="item.id">
-                                <td class="px-4 py-3 text-gray-900 dark:text-white">{{ item.description }}</td>
-                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ item.unit }}</td>
-                                <td class="px-4 py-3 text-right text-gray-900 dark:text-white">{{ item.quantity }}</td>
-                                <td class="px-4 py-3 text-right text-gray-900 dark:text-white">
-                                    {{ invoice.currency }} {{ item.unit_price }}
-                                </td>
-                                <td class="px-4 py-3 text-right font-medium text-gray-900 dark:text-white">
-                                    {{ invoice.currency }} {{ item.line_total }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
-
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useInvoices } from '@/composables/useInvoices';
-import { useToast } from '@/composables/useToast';
+import { Icon } from '@iconify/vue';
+import { useInvoices } from '@composables/useInvoices';
+import { useToast } from '@composables/useToast';
+import { formatInvoiceCode, getInvoiceStatusBadgeClass, formatInvoiceDate } from '@utils/invoice-helpers';
+import { formatCurrency } from '@utils/payment-helpers';
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
-const { invoice, loading, error, fetchInvoice, downloadMarkdown, canEditInvoice } = useInvoices();
 
-function formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
+const { invoice, loading, error, fetchInvoice, deleteInvoice, downloadMarkdown, canEditInvoice, canDeleteInvoice } =
+    useInvoices();
 
-function handleEdit() {
+const showDeleteConfirmModal = ref(false);
+const deletingInvoice = ref(false);
+
+function handleEdit(): void {
     router.push({ name: 'invoice-edit', params: { id: route.params.id } });
 }
 
-async function handleDownloadMarkdown() {
+async function handleDownloadMarkdown(): Promise<void> {
+    if (!invoice.value) {
+        return;
+    }
+
     try {
-        const markdown = await downloadMarkdown(Number(route.params.id));
+        const markdown = await downloadMarkdown(invoice.value.id);
         const blob = new Blob([markdown], { type: 'text/markdown' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `invoice-${invoice.value?.invoice_number}.md`;
+        const code = invoice.value.code || `invoice-${invoice.value.invoice_number}`;
+        a.download = `${code}.md`;
         a.click();
         window.URL.revokeObjectURL(url);
         toast.success('Markdown downloaded successfully');
-    } catch (err) {
+    } catch {
         toast.error('Failed to download markdown');
+    }
+}
+
+function openDeleteModal(): void {
+    showDeleteConfirmModal.value = true;
+}
+
+async function handleDeleteConfirm(): Promise<void> {
+    if (!invoice.value) {
+        return;
+    }
+
+    deletingInvoice.value = true;
+
+    try {
+        await deleteInvoice(invoice.value.id);
+        toast.success(`Invoice ${formatInvoiceCode(invoice.value)} deleted successfully`);
+        router.push({ name: 'invoices' });
+    } catch {
+        toast.error('Failed to delete invoice');
+    } finally {
+        deletingInvoice.value = false;
+        showDeleteConfirmModal.value = false;
     }
 }
 
@@ -200,3 +69,250 @@ onMounted(async () => {
     await fetchInvoice(Number(route.params.id));
 });
 </script>
+
+<template>
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- Loading state -->
+        <div v-if="loading" class="bg-white rounded-xl border border-gray-200 p-12 text-center shadow-sm">
+            <Icon icon="mdi:loading" class="w-8 h-8 animate-spin text-red-600 mx-auto mb-2" />
+            <p class="text-sm text-gray-500">Loading invoice details...</p>
+        </div>
+
+        <!-- Error state -->
+        <div v-else-if="error" class="rounded-xl bg-red-50 border border-red-200 p-6 text-red-700">
+            <div class="flex items-center gap-3">
+                <Icon icon="mdi:alert-circle-outline" class="w-6 h-6 shrink-0" />
+                <div>
+                    <h3 class="text-base font-semibold">Failed to load invoice</h3>
+                    <p class="text-sm mt-0.5">{{ error }}</p>
+                </div>
+            </div>
+            <button
+                type="button"
+                @click="router.push({ name: 'invoices' })"
+                class="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-red-700 hover:text-red-900 cursor-pointer"
+            >
+                <Icon icon="mdi:arrow-left" class="w-4 h-4" />
+                Back to invoices
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div v-else-if="invoice" class="space-y-6">
+            <!-- Header bar -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <button
+                        type="button"
+                        @click="router.push({ name: 'invoices' })"
+                        class="p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+                        title="Back to invoices"
+                    >
+                        <Icon icon="mdi:arrow-left" class="w-5 h-5" />
+                    </button>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Invoice</h1>
+                            <span
+                                class="font-mono text-base font-bold text-slate-900 bg-slate-100 px-3 py-0.5 rounded-lg border border-slate-200 shadow-2xs"
+                            >
+                                {{ formatInvoiceCode(invoice) }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Issued for
+                            <span class="font-semibold text-slate-800">{{ invoice.client?.name }}</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button
+                        v-if="canEditInvoice(invoice)"
+                        type="button"
+                        @click="handleEdit"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs cursor-pointer"
+                    >
+                        <Icon icon="mdi:pencil-outline" class="w-4 h-4" />
+                        Edit
+                    </button>
+
+                    <button
+                        type="button"
+                        @click="handleDownloadMarkdown"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs cursor-pointer"
+                    >
+                        <Icon icon="mdi:file-download-outline" class="w-4 h-4" />
+                        Download Markdown
+                    </button>
+
+                    <button
+                        v-if="canDeleteInvoice(invoice)"
+                        type="button"
+                        @click="openDeleteModal"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors cursor-pointer"
+                    >
+                        <Icon icon="mdi:trash-can-outline" class="w-4 h-4" />
+                        Delete
+                    </button>
+                </div>
+            </div>
+
+            <!-- Details Card -->
+            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-6">
+                <!-- Summary Meta Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-6 border-b border-gray-100">
+                    <div>
+                        <span class="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-1">Client</span>
+                        <p class="text-sm font-bold text-gray-900">{{ invoice.client?.name || '—' }}</p>
+                    </div>
+
+                    <div>
+                        <span class="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                            Issue Date
+                        </span>
+                        <p class="text-sm font-medium text-gray-800">{{ formatInvoiceDate(invoice.issue_date) }}</p>
+                    </div>
+
+                    <div>
+                        <span class="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                            Due Date
+                        </span>
+                        <p class="text-sm font-medium text-gray-800">{{ formatInvoiceDate(invoice.due_date) }}</p>
+                    </div>
+
+                    <div>
+                        <span class="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-1">Status</span>
+                        <span
+                            :class="[
+                                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border',
+                                getInvoiceStatusBadgeClass(invoice.status),
+                            ]"
+                        >
+                            {{ invoice.status }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Line Items Table -->
+                <div>
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Line Items</h3>
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                                    >
+                                        #
+                                    </th>
+                                    <th
+                                        class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                                    >
+                                        Description
+                                    </th>
+                                    <th
+                                        class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                                    >
+                                        Unit
+                                    </th>
+                                    <th
+                                        class="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                                    >
+                                        Quantity
+                                    </th>
+                                    <th
+                                        class="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                                    >
+                                        Unit Price
+                                    </th>
+                                    <th
+                                        class="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                                    >
+                                        Total
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 bg-white">
+                                <tr v-for="(item, idx) in invoice.items" :key="item.id || idx">
+                                    <td class="px-4 py-3 text-xs text-gray-400 font-mono">{{ idx + 1 }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 font-medium">
+                                        {{ item.description }}
+                                    </td>
+                                    <td class="px-4 py-3 text-xs text-gray-600">{{ item.unit || 'unit' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-800 text-right">{{ item.quantity }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-800 text-right">
+                                        {{ formatCurrency(item.unit_price, invoice.currency) }}
+                                    </td>
+                                    <td class="px-4 py-3 text-sm font-bold text-gray-900 text-right">
+                                        {{ formatCurrency(item.line_total, invoice.currency) }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Bottom Grid: Notes & Totals -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 pt-2">
+                    <!-- Notes -->
+                    <div class="md:col-span-7">
+                        <div v-if="invoice.notes" class="rounded-xl bg-gray-50 border border-gray-200 p-4 space-y-1.5">
+                            <h4 class="text-2xs font-bold uppercase tracking-wider text-gray-500">
+                                Notes & Instructions
+                            </h4>
+                            <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ invoice.notes }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Totals Box -->
+                    <div class="md:col-span-5">
+                        <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-2.5 text-sm">
+                            <div class="flex justify-between text-slate-600">
+                                <span>Subtotal</span>
+                                <span class="font-medium text-slate-900">
+                                    {{ formatCurrency(invoice.subtotal, invoice.currency) }}
+                                </span>
+                            </div>
+
+                            <div v-if="Number(invoice.tax_percentage) > 0" class="flex justify-between text-slate-600">
+                                <span>Tax ({{ invoice.tax_percentage }}%)</span>
+                                <span class="font-medium text-slate-900">
+                                    + {{ formatCurrency(invoice.tax_amount, invoice.currency) }}
+                                </span>
+                            </div>
+
+                            <div v-if="Number(invoice.discount_amount) > 0" class="flex justify-between text-slate-600">
+                                <span>Discount</span>
+                                <span class="font-medium text-red-600">
+                                    - {{ formatCurrency(invoice.discount_amount, invoice.currency) }}
+                                </span>
+                            </div>
+
+                            <div class="border-t border-slate-200 pt-2 flex justify-between items-baseline">
+                                <span class="text-base font-bold text-slate-900">Total Due</span>
+                                <div class="text-right">
+                                    <span class="text-xl font-extrabold text-red-600 tracking-tight">
+                                        {{ formatCurrency(invoice.total, invoice.currency) }}
+                                    </span>
+                                    <span class="text-xs text-slate-400 block font-normal">{{ invoice.currency }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <ConfirmModal
+            v-model:isOpen="showDeleteConfirmModal"
+            title="Delete Invoice?"
+            :message="`Are you sure you want to delete invoice ${formatInvoiceCode(invoice)}? This action cannot be undone.`"
+            confirmText="Yes, Delete"
+            cancelText="Keep Invoice"
+            variant="danger"
+            @confirm="handleDeleteConfirm"
+        />
+    </div>
+</template>

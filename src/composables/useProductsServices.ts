@@ -27,6 +27,8 @@ export function useProductsServices() {
             search?: string;
             type?: 'product' | 'service';
             is_active?: boolean;
+            all?: boolean;
+            per_page?: number;
             page?: number;
         } = {}
     ) {
@@ -46,6 +48,14 @@ export function useProductsServices() {
 
             if (filters.is_active !== undefined) {
                 params.append('is_active', filters.is_active.toString());
+            }
+
+            if (filters.all) {
+                params.append('all', '1');
+            }
+
+            if (filters.per_page) {
+                params.append('per_page', filters.per_page.toString());
             }
 
             if (filters.page) {

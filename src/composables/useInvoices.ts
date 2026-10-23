@@ -51,6 +51,10 @@ export function useInvoices() {
             status?: string;
             from_date?: string;
             to_date?: string;
+            search?: string;
+            sort_by?: string;
+            sort_direction?: 'asc' | 'desc';
+            per_page?: number;
             page?: number;
         } = {}
     ) {
@@ -76,6 +80,22 @@ export function useInvoices() {
                 params.append('to_date', filters.to_date);
             }
 
+            if (filters.search) {
+                params.append('search', filters.search);
+            }
+
+            if (filters.sort_by) {
+                params.append('sort_by', filters.sort_by);
+            }
+
+            if (filters.sort_direction) {
+                params.append('sort_direction', filters.sort_direction);
+            }
+
+            if (filters.per_page) {
+                params.append('per_page', filters.per_page.toString());
+            }
+
             if (filters.page) {
                 params.append('page', filters.page.toString());
             }
@@ -99,6 +119,22 @@ export function useInvoices() {
         } finally {
             loading.value = false;
         }
+    }
+
+    async function getNextInvoiceNumber(clientId: number): Promise<{
+        client_id: number;
+        next_client_invoice_number: number;
+        code: string;
+        formatted_code: string;
+    }> {
+        const response = await api.get<{
+            client_id: number;
+            next_client_invoice_number: number;
+            code: string;
+            formatted_code: string;
+        }>(`/invoices/next-number?client_id=${clientId}`);
+
+        return response;
     }
 
     async function fetchInvoice(id: number) {
@@ -263,6 +299,7 @@ export function useInvoices() {
         canHide,
         fetchInvoices,
         fetchInvoice,
+        getNextInvoiceNumber,
         createInvoice,
         updateInvoice,
         deleteInvoice,

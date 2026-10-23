@@ -1,130 +1,28 @@
-<template>
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="mb-6 text-3xl font-bold text-gray-900 dark:text-white">
-            {{ isEditing ? 'Edit Invoice' : 'New Invoice' }}
-        </h1>
-
-        <form class="space-y-6 rounded-lg bg-white p-6 shadow dark:bg-gray-800" @submit.prevent="handleSubmit">
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <CInput v-model="form.client_id" label="Client" type="number" required :disabled="isEditing" />
-
-                <CInput v-model="form.issue_date" label="Issue Date" type="date" required />
-
-                <CInput v-model="form.due_date" label="Due Date" type="date" />
-
-                <CInput v-model="form.currency" label="Currency" maxlength="3" placeholder="USD" required />
-
-                <CInput
-                    v-model.number="form.tax_percentage"
-                    label="Tax Percentage (%)"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                />
-
-                <CInput
-                    v-model.number="form.discount_amount"
-                    label="Discount Amount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                />
-
-                <CSelect v-model="form.status" label="Status">
-                    <option value="draft">Draft</option>
-                    <option value="sent">Sent</option>
-                    <option value="paid">Paid</option>
-                    <option value="cancelled">Cancelled</option>
-                </CSelect>
-
-                <div v-if="canHide" class="flex items-center gap-2">
-                    <input id="hidden" v-model="form.hidden" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
-                    <label for="hidden" class="text-sm text-gray-700 dark:text-gray-300">Hidden from customer</label>
-                </div>
-            </div>
-
-            <CTextarea v-model="form.notes" label="Notes" rows="3" />
-
-            <div class="border-t pt-6">
-                <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Line Items</h2>
-                    <button
-                        type="button"
-                        class="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-                        @click="addItem"
-                    >
-                        Add Item
-                    </button>
-                </div>
-
-                <div v-for="(item, index) in form.items" :key="index" class="mb-4 rounded-lg border p-4">
-                    <div class="mb-4 flex items-center justify-between">
-                        <h3 class="font-medium text-gray-900 dark:text-white">Item {{ index + 1 }}</h3>
-                        <button
-                            v-if="form.items.length > 1"
-                            type="button"
-                            class="text-red-600 hover:text-red-800"
-                            @click="removeItem(index)"
-                        >
-                            Remove
-                        </button>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        <div class="lg:col-span-2">
-                            <CInput v-model="item.description" label="Description" required />
-                        </div>
-
-                        <CInput v-model="item.unit" label="Unit" placeholder="unit" />
-
-                        <CInput
-                            v-model.number="item.quantity"
-                            label="Quantity"
-                            type="number"
-                            step="0.01"
-                            min="0.01"
-                            required
-                        />
-
-                        <CInput
-                            v-model.number="item.unit_price"
-                            label="Unit Price"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            required
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex gap-4 border-t pt-6">
-                <CButton type="submit" :disabled="loading">
-                    {{ isEditing ? 'Update Invoice' : 'Create Invoice' }}
-                </CButton>
-                <CButton preset="outlined-black" type="button" @click="handleCancel">Cancel</CButton>
-            </div>
-        </form>
-    </div>
-</template>
-
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useInvoices } from '@/composables/useInvoices';
-import { useToast } from '@/composables/useToast';
-import type { InvoiceForm, InvoiceItemForm } from '@/types';
+import { Icon } from '@iconify/vue';
+import { useInvoices } from '@composables/useInvoices';
+import { useClients } from '@composables/useClients';
+import { useProductsServices } from '@composables/useProductsServices';
+import { useToast } from '@composables/useToast';
+import type { InvoiceForm, ProductService } from '@/types';
+import InvoiceItemRow from '@components/InvoiceItemRow.vue';
+import InvoiceTotalsSummary from '@components/InvoiceTotalsSummary.vue';
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
-const { invoice, loading, fetchInvoice, createInvoice, updateInvoice, canHide } = useInvoices();
+
+const { invoice, loading, fetchInvoice, createInvoice, updateInvoice, getNextInvoiceNumber, canHide } = useInvoices();
+const { clients, fetchClients } = useClients();
+const { productsServices, fetchProductsServices } = useProductsServices();
 
 const isEditing = computed(() => !!route.params.id);
 
 const form = ref<InvoiceForm>({
     client_id: 0,
+    client_invoice_number: null,
     issue_date: new Date().toISOString().split('T')[0] as string,
     due_date: null,
     currency: 'USD',
@@ -139,50 +37,161 @@ const form = ref<InvoiceForm>({
             unit: 'unit',
             quantity: 1,
             unit_price: 0,
+            product_service_id: null,
         },
     ],
 });
 
-function addItem() {
+const nextNumberInfo = ref<{
+    client_id: number;
+    next_client_invoice_number: number;
+    code: string;
+    formatted_code: string;
+} | null>(null);
+
+const fetchingNextNumber = ref(false);
+const showCancelConfirmModal = ref(false);
+
+const computedPreviewCode = computed(() => {
+    if (!form.value.client_id) {
+        return '—';
+    }
+
+    if (form.value.client_invoice_number) {
+        const padded = String(form.value.client_invoice_number).padStart(3, '0');
+        return `#C${form.value.client_id}-I${padded}`;
+    }
+
+    if (nextNumberInfo.value && nextNumberInfo.value.client_id === form.value.client_id) {
+        return nextNumberInfo.value.formatted_code;
+    }
+
+    return `#C${form.value.client_id}-I...`;
+});
+
+const subtotal = computed(() => {
+    return form.value.items.reduce((acc, item) => {
+        const qty = Number(item.quantity) || 0;
+        const price = Number(item.unit_price) || 0;
+        return acc + qty * price;
+    }, 0);
+});
+
+async function handleClientChange(): Promise<void> {
+    if (!form.value.client_id) {
+        nextNumberInfo.value = null;
+        return;
+    }
+
+    if (isEditing.value) {
+        return;
+    }
+
+    fetchingNextNumber.value = true;
+
+    try {
+        const result = await getNextInvoiceNumber(form.value.client_id);
+        nextNumberInfo.value = result;
+    } catch {
+        nextNumberInfo.value = null;
+    } finally {
+        fetchingNextNumber.value = false;
+    }
+}
+
+watch(
+    () => form.value.client_id,
+    () => {
+        handleClientChange();
+    }
+);
+
+function addItem(): void {
     form.value.items.push({
         description: '',
         unit: 'unit',
         quantity: 1,
         unit_price: 0,
+        product_service_id: null,
     });
 }
 
-function removeItem(index: number) {
+function removeItem(index: number): void {
     form.value.items.splice(index, 1);
 }
 
-async function handleSubmit() {
+function handleAddPreset(preset: ProductService): void {
+    form.value.items.push({
+        description: preset.name,
+        unit: preset.unit || 'unit',
+        quantity: Number(preset.default_quantity) || 1,
+        unit_price: Number(preset.default_price) || 0,
+        product_service_id: preset.id,
+    });
+}
+
+async function handleSubmit(): Promise<void> {
+    if (!form.value.client_id) {
+        toast.error('Please select a client');
+        return;
+    }
+
+    if (form.value.items.length === 0) {
+        toast.error('Invoice must contain at least one line item');
+        return;
+    }
+
+    for (const item of form.value.items) {
+        if (!item.description.trim()) {
+            toast.error('All line items must have a description');
+            return;
+        }
+
+        if (Number(item.quantity) <= 0) {
+            toast.error('Item quantity must be greater than zero');
+            return;
+        }
+    }
+
     try {
+        const payload: InvoiceForm = {
+            ...form.value,
+            client_invoice_number: form.value.client_invoice_number || undefined,
+        };
+
         if (isEditing.value) {
-            await updateInvoice(Number(route.params.id), form.value);
+            await updateInvoice(Number(route.params.id), payload);
             toast.success('Invoice updated successfully');
         } else {
-            await createInvoice(form.value);
-            toast.success('Invoice created successfully');
+            const created = await createInvoice(payload);
+            toast.success(`Invoice ${created.formatted_code || ''} created successfully`);
         }
 
         router.push({ name: 'invoices' });
-    } catch (err) {
+    } catch {
         toast.error('Failed to save invoice');
     }
 }
 
-function handleCancel() {
+function handleCancelClick(): void {
+    showCancelConfirmModal.value = true;
+}
+
+function handleCancelConfirm(): void {
+    showCancelConfirmModal.value = false;
     router.push({ name: 'invoices' });
 }
 
 onMounted(async () => {
+    await Promise.all([fetchClients(1, ''), fetchProductsServices({ all: true, is_active: true })]);
+
     if (isEditing.value) {
         await fetchInvoice(Number(route.params.id));
 
         if (invoice.value) {
             form.value = {
                 client_id: invoice.value.client_id,
+                client_invoice_number: invoice.value.client_invoice_number,
                 issue_date: invoice.value.issue_date,
                 due_date: invoice.value.due_date,
                 currency: invoice.value.currency,
@@ -205,3 +214,276 @@ onMounted(async () => {
     }
 });
 </script>
+
+<template>
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <button
+                    type="button"
+                    @click="router.push({ name: 'invoices' })"
+                    class="p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+                    title="Back to invoices"
+                >
+                    <Icon icon="mdi:arrow-left" class="w-5 h-5" />
+                </button>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">
+                        {{ isEditing ? 'Edit Invoice' : 'Create New Invoice' }}
+                    </h1>
+                    <p class="text-xs text-gray-500 mt-0.5">
+                        {{
+                            isEditing ? `Editing ${computedPreviewCode}` : 'Fill in the details to generate an invoice'
+                        }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Preview badge -->
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-500 font-medium">Invoice Code:</span>
+                <span
+                    class="font-mono text-sm font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200/90 shadow-2xs"
+                >
+                    {{ computedPreviewCode }}
+                </span>
+            </div>
+        </div>
+
+        <form @submit.prevent="handleSubmit" class="space-y-6">
+            <!-- Top Card: Client & Invoice Info -->
+            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-5">
+                <h2
+                    class="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 pb-2 border-b border-gray-100"
+                >
+                    <Icon icon="mdi:account-details-outline" class="w-4 h-4 text-slate-500" />
+                    Invoice & Client Details
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Client Selection -->
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide">
+                            Client
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <select
+                            v-model="form.client_id"
+                            :disabled="isEditing"
+                            required
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        >
+                            <option :value="0" disabled>Select a client...</option>
+                            <option v-for="client in clients" :key="client.id" :value="client.id">
+                                {{ client.name }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Client Invoice Number (Optional Counter) -->
+                    <div class="space-y-1">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide">
+                                Invoice # (Counter)
+                            </label>
+                            <span class="text-2xs text-slate-400">Optional</span>
+                        </div>
+                        <input
+                            v-model.number="form.client_invoice_number"
+                            type="number"
+                            min="1"
+                            :placeholder="nextNumberInfo ? String(nextNumberInfo.next_client_invoice_number) : 'Auto'"
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                        />
+                        <p class="text-2xs text-slate-500 mt-1">
+                            {{
+                                nextNumberInfo
+                                    ? `Suggested: #${nextNumberInfo.next_client_invoice_number} (leave empty to use auto-sequence)`
+                                    : 'Auto-generated sequence if left blank'
+                            }}
+                        </p>
+                    </div>
+
+                    <!-- Currency -->
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide">
+                            Currency
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <select
+                            v-model="form.currency"
+                            required
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                        >
+                            <option value="USD">USD ($)</option>
+                            <option value="BRL">BRL (R$)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                        </select>
+                    </div>
+
+                    <!-- Issue Date -->
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide">
+                            Issue Date
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                            v-model="form.issue_date"
+                            type="date"
+                            required
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                        />
+                    </div>
+
+                    <!-- Due Date -->
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide">Due Date</label>
+                        <input
+                            v-model="form.due_date"
+                            type="date"
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                        />
+                    </div>
+
+                    <!-- Status -->
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide">Status</label>
+                        <select
+                            v-model="form.status"
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                        >
+                            <option value="draft">Draft</option>
+                            <option value="sent">Sent</option>
+                            <option value="paid">Paid</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Hidden from customer toggle -->
+                <div v-if="canHide" class="flex items-center gap-2 pt-1">
+                    <input
+                        id="hidden-invoice"
+                        v-model="form.hidden"
+                        type="checkbox"
+                        class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                    />
+                    <label for="hidden-invoice" class="text-xs font-medium text-gray-700 cursor-pointer">
+                        Hidden from customer portal
+                    </label>
+                </div>
+            </div>
+
+            <!-- Middle Card: Line Items -->
+            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-4">
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100"
+                >
+                    <div>
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                            <Icon icon="mdi:format-list-bulleted" class="w-4 h-4 text-slate-500" />
+                            Line Items (Products & Services)
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            Select catalog services/products or type custom inline items
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <!-- Quick Add preset dropdown -->
+                        <div v-if="productsServices.length > 0" class="relative inline-block text-left">
+                            <select
+                                @change="
+                                    (e) => {
+                                        const id = Number((e.target as HTMLSelectElement).value);
+                                        const found = productsServices.find((p) => p.id === id);
+                                        if (found) handleAddPreset(found);
+                                        (e.target as HTMLSelectElement).value = '';
+                                    }
+                                "
+                                class="text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none transition-colors cursor-pointer"
+                            >
+                                <option value="">+ Add from Catalog...</option>
+                                <option v-for="ps in productsServices" :key="ps.id" :value="ps.id">
+                                    {{ ps.name }} ({{ ps.type }})
+                                </option>
+                            </select>
+                        </div>
+
+                        <button
+                            type="button"
+                            @click="addItem"
+                            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700 shadow-2xs transition-colors cursor-pointer"
+                        >
+                            <Icon icon="mdi:plus" class="w-4 h-4" />
+                            Add Custom Item
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Items list -->
+                <div class="space-y-3">
+                    <InvoiceItemRow
+                        v-for="(item, index) in form.items"
+                        :key="index"
+                        :item="item"
+                        :index="index"
+                        :currency="form.currency"
+                        :products-services="productsServices"
+                        :can-remove="form.items.length > 1"
+                        @remove="removeItem"
+                    />
+                </div>
+            </div>
+
+            <!-- Bottom Section: Notes & Totals Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <!-- Notes -->
+                <div class="md:col-span-7 bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-2">
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide">
+                        Invoice Notes & Payment Terms
+                    </label>
+                    <textarea
+                        v-model="form.notes"
+                        rows="4"
+                        placeholder="Add optional notes, bank instructions, or thank you message for the customer..."
+                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all resize-none"
+                    ></textarea>
+                </div>
+
+                <!-- Summary Totals Box -->
+                <div class="md:col-span-5">
+                    <InvoiceTotalsSummary
+                        :currency="form.currency"
+                        :subtotal="subtotal"
+                        v-model:tax-percentage="form.tax_percentage"
+                        v-model:discount-amount="form.discount_amount"
+                    />
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex items-center justify-between border-t border-gray-200 pt-5">
+                <CButton preset="outlined-black" type="button" @click="handleCancelClick">Cancel</CButton>
+
+                <CButton preset="primary-md" type="submit" :disabled="loading">
+                    <Icon icon="mdi:content-save-outline" class="w-4 h-4 mr-1.5" />
+                    {{ isEditing ? 'Update Invoice' : 'Create Invoice' }}
+                </CButton>
+            </div>
+        </form>
+
+        <!-- Cancel Confirmation Modal -->
+        <ConfirmModal
+            v-model:isOpen="showCancelConfirmModal"
+            title="Discard Changes?"
+            message="Are you sure you want to cancel? Any unsaved changes will be lost."
+            confirmText="Yes, Discard"
+            cancelText="Keep Editing"
+            variant="warning"
+            @confirm="handleCancelConfirm"
+        />
+    </div>
+</template>

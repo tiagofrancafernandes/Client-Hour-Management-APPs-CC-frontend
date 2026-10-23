@@ -156,3 +156,4 @@ export function getPurchaseStatusColor(status: string): string {
 
     return map[status] ?? 'bg-gray-100 text-gray-700';
 }
+
