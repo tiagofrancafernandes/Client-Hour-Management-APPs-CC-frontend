@@ -64,6 +64,10 @@ const canAddEntry = computed(() => {
     return canAddCredits.value || canAddDebits.value || canAddAdjustments.value;
 });
 
+const isCustomer = computed(() => {
+    return auth?.isCustomer?.value ? true : false;
+});
+
 const canEditWallet = computed(() => {
     // Customers cannot edit wallets
     if (auth.isCustomer.value) {
@@ -514,6 +518,7 @@ function refreshTzListOptions({ searchTerm }: { searchTerm: string | null }): Ty
                         <div class="mb-4 flex justify-end gap-2">
                             <div class="ml-auto flex items-center gap-2">
                                 <CButton
+                                    v-if="!isCustomer"
                                     class="inline-flex items-center gap-1 text-sm"
                                     icon="mdi:play-outline"
                                     :disabled="startingTimerId === wallet.id"

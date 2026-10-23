@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import api from '@/services/api';
 import { useAuth } from '@/composables/useAuth';
-import type { LedgerEntry, PaginatedResponse, WalletWithBalance } from '@/types';
+import type { LedgerEntry, PaginatedResponse, WalletWithBalance, WalletDiscountsConfig } from '@/types';
 
 export function useWallets() {
     const wallets = ref<WalletWithBalance[]>([]);
@@ -99,6 +99,8 @@ export function useWallets() {
         hourly_rate_reference?: number;
         currency_code?: string;
         credit_purchase_allowed?: boolean;
+        discounts_enabled?: boolean;
+        discounts_config?: WalletDiscountsConfig | null;
         internal_note?: string;
     }) {
         loading.value = true;
@@ -126,6 +128,8 @@ export function useWallets() {
             currency_code?: string;
             internal_note?: string;
             credit_purchase_allowed?: boolean;
+            discounts_enabled?: boolean;
+            discounts_config?: WalletDiscountsConfig | null;
         }
     ) {
         loading.value = true;

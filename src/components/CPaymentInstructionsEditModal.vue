@@ -98,7 +98,7 @@ function handleSave(): void {
                         <!-- Instructions Help -->
                         <div class="rounded-lg bg-blue-50 p-3 border border-blue-200">
                             <p class="text-xs text-blue-900">
-                                <strong>Dica:</strong>
+                                <strong>Tip:</strong>
                                 Add key fields such as "PIX Key", "Agency", "Account", "Holder", etc. Each field will
                                 appear on a line with the key in bold.
                             </p>
@@ -112,7 +112,7 @@ function handleSave(): void {
                                     <input
                                         v-model="pair.key"
                                         type="text"
-                                        placeholder="Ex: Chave PIX"
+                                        placeholder="Ex: PIX Key"
                                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
                                     />
                                 </div>

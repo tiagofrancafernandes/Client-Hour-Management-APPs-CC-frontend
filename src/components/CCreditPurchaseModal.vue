@@ -63,25 +63,88 @@ const formattedTotalHours = computed(() => {
     return decimalToTimeFormat(totalHours.value);
 });
 
-const discountPercentage = computed(() => {
-    if (selectedPackage.value === '5h') {
-        return 0.1;
+const isDiscountsEnabled = computed(() => {
+    return Boolean(props.wallet?.discounts_enabled);
+});
+
+const discountsConfig = computed(() => {
+    return (
+        props.wallet?.discounts_config || {
+            '5h': 0,
+            '10h': 10,
+            '15h': 15,
+            greater_than_15h: 20,
+        }
+    );
+});
+
+function getPackageDiscountPercent(pkg: string): number {
+    if (!isDiscountsEnabled.value) {
+        return 0;
     }
 
-    if (selectedPackage.value === '10h') {
-        return 0.15;
+    if (pkg === '5h') {
+        return Number(discountsConfig.value['5h'] ?? 0);
     }
 
-    if (selectedPackage.value === '15h') {
-        return 0.2;
+    if (pkg === '10h') {
+        return Number(discountsConfig.value['10h'] ?? 0);
     }
 
-    if (selectedPackage.value === 'custom' && customHours.value && customHours.value > 15) {
-        return 0.25;
+    if (pkg === '15h') {
+        return Number(discountsConfig.value['15h'] ?? 0);
+    }
+
+    return 0;
+}
+
+const customHoursDiscountPercent = computed(() => {
+    if (!isDiscountsEnabled.value) {
+        return 0;
+    }
+
+    if (customHours.value && customHours.value > 15) {
+        return Number(discountsConfig.value.greater_than_15h ?? 0);
     }
 
     return 0;
 });
+
+const discountPercentage = computed(() => {
+    if (!isDiscountsEnabled.value) {
+        return 0;
+    }
+
+    if (selectedPackage.value === '5h') {
+        return getPackageDiscountPercent('5h') / 100;
+    }
+
+    if (selectedPackage.value === '10h') {
+        return getPackageDiscountPercent('10h') / 100;
+    }
+
+    if (selectedPackage.value === '15h') {
+        return getPackageDiscountPercent('15h') / 100;
+    }
+
+    if (selectedPackage.value === 'custom') {
+        return customHoursDiscountPercent.value / 100;
+    }
+
+    return 0;
+});
+
+function getPackagePrice(pkg: string): number {
+    const hours = parseInt(pkg, 10);
+    const discount = getPackageDiscountPercent(pkg);
+    const base = hours * hourlyRate.value;
+
+    if (discount <= 0) {
+        return base;
+    }
+
+    return base * (1 - discount / 100);
+}
 
 const hourlyRate = computed(() => {
     return props.wallet?.hourly_rate_reference ? parseFloat(String(props.wallet.hourly_rate_reference)) : 0;
@@ -384,19 +447,13 @@ function formatCurrency(value: number): string {
                                     ]"
                                 >
                                     <div class="font-semibold text-gray-900">{{ pkg }}</div>
-                                    <div class="text-sm text-gray-600 mt-2">
-                                        {{ pkg === '5h' ? '10% discount' : '' }}
-                                        {{ pkg === '10h' ? '15% discount' : '' }}
-                                        {{ pkg === '15h' ? '20% discount' : '' }}
+                                    <div v-if="isDiscountsEnabled && getPackageDiscountPercent(pkg)" class="text-xs text-gray-600 mt-2 min-h-5">
+                                        <span v-if="getPackageDiscountPercent(pkg) > 0">
+                                            {{ getPackageDiscountPercent(pkg) }}% OFF
+                                        </span>
                                     </div>
                                     <div class="text-lg font-bold text-green-600 mt-3">
-                                        {{
-                                            formatCurrency(
-                                                parseInt(pkg) *
-                                                    hourlyRate *
-                                                    (pkg === '5h' ? 0.9 : pkg === '10h' ? 0.85 : 0.8)
-                                            )
-                                        }}
+                                        {{ formatCurrency(getPackagePrice(pkg)) }}
                                     </div>
                                 </button>
                             </div>
@@ -417,11 +474,16 @@ function formatCurrency(value: number): string {
                                         @focus="selectedPackage = 'custom'"
                                     />
 
-                                    <div class="flex w-36 items-center px-0 py-1">
+                                    <div class="flex flex-col w-36 items-center">
+                                        <span class="block text-sm font-medium text-gray-700 mb-2 h-4"></span>
                                         <span
                                             class="w-full min-h-10 text-center pt-2 bg-gray-100 rounded-lg border border-gray-300 text-sm text-gray-600"
                                         >
-                                            {{ customHours && customHours > 15 ? '25% discount' : 'No discount' }}
+                                            {{
+                                                customHours && customHours > 15 && customHoursDiscountPercent > 0
+                                                    ? `${customHoursDiscountPercent}% discount`
+                                                    : 'No discount'
+                                            }}
                                         </span>
                                     </div>
                                 </div>
@@ -553,12 +615,12 @@ function formatCurrency(value: number): string {
                                             <p class="text-sm text-gray-600 mt-1">
                                                 {{
                                                     method.is_offline
-                                                        ? 'Envie o comprovante. Aprovação do admin necessária.'
-                                                        : 'Pagamento instantâneo'
+                                                        ? 'Submit receipt. Admin approval required.'
+                                                        : 'Instant payment'
                                                 }}
                                             </p>
                                             <p v-if="method.expires_time" class="text-xs text-amber-600 mt-1">
-                                                Vence em {{ method.expires_time }}
+                                                Expires in {{ method.expires_time }}
                                             </p>
                                         </div>
 
@@ -578,7 +640,7 @@ function formatCurrency(value: number): string {
                                 >
                                     <span class="flex items-center justify-center gap-2">
                                         <Icon icon="mdi:information-outline" class="w-4 h-4" />
-                                        Ver Instruções
+                                        View Instructions
                                     </span>
                                 </button>
                             </div>

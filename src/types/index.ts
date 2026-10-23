@@ -14,6 +14,13 @@ export interface Client {
     updated_at: string;
 }
 
+export interface WalletDiscountsConfig {
+    '5h': number;
+    '10h': number;
+    '15h': number;
+    greater_than_15h: number;
+}
+
 export interface Wallet {
     id: number;
     client_id: number;
@@ -24,6 +31,8 @@ export interface Wallet {
     currency_code: string | null;
     client?: Client;
     credit_purchase_allowed: boolean;
+    discounts_enabled?: boolean;
+    discounts_config?: WalletDiscountsConfig | null;
     created_at: string;
     updated_at: string;
 }

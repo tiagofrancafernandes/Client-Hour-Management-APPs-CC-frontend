@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { Icon } from '@iconify/vue';
+import type { PaymentInstruction } from '@/types';
 
 interface CPaymentInstructionsModalProps {
     show: boolean;
     methodLabel: string;
-    instructions: string | null;
+    instructions: string | PaymentInstruction[] | null;
     totalAmount: number;
     currencyCode: string;
     expiresAt: string | null;
@@ -18,10 +19,11 @@ const emit = defineEmits<{
 }>();
 
 const copied = ref(false);
+const displayInstructionsRef = ref<HTMLElement | null>(null);
 
-const displayInstructions = computed(() => {
-    if (!props.instructions) {
-        return 'Nenhuma instrução disponível para este método.';
+const displayInstructions = computed<string | PaymentInstruction[]>(() => {
+    if (!props.instructions || (Array.isArray(props.instructions) && props.instructions.length === 0)) {
+        return 'No instructions available for this method.';
     }
     return props.instructions;
 });
@@ -32,7 +34,16 @@ function handleClose(): void {
 }
 
 function copyToClipboard(): void {
-    navigator.clipboard.writeText(displayInstructions.value);
+    let element = displayInstructionsRef.value || null;
+    let elementText = String(element?.innerText || '')?.trim();
+
+    if (!elementText) {
+        return;
+    }
+
+    // navigator.clipboard.writeText(displayInstructions.value);
+    navigator.clipboard.writeText(elementText);
+
     copied.value = true;
     setTimeout(() => {
         copied.value = false;
@@ -62,10 +73,10 @@ function copyToClipboard(): void {
                 <div class="p-6 space-y-6">
                     <!-- Amount Info -->
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div class="text-sm text-gray-600 mb-1">Valor a pagar</div>
+                        <div class="text-sm text-gray-600 mb-1">Amount to pay</div>
                         <div class="text-2xl font-bold text-gray-900">
                             {{
-                                new Intl.NumberFormat('pt-BR', {
+                                new Intl.NumberFormat('en-US', {
                                     style: 'currency',
                                     currency: currencyCode,
                                 }).format(totalAmount)
@@ -75,17 +86,31 @@ function copyToClipboard(): void {
 
                     <!-- Expiration Info -->
                     <div v-if="expiresAt" class="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                        <div class="text-sm text-gray-600 mb-1">Vence em</div>
+                        <div class="text-sm text-gray-600 mb-1">Expires at</div>
                         <div class="font-semibold text-amber-700">{{ expiresAt }}</div>
                     </div>
 
                     <!-- Instructions -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Instruções de Pagamento</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Payment Instructions</label>
                         <div
                             class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-700 whitespace-pre-wrap min-h-32"
+                            ref="displayInstructionsRef"
                         >
-                            {{ displayInstructions }}
+                            <ul v-if="Array.isArray(displayInstructions)">
+                                <template
+                                    v-for="(dataItem, dataItemIndex) in displayInstructions"
+                                    :key="dataItemIndex"
+                                >
+                                    <li v-if="dataItem && (dataItem.key || dataItem.value)" class="flex gap-2">
+                                        <span class="font-bold">{{ dataItem.key }}</span>
+                                        <span class="font-normal">{{ dataItem.value }}</span>
+                                    </li>
+                                </template>
+                            </ul>
+                            <div v-else>
+                                {{ displayInstructions }}
+                            </div>
                         </div>
                     </div>
 
@@ -102,18 +127,18 @@ function copyToClipboard(): void {
                     >
                         <span v-if="!copied" class="flex items-center justify-center gap-2">
                             <Icon icon="mdi:content-copy" class="w-4 h-4" />
-                            Copiar Instruções
+                            Copy Instructions
                         </span>
                         <span v-else class="flex items-center justify-center gap-2">
                             <Icon icon="mdi:check-circle" class="w-4 h-4" />
-                            Copiado!
+                            Copied!
                         </span>
                     </button>
                 </div>
 
                 <!-- Footer -->
                 <div class="bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-200">
-                    <CButton preset="outlined-black" class="w-full" @click="handleClose">Fechar</CButton>
+                    <CButton preset="outlined-black" class="w-full" @click="handleClose">Close</CButton>
                 </div>
             </div>
         </div>
