@@ -4,21 +4,45 @@ import { useRoute, useRouter } from 'vue-router';
 import { Icon } from '@iconify/vue';
 import { useInvoices } from '@composables/useInvoices';
 import { useToast } from '@composables/useToast';
-import { formatInvoiceCode, getInvoiceStatusBadgeClass, formatInvoiceDate } from '@utils/invoice-helpers';
+import {
+    formatInvoiceCode,
+    getInvoiceStatusBadgeClass,
+    formatInvoiceDate,
+    getInvoiceDownloadFilename,
+} from '@utils/invoice-helpers';
 import { formatCurrency } from '@utils/payment-helpers';
+import InvoicePrintModal from '@/components/InvoicePrintModal.vue';
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 
-const { invoice, loading, error, fetchInvoice, deleteInvoice, downloadMarkdown, canEditInvoice, canDeleteInvoice } =
-    useInvoices();
+const {
+    invoice,
+    loading,
+    error,
+    fetchInvoice,
+    deleteInvoice,
+    downloadMarkdown,
+    downloadPdf,
+    canEditInvoice,
+    canDeleteInvoice,
+} = useInvoices();
 
 const showDeleteConfirmModal = ref(false);
 const deletingInvoice = ref(false);
+const showPrintModal = ref(false);
 
 function handleEdit(): void {
     router.push({ name: 'invoice-edit', params: { id: route.params.id } });
+}
+
+function openPrintModal(): void {
+    showPrintModal.value = true;
+}
+
+function closePrintModal(): void {
+    showPrintModal.value = false;
 }
 
 async function handleDownloadMarkdown(): Promise<void> {
@@ -32,13 +56,26 @@ async function handleDownloadMarkdown(): Promise<void> {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const code = invoice.value.code || `invoice-${invoice.value.invoice_number}`;
-        a.download = `${code}.md`;
+        a.download = getInvoiceDownloadFilename(invoice.value, 'md');
         a.click();
         window.URL.revokeObjectURL(url);
         toast.success('Markdown downloaded successfully');
     } catch {
         toast.error('Failed to download markdown');
+    }
+}
+
+async function handleDownloadPdf(): Promise<void> {
+    if (!invoice.value) {
+        return;
+    }
+
+    try {
+        const filename = getInvoiceDownloadFilename(invoice.value, 'pdf');
+        await downloadPdf(invoice.value.id, filename);
+        toast.success('PDF downloaded successfully');
+    } catch {
+        toast.error('Failed to download PDF');
     }
 }
 
@@ -137,13 +174,34 @@ onMounted(async () => {
                         Edit
                     </button>
 
+                    <!-- Print / Preview Modal -->
+                    <button
+                        type="button"
+                        @click="openPrintModal"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-slate-300 bg-white text-slate-800 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
+                    >
+                        <Icon icon="mdi:printer-outline" class="w-4 h-4" />
+                        Print / Preview
+                    </button>
+
+                    <!-- Download PDF -->
+                    <button
+                        type="button"
+                        @click="handleDownloadPdf"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs cursor-pointer"
+                    >
+                        <Icon icon="mdi:file-pdf-box" class="w-4 h-4 text-red-600" />
+                        Download PDF
+                    </button>
+
+                    <!-- Download Markdown -->
                     <button
                         type="button"
                         @click="handleDownloadMarkdown"
                         class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs cursor-pointer"
                     >
-                        <Icon icon="mdi:file-download-outline" class="w-4 h-4" />
-                        Download Markdown
+                        <Icon icon="mdi:language-markdown" class="w-4 h-4 text-slate-600" />
+                        Markdown
                     </button>
 
                     <button
@@ -163,26 +221,26 @@ onMounted(async () => {
                 <!-- Summary Meta Grid -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-6 border-b border-gray-100">
                     <div>
-                        <span class="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-1">Client</span>
+                        <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Client</span>
                         <p class="text-sm font-bold text-gray-900">{{ invoice.client?.name || '—' }}</p>
                     </div>
 
                     <div>
-                        <span class="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
                             Issue Date
                         </span>
                         <p class="text-sm font-medium text-gray-800">{{ formatInvoiceDate(invoice.issue_date) }}</p>
                     </div>
 
                     <div>
-                        <span class="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
                             Due Date
                         </span>
                         <p class="text-sm font-medium text-gray-800">{{ formatInvoiceDate(invoice.due_date) }}</p>
                     </div>
 
                     <div>
-                        <span class="block text-2xs font-bold text-gray-500 uppercase tracking-wider mb-1">Status</span>
+                        <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Status</span>
                         <span
                             :class="[
                                 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border',
@@ -258,7 +316,7 @@ onMounted(async () => {
                     <!-- Notes -->
                     <div class="md:col-span-7">
                         <div v-if="invoice.notes" class="rounded-xl bg-gray-50 border border-gray-200 p-4 space-y-1.5">
-                            <h4 class="text-2xs font-bold uppercase tracking-wider text-gray-500">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">
                                 Notes & Instructions
                             </h4>
                             <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ invoice.notes }}</p>
@@ -295,7 +353,7 @@ onMounted(async () => {
                                     <span class="text-xl font-extrabold text-red-600 tracking-tight">
                                         {{ formatCurrency(invoice.total, invoice.currency) }}
                                     </span>
-                                    <span class="text-xs text-slate-400 block font-normal">{{ invoice.currency }}</span>
+                                    <span class="text-xs text-slate-400 block font-medium">{{ invoice.currency }}</span>
                                 </div>
                             </div>
                         </div>
@@ -313,6 +371,15 @@ onMounted(async () => {
             cancelText="Keep Invoice"
             variant="danger"
             @confirm="handleDeleteConfirm"
+        />
+
+        <!-- Print & PDF Preview Modal -->
+        <InvoicePrintModal
+            :show="showPrintModal"
+            :invoice="invoice"
+            @close="closePrintModal"
+            @download-pdf="handleDownloadPdf"
+            @download-markdown="handleDownloadMarkdown"
         />
     </div>
 </template>

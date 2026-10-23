@@ -260,7 +260,7 @@ onMounted(async () => {
 <template>
     <div class="relative" :class="containerClasses || []">
         <!-- Label -->
-        <label v-if="label" class="block text-sm font-medium" :class="labelClasses || []">
+        <label v-if="label" class="block text-xs font-thin text-sm text-gray-600" :class="labelClasses || []">
             {{ label }}
             <span v-if="required" class="text-red-500 font-bold italic">*</span>
         </label>
@@ -356,7 +356,7 @@ onMounted(async () => {
                             type="button"
                             class="w-full px-3 py-2.5 text-left text-sm"
                             :class="{
-                                'font-medium text-red-700': option.value === currentValue,
+                                'font-thin text-sm text-red-700': option.value === currentValue,
                                 'text-gray-800 hover:bg-gray-50': option.value !== currentValue,
                             }"
                             @click="handleSelect(option)"

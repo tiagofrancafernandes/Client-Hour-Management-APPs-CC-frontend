@@ -240,6 +240,22 @@ export function useInvoices() {
         }
     }
 
+    async function downloadPdf(id: number, filename?: string) {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            await api.download(`/invoices/${id}/download-pdf`, filename || null);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to download PDF';
+            error.value = message;
+
+            throw err;
+        } finally {
+            loading.value = false;
+        }
+    }
+
     function canViewInvoice(invoiceData: Invoice): boolean {
         if (canViewAny.value) {
             if (invoiceData.status === 'draft' && !canViewDraft.value) {
@@ -304,6 +320,7 @@ export function useInvoices() {
         updateInvoice,
         deleteInvoice,
         downloadMarkdown,
+        downloadPdf,
         canViewInvoice,
         canEditInvoice,
         canDeleteInvoice,

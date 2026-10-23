@@ -64,3 +64,16 @@ export function formatInvoiceDate(dateString?: string | null): string {
     });
 }
 
+/**
+ * Get standard filename for invoice downloads (Markdown, PDF)
+ * Example: invoice-C12-I005.pdf
+ */
+export function getInvoiceDownloadFilename(
+    invoice?: { code?: string; invoice_number?: string | number } | null,
+    extension: 'md' | 'pdf' = 'md'
+): string {
+    const raw = invoice?.code || (invoice?.invoice_number ? String(invoice.invoice_number) : '') || 'invoice';
+    const clean = raw.replace(/^#/, '');
+    const base = clean.toLowerCase().startsWith('invoice-') ? clean : `invoice-${clean}`;
+    return `${base}.${extension}`;
+}

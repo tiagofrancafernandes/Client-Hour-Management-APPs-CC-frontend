@@ -74,13 +74,13 @@ function onProductServiceSelect(value: unknown): void {
                 </span>
                 <span
                     v-if="item.product_service_id"
-                    class="text-2xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200"
+                    class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200"
                 >
                     Catalog Preset
                 </span>
                 <span
                     v-else
-                    class="text-2xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200"
+                    class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200"
                 >
                     Custom Item
                 </span>
@@ -129,7 +129,7 @@ function onProductServiceSelect(value: unknown): void {
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
             <!-- Unit -->
             <div>
-                <label class="block text-2xs font-bold text-slate-600 uppercase tracking-wider mb-1">Unit</label>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Unit</label>
                 <input
                     v-model="item.unit"
                     type="text"
@@ -140,7 +140,7 @@ function onProductServiceSelect(value: unknown): void {
 
             <!-- Quantity -->
             <div>
-                <label class="block text-2xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
                     Quantity
                     <span class="text-red-500">*</span>
                 </label>
@@ -156,7 +156,7 @@ function onProductServiceSelect(value: unknown): void {
 
             <!-- Unit Price -->
             <div>
-                <label class="block text-2xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
                     Unit Price ({{ currency }})
                     <span class="text-red-500">*</span>
                 </label>
@@ -172,11 +172,11 @@ function onProductServiceSelect(value: unknown): void {
 
             <!-- Total Preview -->
             <div class="flex flex-col justify-end">
-                <label class="block text-2xs font-bold text-slate-500 uppercase tracking-wider mb-1">Line Total</label>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Line Total</label>
                 <div
                     class="w-full rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-sm font-bold text-slate-900 flex items-center justify-between"
                 >
-                    <span class="text-xs text-slate-400 font-normal">{{ currency }}</span>
+                    <span class="text-xs text-slate-400 font-medium">{{ currency }}</span>
                     <span class="font-mono">{{ formatCurrency(lineTotal, currency) }}</span>
                 </div>
             </div>

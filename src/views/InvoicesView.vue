@@ -6,8 +6,14 @@ import { useInvoices } from '@composables/useInvoices';
 import { useClients } from '@composables/useClients';
 import { useToast } from '@composables/useToast';
 import type { Invoice } from '@/types';
-import { formatInvoiceCode, getInvoiceStatusBadgeClass, formatInvoiceDate } from '@utils/invoice-helpers';
+import {
+    formatInvoiceCode,
+    getInvoiceStatusBadgeClass,
+    formatInvoiceDate,
+    getInvoiceDownloadFilename,
+} from '@utils/invoice-helpers';
 import { formatCurrency } from '@utils/payment-helpers';
+import InvoicePrintModal from '@/components/InvoicePrintModal.vue';
 
 const router = useRouter();
 const toast = useToast();
@@ -23,6 +29,7 @@ const {
     fetchInvoices,
     deleteInvoice,
     downloadMarkdown,
+    downloadPdf,
     canEditInvoice,
     canDeleteInvoice,
 } = useInvoices();
@@ -183,20 +190,42 @@ function goToCreate(): void {
     router.push({ name: 'invoice-create' });
 }
 
-async function handleDownload(invoice: Invoice): Promise<void> {
+const showPrintModal = ref(false);
+const printModalInvoice = ref<Invoice | null>(null);
+
+function openPrintModal(invoice: Invoice): void {
+    printModalInvoice.value = invoice;
+    showPrintModal.value = true;
+}
+
+function closePrintModal(): void {
+    showPrintModal.value = false;
+    printModalInvoice.value = null;
+}
+
+async function handleDownloadMarkdown(invoice: Invoice): Promise<void> {
     try {
         const markdown = await downloadMarkdown(invoice.id);
         const blob = new Blob([markdown], { type: 'text/markdown' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const code = invoice.code || `invoice-${invoice.invoice_number}`;
-        a.download = `${code}.md`;
+        a.download = getInvoiceDownloadFilename(invoice, 'md');
         a.click();
         window.URL.revokeObjectURL(url);
         toast.success('Markdown downloaded successfully');
     } catch {
         toast.error('Failed to download markdown');
+    }
+}
+
+async function handleDownloadPdf(invoice: Invoice): Promise<void> {
+    try {
+        const filename = getInvoiceDownloadFilename(invoice, 'pdf');
+        await downloadPdf(invoice.id, filename);
+        toast.success('PDF downloaded successfully');
+    } catch {
+        toast.error('Failed to download PDF');
     }
 }
 
@@ -295,7 +324,7 @@ onMounted(async () => {
                         :initialOptions="clientOptions"
                         placeholder="All Clients"
                         clearable
-                        label-classes="uppercase tracking-wide"
+                        label-classes="block text-xs font-medium text-gray-600 uppercase tracking-wide"
                     />
                 </div>
 
@@ -513,13 +542,34 @@ onMounted(async () => {
                                         <Icon icon="mdi:pencil-outline" class="w-4 h-4" />
                                     </button>
 
+                                    <!-- Print / PDF Preview -->
                                     <button
                                         type="button"
-                                        @click="handleDownload(inv)"
+                                        @click="openPrintModal(inv)"
+                                        class="p-1.5 text-gray-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                                        title="Print / PDF Preview"
+                                    >
+                                        <Icon icon="mdi:printer-outline" class="w-4 h-4" />
+                                    </button>
+
+                                    <!-- Download PDF -->
+                                    <button
+                                        type="button"
+                                        @click="handleDownloadPdf(inv)"
+                                        class="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                        title="Download PDF"
+                                    >
+                                        <Icon icon="mdi:file-pdf-box" class="w-4 h-4" />
+                                    </button>
+
+                                    <!-- Download Markdown -->
+                                    <button
+                                        type="button"
+                                        @click="handleDownloadMarkdown(inv)"
                                         class="p-1.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
                                         title="Download Markdown"
                                     >
-                                        <Icon icon="mdi:file-download-outline" class="w-4 h-4" />
+                                        <Icon icon="mdi:language-markdown" class="w-4 h-4" />
                                     </button>
 
                                     <button
@@ -606,6 +656,15 @@ onMounted(async () => {
             cancelText="Keep Invoice"
             variant="danger"
             @confirm="handleDeleteConfirm"
+        />
+
+        <!-- Print & PDF Preview Modal -->
+        <InvoicePrintModal
+            :show="showPrintModal"
+            :invoice="printModalInvoice"
+            @close="closePrintModal"
+            @download-pdf="handleDownloadPdf"
+            @download-markdown="handleDownloadMarkdown"
         />
     </div>
 </template>
