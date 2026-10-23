@@ -98,9 +98,14 @@ function onProductServiceSelect(value: unknown): void {
         </div>
 
         <!-- Line 1: Preset Product / Service (Typeahead) -->
-        <div>
+        <div class="flex flex-col">
+            <div class="flex items-center justify-between h-5 mb-1.5">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                    Preset Product / Service
+                </label>
+                <span class="text-2xs text-slate-400 font-medium">Optional</span>
+            </div>
             <CTypeahead
-                label="Preset Product / Service (Optional)"
                 v-model="item.product_service_id"
                 :initialOptions="productServiceOptions"
                 placeholder="Search and pick from catalog or leave empty for custom..."
@@ -111,70 +116,81 @@ function onProductServiceSelect(value: unknown): void {
         </div>
 
         <!-- Line 2: Description (Full Width) -->
-        <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">
-                Description
-                <span class="text-red-500">*</span>
-            </label>
+        <div class="flex flex-col">
+            <div class="flex items-center justify-between h-5 mb-1.5">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                    Description
+                    <span class="text-red-500">*</span>
+                </label>
+            </div>
             <input
                 v-model="item.description"
                 type="text"
                 required
                 placeholder="Enter detailed item or service description..."
-                class="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                class="w-full h-10 rounded-lg border border-slate-300 bg-white px-3.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
             />
         </div>
 
         <!-- Line 3: Numeric Breakdown (Unit, Quantity, Price, Total) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-1 items-start">
             <!-- Unit -->
-            <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Unit</label>
+            <div class="flex flex-col">
+                <div class="flex items-center justify-between h-5 mb-1.5">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">Unit</label>
+                    <span class="text-2xs text-slate-400 font-medium">Optional</span>
+                </div>
                 <input
                     v-model="item.unit"
                     type="text"
                     placeholder="unit, hour, month..."
-                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                    class="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                 />
             </div>
 
             <!-- Quantity -->
-            <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    Quantity
-                    <span class="text-red-500">*</span>
-                </label>
+            <div class="flex flex-col">
+                <div class="flex items-center justify-between h-5 mb-1.5">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                        Quantity
+                        <span class="text-red-500">*</span>
+                    </label>
+                </div>
                 <input
                     v-model.number="item.quantity"
                     type="number"
                     step="0.01"
                     min="0.01"
                     required
-                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                    class="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                 />
             </div>
 
             <!-- Unit Price -->
-            <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    Unit Price ({{ currency }})
-                    <span class="text-red-500">*</span>
-                </label>
+            <div class="flex flex-col">
+                <div class="flex items-center justify-between h-5 mb-1.5">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                        Unit Price ({{ currency }})
+                        <span class="text-red-500">*</span>
+                    </label>
+                </div>
                 <input
                     v-model.number="item.unit_price"
                     type="number"
                     step="0.01"
                     min="0"
                     required
-                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                    class="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                 />
             </div>
 
             <!-- Total Preview -->
-            <div class="flex flex-col justify-end">
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Line Total</label>
+            <div class="flex flex-col">
+                <div class="flex items-center justify-between h-5 mb-1.5">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">Line Total</label>
+                </div>
                 <div
-                    class="w-full rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-sm font-bold text-slate-900 flex items-center justify-between"
+                    class="w-full h-10 rounded-lg bg-slate-50 border border-slate-200 px-3 text-sm font-bold text-slate-900 flex items-center justify-between"
                 >
                     <span class="text-xs text-slate-400 font-medium">{{ currency }}</span>
                     <span class="font-mono">{{ formatCurrency(lineTotal, currency) }}</span>

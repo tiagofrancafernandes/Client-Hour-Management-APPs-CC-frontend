@@ -268,11 +268,16 @@ onMounted(async () => {
                     Invoice & Client Details
                 </h2>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-4 items-start">
                     <!-- Client Selection -->
-                    <div class="space-y-1">
+                    <div class="flex flex-col">
+                        <div class="flex items-center justify-between h-5 mb-1.5">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                                Client
+                                <span class="text-red-500">*</span>
+                            </label>
+                        </div>
                         <CTypeahead
-                            label="Client *"
                             v-model="form.client_id"
                             :initialOptions="clientOptions"
                             placeholder="Select a client..."
@@ -282,19 +287,19 @@ onMounted(async () => {
                     </div>
 
                     <!-- Client Invoice Number (Optional Counter) -->
-                    <div class="space-y-1">
-                        <div class="flex items-center justify-between">
-                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide">
+                    <div class="flex flex-col">
+                        <div class="flex items-center justify-between h-5 mb-1.5">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">
                                 Invoice # (Counter)
                             </label>
-                            <span class="text-2xs text-slate-400">Optional</span>
+                            <span class="text-2xs text-slate-400 font-medium">Optional</span>
                         </div>
                         <input
                             v-model.number="form.client_invoice_number"
                             type="number"
                             min="1"
                             :placeholder="nextNumberInfo ? String(nextNumberInfo.next_client_invoice_number) : 'Auto'"
-                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                            class="w-full h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                         />
                         <p class="text-2xs text-slate-500 mt-1">
                             {{
@@ -306,15 +311,17 @@ onMounted(async () => {
                     </div>
 
                     <!-- Currency -->
-                    <div class="space-y-1">
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide">
-                            Currency
-                            <span class="text-red-500">*</span>
-                        </label>
+                    <div class="flex flex-col">
+                        <div class="flex items-center justify-between h-5 mb-1.5">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                                Currency
+                                <span class="text-red-500">*</span>
+                            </label>
+                        </div>
                         <select
                             v-model="form.currency"
                             required
-                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                            class="w-full h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all cursor-pointer"
                         >
                             <option value="BRL">BRL (R$)</option>
                             <option value="USD">USD ($)</option>
@@ -324,35 +331,47 @@ onMounted(async () => {
                     </div>
 
                     <!-- Issue Date -->
-                    <div class="space-y-1">
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide">
-                            Issue Date
-                            <span class="text-red-500">*</span>
-                        </label>
+                    <div class="flex flex-col">
+                        <div class="flex items-center justify-between h-5 mb-1.5">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                                Issue Date
+                                <span class="text-red-500">*</span>
+                            </label>
+                        </div>
                         <input
                             v-model="form.issue_date"
                             type="date"
                             required
-                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                            class="w-full h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                         />
                     </div>
 
                     <!-- Due Date -->
-                    <div class="space-y-1">
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide">Due Date</label>
+                    <div class="flex flex-col">
+                        <div class="flex items-center justify-between h-5 mb-1.5">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                                Due Date
+                            </label>
+                            <span class="text-2xs text-slate-400 font-medium">Optional</span>
+                        </div>
                         <input
                             v-model="form.due_date"
                             type="date"
-                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                            class="w-full h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                         />
                     </div>
 
                     <!-- Status -->
-                    <div class="space-y-1">
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide">Status</label>
+                    <div class="flex flex-col">
+                        <div class="flex items-center justify-between h-5 mb-1.5">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                                Status
+                                <span class="text-red-500">*</span>
+                            </label>
+                        </div>
                         <select
                             v-model="form.status"
-                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                            class="w-full h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all cursor-pointer"
                         >
                             <option value="draft">Draft</option>
                             <option value="sent">Sent</option>

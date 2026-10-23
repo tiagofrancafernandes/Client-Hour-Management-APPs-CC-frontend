@@ -260,7 +260,7 @@ onMounted(async () => {
 <template>
     <div class="relative" :class="containerClasses || []">
         <!-- Label -->
-        <label v-if="label" class="block text-xs font-thin text-sm text-gray-600" :class="labelClasses || []">
+        <label v-if="label" class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-0.5" :class="labelClasses || []">
             {{ label }}
             <span v-if="required" class="text-red-500 font-bold italic">*</span>
         </label>
@@ -270,8 +270,8 @@ onMounted(async () => {
             type="button"
             :disabled="disabled"
             :class="[
-                'w-full flex items-center justify-between gap-2',
-                'rounded-lg border bg-white px-3 py-2',
+                'w-full h-10 flex items-center justify-between gap-2',
+                'rounded-lg border bg-white px-3',
                 'text-sm text-left transition-colors outline-none',
                 {
                     'border-red-500 ring-1 ring-red-500': isOpen,
@@ -282,7 +282,7 @@ onMounted(async () => {
             ]"
             @click="handleTriggerClick"
         >
-            <span :class="{ 'text-gray-400': !selectedOption }">
+            <span class="truncate block" :class="{ 'text-gray-400': !selectedOption }">
                 {{ selectedOption ? selectedOption.label : placeholder }}
             </span>
 
