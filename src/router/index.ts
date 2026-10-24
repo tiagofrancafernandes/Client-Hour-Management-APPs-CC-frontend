@@ -46,24 +46,21 @@ const router = createRouter({
         {
             path: '/',
             name: 'home',
-            redirect: (to) => {
-                const auth = useAuth();
-
-                if (auth.isCustomer.value) {
-                    return '/dashboard';
-                }
-
-                return '/clients';
-            },
+            redirect: '/dashboard',
         },
         {
             path: '/dashboard',
-            name: 'customer-dashboard',
-            component: () => import('@/views/CustomerDashboardView.vue'),
+            name: 'dashboard',
+            component: () => import('@/views/DashboardView.vue'),
             meta: {
                 title: 'Dashboard',
                 requiresAuth: true,
             },
+        },
+        {
+            path: '/customer-dashboard',
+            name: 'customer-dashboard',
+            redirect: '/dashboard',
         },
         {
             path: '/clients',

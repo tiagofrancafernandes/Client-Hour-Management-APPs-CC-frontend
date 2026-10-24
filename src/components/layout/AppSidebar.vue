@@ -36,6 +36,13 @@ interface NavItem {
 const navItems = computed((): NavItem[] => {
     return [
         {
+            key: 'dashboard',
+            label: 'Dashboard',
+            icon: 'heroicons:squares-2x2',
+            to: '/dashboard',
+            show: permissions.canViewDashboard.value,
+        },
+        {
             key: 'clients',
             label: 'Clients',
             icon: 'heroicons:users',
@@ -146,7 +153,7 @@ function isDirectActive(to: string): boolean {
     return route.path === to || route.path.startsWith(to + '/');
 }
 
-function isChildActive(to: string, children: any[]|undefined): boolean {
+function isChildActive(to: string, children?: any[] | undefined): boolean {
     if (!children || !Array.isArray(children)) {
         return route.path === to;
     }
@@ -285,7 +292,7 @@ watch(() => route.path, syncExpandedGroups, { immediate: true });
                                 'flex items-center gap-2 px-2.5 py-1 rounded-md text-2xs transition-colors duration-150',
                                 {
                                     'text-red-400 font-semibold bg-red-400/10': isChildActive(child.to, item?.children),
-                                    'text-slate-300 hover:text-white hover:bg-white/10': !isChildActive(child.to),
+                                    'text-slate-300 hover:text-white hover:bg-white/10': !isChildActive(child.to, item?.children),
                                 },
                             ]"
                         >

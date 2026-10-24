@@ -151,7 +151,17 @@ export function usePermissions() {
         return auth.hasAnyRole(['super_admin', 'admin', 'manager']);
     });
 
+    // Dashboard
+    const canViewDashboard = computed(() => {
+        return (
+            auth.hasPermission('dashboard.view') ||
+            auth.hasAnyRole(['super_admin', 'admin', 'manager'])
+        );
+    });
+
     return {
+        // Dashboard
+        canViewDashboard,
         // Client
         canViewClients,
         canViewAnyClients,
