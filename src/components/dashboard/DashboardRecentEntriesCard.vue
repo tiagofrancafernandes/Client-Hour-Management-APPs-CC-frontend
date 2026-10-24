@@ -58,7 +58,7 @@ function formatDate(dateStr: string | null): string {
                 <!-- Sort Field Dropdown -->
                 <select
                     :value="orderBy"
-                    class="text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-32"
+                    class="text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-36"
                     aria-label="Order entries by"
                     @change="emit('update:orderBy', ($event.target as HTMLSelectElement).value as any)"
                 >

@@ -37,7 +37,7 @@ function formatDate(dateStr: string | null): string {
 <template>
     <div class="flex flex-col h-full bg-white dark:bg-gray-800 rounded-xl border border-gray-200/80 dark:border-gray-700/80 shadow-xs">
         <!-- Card Header -->
-        <div class="p-4 sm:p-5 border-b border-gray-100 dark:border-gray-700/60 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-col flex-wrap items-stretch justify-between gap-1 p-4 sm:p-5 border-b border-gray-100 dark:border-gray-700/60">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                     <Icon icon="heroicons:users" class="w-4 h-4" />
@@ -53,11 +53,11 @@ function formatDate(dateStr: string | null): string {
             </div>
 
             <!-- Sorting & Refresh Actions -->
-            <div class="flex items-center gap-2">
+            <div class="flex items-center justify-end gap-2">
                 <!-- Sort Field Dropdown -->
                 <select
                     :value="orderBy"
-                    class="text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    class="text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-36"
                     aria-label="Order clients by"
                     @change="emit('update:orderBy', ($event.target as HTMLSelectElement).value as any)"
                 >
@@ -166,4 +166,3 @@ function formatDate(dateStr: string | null): string {
         </div>
     </div>
 </template>
-
