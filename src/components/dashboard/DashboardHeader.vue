@@ -27,30 +27,30 @@ const formattedCachedTime = computed(() => {
 </script>
 
 <template>
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-gray-200 dark:border-gray-800">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-gray-200 dark:border-gray-800">
         <div>
-            <h1 class="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
+            <h1 class="text-xl sm:text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
                 Dashboard
             </h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p class="mt-0.5 sm:mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 System activity overview, resource counts, and latest operations
             </p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-wrap">
             <span
                 v-if="formattedCachedTime"
-                class="hidden md:inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1.5 rounded-lg border border-gray-200/60 dark:border-gray-700/60"
+                class="inline-flex items-center gap-1.5 text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border border-gray-200/60 dark:border-gray-700/60"
                 title="Data served from cache"
             >
-                <Icon icon="heroicons:clock" class="w-3.5 h-3.5 text-gray-400" />
+                <Icon icon="heroicons:clock" class="w-3.5 h-3.5 text-gray-400 shrink-0" />
                 <span>Cached at {{ formattedCachedTime }}</span>
             </span>
 
             <CButton
                 preset="white"
                 :disabled="loading"
-                class="text-xs font-medium border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 shadow-xs"
+                class="text-xs font-medium border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 shadow-xs cursor-pointer"
                 @click="emit('refresh-all')"
             >
                 <Icon
