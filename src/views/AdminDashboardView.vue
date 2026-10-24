@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue';
-import AdminLayout from '@/layouts/AdminLayout.vue';
 import DashboardHeader from '@/components/dashboard/DashboardHeader.vue';
 import DashboardStatsGrid from '@/components/dashboard/DashboardStatsGrid.vue';
 import DashboardRecentEntriesCard from '@/components/dashboard/DashboardRecentEntriesCard.vue';
@@ -54,9 +53,8 @@ onMounted(() => {
 </script>
 
 <template>
-    <AdminLayout>
-        <div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
-            <!-- Dashboard Header -->
+    <div class="container mx-auto px-4 py-6 space-y-6">
+        <!-- Dashboard Header -->
             <DashboardHeader
                 :cached-at="stats?.cached_at"
                 :loading="globalLoading"
@@ -106,5 +104,5 @@ onMounted(() => {
                 </div>
             </div>
         </div>
-    </AdminLayout>
 </template>
+

@@ -182,3 +182,4 @@ function formatCurrency(amount: number, currency: string = 'USD'): string {
         </div>
     </div>
 </template>
+

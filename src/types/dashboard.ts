@@ -105,3 +105,4 @@ export interface RecentQueryParams {
     limit?: number;
     refresh?: boolean;
 }
+

@@ -10,3 +10,4 @@ const { isCustomer } = useAuth();
     <CustomerDashboardView v-if="isCustomer" />
     <AdminDashboardView v-else />
 </template>
+

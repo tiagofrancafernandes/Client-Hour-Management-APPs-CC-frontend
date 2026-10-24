@@ -113,3 +113,4 @@ const formattedHoursThisMonth = computed(() => {
         />
     </div>
 </template>
+
